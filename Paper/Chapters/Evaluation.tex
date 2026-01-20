@@ -27,16 +27,26 @@ The evaluation is conducted using four benchmark datasets that are commonly used
 All datasets have a corresponding ground truth version, which is used as a reference for computing the evaluation metrics. 
 Initially, these versions still contained inconsistencies and were manually curated to ensure a reliable evaluation. 
 Examples are standardizing representations of missing values (e.g., replacing placeholders with NaN), converting formatting inconsistencies (e.g., converting '10\%' to 10) and fixing minor typos.
-To evaluate the robustness of the cleaning methods, additional outliers were injected into the Movies and Beers datasets. The Rayyan dataset already contains natural outliers and was therefore not modified.
-An overview of the datasets is provided below. Dataset size and error rates are reported separately in table \ref{tab:datasets}.
+To evaluate the robustness of the cleaning methods, additional outliers were injected into the Movies and Beers datasets. 
+The Rayyan dataset already contains natural outliers and was therefore not modified.
+An overview of the datasets is provided below. 
+Dataset size and error rates are reported separately in table \ref{tab:datasets}.
 \newline\newline
-\textbf{Hospital} \cite{HOLOCLEAN} - A real-world, structured and redundant dataset describing hospitals and their attributes. The data consists primarily of short strings and numeric fields representing identifiers (e.g., zipcodes, phonenumber, ids). Errors include typos caused by character replacement (e.g., replacing characters with 'x'), formatting inconsistencies (e.g., values stored with non-numeric characters instead of pure numerics), DMVs such as 'empty' and dependency violations.
+\textbf{Hospital} \cite{HOLOCLEAN} - A real-world, structured and redundant dataset describing hospitals and their attributes. 
+The data consists primarily of short strings and numeric fields representing identifiers (e.g., zipcodes, phonenumber, ids). 
+Errors include typos caused by character replacement (e.g., replacing characters with 'x'), formatting inconsistencies (e.g., values stored with non-numeric characters instead of pure numerics), DMVs such as 'empty' and dependency violations.
 \newline
-\textbf{Beers} \cite{RAHA}- A real-world, structured and redundant dataset containing information about beers and their properties, such as alcohol by volume and brewery details. The dataset includes numeric columns, short strings and identifiers. Error types include missing values, formatting inconsistencies (e.g., '0.045\%' vs 0.045, '12.0 oz' vs '12.0 ounce'), dependency violations, schema violations where data from multiple columns is merged into a single column, and some outliers and typos.
+\textbf{Beers} \cite{RAHA}- A real-world, structured and redundant dataset containing information about beers and their properties, such as alcohol by volume and brewery details. 
+The dataset includes numeric columns, short strings and identifiers. 
+Error types include missing values, formatting inconsistencies (e.g., '0.045\%' vs. 0.045, '12.0 oz' vs. '12.0 ounce'), dependency violations, schema violations where data from multiple columns is merged into a single column, and some outliers and typos.
 \newline
-\textbf{Movies} \cite{MDR} - A real-world, structured dataset containing information about movies, including cast, ratings, duration and textual descriptions. The dataset includes a diverse range of data types, such as dates, numeric values, identifiers, multi-value columns and free-text fields. Error types include missing values, DMVs (e.g., 'No description'), outliers and formatting inconsistencies, such as pattern violations, incorrect data types and duplicated values.
+\textbf{Movies} \cite{MDR} - A real-world, structured dataset containing information about movies, including cast, ratings, duration and textual descriptions. 
+The dataset includes a diverse range of data types, such as dates, numeric values, identifiers, multi-value columns and free-text fields. 
+Error types include missing values, DMVs (e.g., 'No description'), outliers and formatting inconsistencies, such as pattern violations, incorrect data types and duplicated values.
 \newline
-\textbf{Rayyan} \cite{RAYYAN} - A real-world dataset with a high degree of unstructured columns with heterogeneous representations and limited redundancy, describing academic journals and their metadata, including publication dates, venues and authors. The dataset contains dates, numeric values, identifiers and text fields with inconsistent casing, diverse textual styles and substantial noise. Error types include typos, missing values, DMVs (e.g., -1, {NULL}), outliers and formatting inconsistencies
+\textbf{Rayyan} \cite{RAYYAN} - A real-world dataset with a high degree of unstructured columns with heterogeneous representations and limited redundancy, describing academic journals and their metadata, including publication dates, venues and authors. 
+The dataset contains dates, numeric values, identifiers and text fields with inconsistent casing, diverse textual styles and substantial noise. 
+Error types include typos, missing values, DMVs (e.g., -1, {NULL}), outliers and formatting inconsistencies
 \newline
 \begin{table}[h]
 \centering
@@ -82,7 +92,8 @@ To evaluate the effectiveness of the data cleaning systems, we follow the standa
 The evaluation is performed at the cell level, where each cell in the dataset is treated as an individual prediction. 
 We distinguish between error detection and error correction, while using a single, consistent definition of precision, recall and F1 score for both tasks.
 \newline\newline
-The term mask is commonly used in data cleaning literature to denote a boolean matrix that indicates specific properties of cells (e.g., whether a cell is erroneous, modified or correctly repaired). We therefore use this terminology throughout the evaluation.
+The term mask is commonly used in data cleaning literature to denote a boolean matrix that indicates specific properties of cells (e.g., whether a cell is erroneous, modified or correctly repaired). 
+We therefore use this terminology throughout the evaluation.
 \newline\newline
 Let $D_d$ denote the dirty dataset and $D_{gt}$ the corresponding ground truth dataset. 
 By comparing these two datasets, we construct the \emph{error mask}, which indicates the cells that are erroneous in the dirty dataset:
@@ -174,20 +185,17 @@ In this context, precision reflects how many of the modified cells are repaired 
 
 \section{Results}
 In this section, we present the experimental results of the proposed framework. 
-We first summarize the error detection and error correction performance based on the results shown in the tables. 
-Next, we discuss the observed cleaning behavior across the individual datasets and compare the proposed framework with the baseline methods. 
+We first evaluate error detection and correction performance using the results shown in the tables and the analysis of the cleaned datasets. 
+Observed cleaning behavior will be discussed and the proposed framework will be compared with baseline methods. 
 Finally, we analyze runtime performance and provide a more in-depth evaluation of the framework.
 
+
 \subsection{Error detection results}
-The error detection results in table \ref{tab:detection_results} show that the proposed framework consistently outperforms the baseline methods across most datasets. 
-It achieves high precision and recall, resulting in near-perfect F1 scores for all datasets except Rayyan. 
-On the Rayyan dataset, Raha+Baran slightly outperforms the proposed framework in terms of F1 score.
+The error detection results in table \ref{tab:detection_results} show that the proposed framework consistently outperforms the baseline methods across most datasets, yielding near-perfect F1 scores for all datasets except Rayyan.
+On Rayyan, Raha+Baran slightly outperforms the proposed framework in terms of F1 score.
 The framework demonstrates high recall across all datasets, showing that it effectively identifies erroneous cells. 
-At the same time, it maintains high precision, meaning that only few clean cells are incorrectly modified. 
+At the same time, it maintains high precision, meaning that only few clean cells are incorrectly flagged. 
 This is an important property for data cleaning systems, as unnecessary changes to clean values can negatively affect overall data quality.
-Performance is generally higher on highly structured datasets, such as Hospital, Beers. 
-In contrast, all evaluated methods perform substantially worse on the Rayyan dataset. 
-This dataset contains unstructured columns with ambiguous styles and limited redundancy, making error detection more challenging.
 \newline\newline
 Among the baseline methods, HoloClean exhibits the weakest detection performance across datasets, largely due to its preprocessing step that converts all values to lowercase, which introduces many false positives. 
 In addition, HoloClean failed to complete the cleaning process for the Movies dataset due to excessive memory requirements (it attempted to allocate 50 GB of memory). 
@@ -220,6 +228,45 @@ Its performance is comparable to that of the proposed framework, highlighting th
 \caption{Detection results}
 \label{tab:detection_results}
 \end{table}
+
+Detection performance is generally strongest on highly structured datasets, such as Hospital, Beers and Movies. 
+In these settings, the framework successfully identifies a wide range of errors across identifiers, textual and numeric columns, and relational fields. 
+This success is largely due to the structured nature of these datasets, the presence of redundancy and the ability of the framework to leverage functional dependencies and column-level context. 
+For example, datasets like Beers contain many columns with short, redundant strings or numeric values, which allows the LLM to infer dominant patterns and derive generalized detection rules effectively.
+\newline\newline
+The framework effectively handles common textual errors, including typos, inconsistent whitespace and semantic inconsistencies. 
+It reliably identifies ambiguous missing value placeholders such as 'empty', 'Add a plot', 'No description', -1 and 'NULL', which are often difficult to detect using rule-based methods.  
+In addition, inconsistent use of abbreviations, such as 'Co.' when 'Company' is the dominant representation, is consistently flagged as erroneous. 
+Similar behavior is observed for columns where values deviate from the dominant string pattern, such as city fields that inconsistently include state abbreviations (e.g., 'San Francisco CA'). 
+Both syntactic and semantic errors are detected, particularly in named entities such as city or state names, where misspellings or incorrect entries (e.g., neighborhoods appearing in city columns) are identified. 
+These cases highlight the advantage of LLM-based semantic reasoning, which several baseline methods, including Cocoon, do not fully capture.
+\newline\newline
+The framework also performs well on formatting and pattern-based errors. 
+In the Movies dataset, identifier columns that follow a regular expression pattern are handled effectively: deviations from the dominant pattern are consistently detected, while all baseline methods fail to identify these violations. 
+Duplicate values, both numeric (e.g., '2005 2005') and textual (e.g., repeated names in multi-value fields), are also reliably detected. 
+In addition, date entries that deviate from the dominant format (e.g.,  'Nov 24, 2011 USA' instead of '24 November 2011 (USA)') are flagged as errors, whereas the other baselines fail to detect these inconsistencies.
+\newline\newline
+Numeric formatting inconsistencies are detected with high accuracy. 
+Columns containing values such as '12.0 oz', '12.0 ounce', '97\%' or '33 patients' are consistently flagged as erroneous due to the presence of non-numeric characters. 
+While Cocoon and Raha+Baran also identify many of these issues, the proposed framework provides more complete detection overall. 
+In addition, most outliers are detected by the framework, while all other baseline methods, except SAGED in some cases, largely fail to identify them.
+\newline\newline
+The framework is also effective at enforcing functional dependencies. 
+The majority of violations are correctly identified, and missing values that can be inferred using functional dependencies are flagged accordingly. 
+In contrast, Cocoon and SAGED fail to detect most of the violations, HoloClean only identifies imputable missing values, and Raha+Baran detects only a subset of the dependency pairs, missing many violations.
+\newline\newline
+The framework introduces only minor misdetections. 
+Some false negatives occur for highly irregular errors, such as random character replacements (e.g., arbitrary 'x' substitutions). 
+These errors lack a consistent pattern, making generalized detection difficult for both the proposed framework and Raha+Baran, which both rely on a limited subset of the dataset to infer rules that are applied globally. 
+Furthermore, minor false positives occur primarily in string values, where special symbols such as trademark characters are flagged for removal.
+\newline\newline
+Performance declines substantially on unstructured datasets such as Rayyan, which contain heterogeneous column formats, ambiguous styles and limited redundancy. 
+These characteristics make it difficult for the LLM to infer consistent detection rules. 
+Nevertheless, the proposed framework still matches or exceeds the overall performance of most baseline methods. 
+Detection performance remains strongest in the more structured columns of this dataset, such as those containing language or ISSN entries, where dominant patterns can be identified. 
+Recall remains relatively high in these cases, as the framework often recognizes that a value is erroneous. 
+However, many clean values are also incorrectly flagged as errors, leading to lower precision. 
+This limitation is shared by all baseline methods, with the proposed framework generally outperforming them, except for Raha+Baran.
 
 \subsection{Error correction results}
 The error correction results shown in table \ref{tab:correction_results} further highlight the effectiveness of the proposed framework. 
@@ -257,133 +304,55 @@ Since SAGED is designed only for error detection, it is excluded from this evalu
 \label{tab:correction_results}
 \end{table}
 
-\subsubsection{Dataset-level analysis}
-We discuss the cleaning results of the proposed framework for each dataset, highlighting which errors are effectively corrected, which remain, and the reasons behind these outcomes. 
+Textual error correction is one of the framework's strongest components. 
+It introduces few miscorrections and follows dominant dataset formats using column-level context, as it is designed to minimize stylistic changes and ensure consistency within each column. 
+Other LLM-based baseline methods such as Cocoon and RetClean often introduce unnecessary modifications, such as rewriting full addresses or inconsistently modifying capitalization. 
+In contrast, the proposed framework preserves valid representations while correcting true inconsistencies. 
+Misspellings, inconsistent abbreviations or incorrect semantic entries are almost always standardized or normalized to the correct values. 
+These repairs leverage the LLM's semantic understanding, which is largely absent in non-LLM-based baseline methods.
 \newline\newline
-\textbf{Hospital} - The proposed framework achieves strong performance on the Hospital dataset, both for error detection and correction. 
-It successfully identifies and repairs a wide range of errors across identifiers, categorical fields and numeric columns. 
-This success is largely due to the structured nature of the dataset, the presence of redundant data and the ability of the framework to leverage functional dependencies and column-level context.
-The framework effectively handles common textual errors, including typos and inconsistent whitespace.
-It also reliably identifies missing value placeholders, such as 'empty' and converts them to NaN, while only introducing minor miscorrections. 
-For example, in the address\_1 column, baseline methods such as Cocoon and RetClean introduce unnecessary changes: Cocoon rewrites full addresses (e.g., '1720 university blvd' to '1720 university boulevard') and RetClean inconsistently changes capitalization. 
-In contrast, the proposed framework explicitly follows the dominant dataset format and validates corrections, preventing such false positives.
-Functional dependencies are effectively used to repair errors that cannot be corrected from the cell value alone. 
-For instance, in the ProviderNumber column, the value 100x8 is correctly repaired using dependency and column-level context. 
-Baselines like RetClean operate row-wise, resulting in inconsistent repairs (e.g., multiple formats for the same error in the State column: 'al' to 'Alabama', 'AL' or 'alabama') and preventing them from handling violations effectively. 
-Similarly, Cocoon and Raha+Baran fail to detect and repair many functional dependency violations, likely because they do not identify the relevant column pairs as dependent.
-Numeric columns with formatting inconsistencies, such as score (97\%) and sample (33 patients), are correctly converted to pure numeric types by removing extra non-numeric characters, improving downstream usability. 
-While Cocoon also handles numeric standardization well, other baselines either ignore these inconsistencies or apply partial, inconsistent corrections, leaving columns with non-numeric characters that can cause issues in later analyses.
-Across the dataset, the framework maintains high precision and recall, with few false positives or negatives. 
-Rare errors occur when the LLM sets a detected error to NaN rather than inferring the correct value (e.g., in the PhoneNumber column). 
-Some false negatives remain, especially for highly diverse errors where characters are randomly replaced. 
-Both the framework (with sampled context) and Raha+Baran (with labeled examples) struggle to correct these cases because the errors are too irregular to define a generalized cleaning operation that can fix all instances.
+Formatting inconsistencies in textual columns are corrected using column-level patterns or functional dependencies where possible, and otherwise set to NaN. 
+This ensures a single, consistent representation within each column. 
+Date values are standardized to the dominant format observed in the column, avoiding the many false positives introduced by baselines such as Cocoon, which convert date entries into alternative datetime formats.
 \newline\newline
-\textbf{Beers} - On the Beers dataset, the framework again demonstrates strong performance across numeric, categorical and relational attributes. 
-Most errors are detected and corrected, resulting in high recall with minimal impactful false positives. 
-This is mainly because the dataset contains columns with short, redundant strings or numeric values, both of which the LLM can handle effectively. 
-For these columns, it is easier to generate generalized cleaning operations. 
-In the brewery\_name column, the framework standardizes abbreviations such as 'Co.' to 'Company' when this is the dominant pattern, improving consistency. 
-Only Raha+Baran applies a similar standardization, and only partially.
-The city column is corrected both semantically and syntactically: misspellings are fixed, variants including state abbreviations are standardized to city names only and incorrect neighborhood entries like 'South Austin' are normalized to the correct city, 'Austin'. 
-These corrections leverage contextual and semantic reasoning, which non-LLM methods cannot perform. 
-Remarkably, Cocoon also does not fully apply these corrections. 
-Minor false positives, primarily in cells containing string values, include converting curly apostrophes to straight ones or standardizing 'Saint' to 'St.' but these changes are low-impact.
-Formatting inconsistencies in numeric columns ounces (12.0 oz, 12.0 ounce, 12.0 OZ.) and abv (0.09\%, 0.09, 0.046\%), are correctly converted to pure numeric types. 
-This ensures consistency and usability for downstream analytical tasks. Baselines either perform conversions inconsistently or not at all, leaving noisy values. 
-Outliers in the ibu column are correctly handled by the framework, which distinguishes between true outliers and outliers acting as placeholder values. 
-True outliers are repaired by replacing them with the median value, while placeholders for missing data are converted to NaN. 
-In contrast, all other baselines except SAGED fail to detect the outliers correctly.
-Functional dependency reasoning further improves the framework's performance. 
-For example, missing values in the state column are correctly imputed and errors in brewery\_id are repaired, both using dataset-level constraints derived from functional dependencies. 
-In contrast, Cocoon and SAGED largely miss dependency violations, HoloClean applies constraints to impute missing values but fails to correct violations, and RetClean relies only on row-level context (e.g., using the city column to infer the state), resulting in incomplete repairs.
-A notable example illustrating the effectiveness of using an LLM as a semantic decision-maker involves the dependency brewery\_name $\longrightarrow$ brewery\_id. 
-Multiple rows corresponding to 'Oskar Blues Brewery'  have different IDs and cities because the brewery operates in multiple locations. 
-This triggers a statistical dependency violation, and a naïve repair strategy based on majority voting would incorrectly overwrite these valid differences. 
-In contrast, the LLM uses the row-level context to infer the true logic and preserves the legitimate variations, thereby maintaining semantic correctness rather than enforcing purely statistical consistency.
+The framework performs particularly well on numeric columns. 
+Formatting inconsistencies such as percentages, units or mixed textual representations (e.g., '55 min' and '1 hr. 23 min.') are removed, converting values into pure numeric types. 
+These conversions improve consistency and downstream usability for analytical and machine learning tasks. 
+While Cocoon applies similar transformations in some cases, other baselines either ignore these inconsistencies or apply partial, inconsistent corrections, leaving noisy non-numeric values in the data. 
+The framework is the only method that applies these corrections consistently across all numeric columns. 
 \newline\newline
-\textbf{Movies} - On the Movies dataset, the proposed framework demonstrates strong performance across a wide range of structural, numeric and formatting error types. 
-Overall, the framework achieves high recall and produces a consistent cleaned dataset, with most false positives limited to minor formatting changes rather than semantic errors.
-The framework performs particularly well on pattern, format and duplication errors. 
-In the id column, entries that deviate from the dominant identifier pattern are correctly detected and set to NaN, while all baseline methods fail to identify these violations. 
-Similarly, duplicated values are consistently normalized, both in numeric fields such as year (e.g., '2005 2005') and in multi-value textual fields such as creator (e.g., 'Mark Brown,Mark Brown' to 'Mark Brown'). 
-Placeholder descriptions (e.g., 'Add a plot', 'No description') are also correctly converted to NaN, resulting in cleaner and more consistent columns.
-For the release\_date column, entries that deviate from the dominant format (e.g., 'Nov 11, 2011 USA' instead of '11 November 2011 (USA)') are standardized to a single consistent representation across the dataset. 
-This contrasts with Cocoon, which converts dates into a different datetime format and thereby introduces many false positives, and with Raha+Baran and SAGED, which fail to detect these inconsistencies altogether.
-As in the other datasets, the framework performs well on numeric columns. 
-Format inconsistencies in the duration column, such as '55 min' and '1 hr. 23 min.', are correctly converted into a single numeric value. 
-This highlights the advantage of LLM-based code generation, as it can handle mixed textual patterns that rule-based approaches struggle with. 
-In contrast, Raha+Baran and Cocoon fail on mixed formats, for example converting '106 min.' to 106 while incorrectly converting '1 hr. 39 min.' to 1. 
-Other numeric formatting issues are also handled effectively: values such as '6.7/10' in ratingValue are converted to pure numerics, and string-typed values in ratingCount (e.g., '379,998') are correctly parsed into integers. 
-All entries are converted to either numeric values or NaN, resulting in columns that are directly usable for downstream machine learning tasks. 
-While Cocoon applies similar conversions, Raha+Baran does so inconsistently, leaving a subset of values uncleaned. 
-Outliers are also detected by the framework, whereas the baseline methods largely fail to identify them.
-Most false positives in this dataset are minor and primarily related to formatting. 
-The majority occur in the director column, where the framework inserts spaces after commas in name lists (e.g.,'Pierre Coffin,Chris Renau' to 'Pierre Coffin, Chris Renau'). 
-While these changes are counted as false positives, they improve readability and could be corrected by a stricter validator. 
-Cocoon applies similar formatting changes but does so across all multi-value columns. 
-This demonstrates that LLMs may apply learned formatting habits even when explicitly instructed not to, as discussed earlier in the context of the importance of validation mechanisms.
+Outliers are handled effectively by the framework. 
+It distinguishes between true outliers, placeholder values and legitimate extreme values. 
+True outliers are usually repaired by replacing them with the median, while placeholder values indicating missing data are converted to NaN. 
+In some cases, when uncertainty is high, the framework conservatively sets values to NaN rather than applying an incorrect repair.
 \newline\newline
-\textbf{Rayyan} - The Rayyan dataset poses significant challenges for automated data cleaning, resulting in a strong decline in performance for both the proposed framework and the baseline methods. 
-The highly heterogeneous column formats, ambiguous fields and limited redundancy make it difficult for the LLM to infer consistent cleaning rules. 
-Despite these challenges, the proposed framework achieves average cleaning performance and matches or exceeds the overall performance of the baseline methods.
-For this analysis, we focus on column-level results, as they provide more meaningful insights here, while the other datasets show near-perfect scores across all columns. 
-As shown in table \ref{tab:rayyan_metrics}, the framework performs best on more structured columns where format and pattern standardization can be applied. 
-In the article\_language column, multiple representations (e.g., 'eng', 'ENG', 'English') are successfully normalized to a single consistent format, yielding high performance. 
-In contrast, Raha+Baran overgeneralizes and incorrectly converts all entries to 'eng'. 
-Similarly, in the journal\_issn column, the framework identifies the dominant ISSN pattern and attempts to repair deviations accordingly. 
-When a valid repair cannot be inferred, values are correctly set to NaN, ensuring reliability for downstream use. 
-This leads to strong performance, whereas Cocoon fails to detect most pattern violations and Raha+Baran overgeneralizes by repairing all violations to a single value. 
-In the article\_pagination column, detection precision is high, but correction performance is lower. 
-The column contains many distinct and irregular formats, making it difficult for the LLM to infer a dominant pattern. 
-Detected errors are frequently replaced with NaN instead of being properly corrected, because the LLM cannot determine the correct value.
-As a result, some errors remain uncorrected and others are only partially fixed. 
-Similar to the other datasets, the framework effectively handles DMVs. 
-In author\_list, placeholder values such as {NULL} are converted to NaN, while in article\_jvolume and article\_jissue, placeholder values such as -1 are correctly removed. 
-Extreme outliers in these columns are detected and cleaned, although smaller outliers are missed. 
-Notably, none of the baseline methods detect these outliers. 
-Performance is weakest for free-text columns such as article\_title, journal\_title and author\_list, particularly in error correction. 
-These columns contain a wide range of complex textual issues, including HTML entities, corrupt symbols and inconsistent formatting. 
-While the framework successfully decodes some HTML-encoded strings (e.g., 'Does It \&quot;Work\&quot;?' to 'Does It "Work"?'), it struggles with corrupt symbols and cannot identify a consistent correction pattern. 
-This limitation reflects the difficulty of reliably cleaning unstructured text, with baselines showing similar poor performance.
-
-\begin{table}[h]
-\centering
-\resizebox{0.8\textwidth}{!}{
-  \begin{tabular}{l|ccc|ccc}
-  \toprule[1.5pt]
-  \textbf{Column} 
-  & \multicolumn{3}{c|}{\textbf{Detection}} 
-  & \multicolumn{3}{c}{\textbf{Correction}} \\
-  \midrule[1pt]
-  & \textbf{P} & \textbf{R} & \textbf{F1}
-  & \textbf{P} & \textbf{R} & \textbf{F1} \\
-  \midrule[1pt]
-  article\_title & 0.95 & 0.94 & 0.95 & 0.75 & 0.74 & 0.75 \\
-  article\_language & 1.00 & 1.00 & 1.00 & 0.94 & 0.94 & 0.94 \\
-  journal\_title & 0.61 & 0.53 & 0.54 & 0.37 & 0.33 & 0.32 \\
-  journal\_issn & 1.00 & 1.00 & 1.00 & 0.99 & 0.99 & 0.99 \\
-  article\_jvolumn & 0.81 & 0.72 & 0.71 & 0.65 & 0.58 & 0.57 \\
-  article\_jissue & 1.00 & 0.84 & 0.91 & 1.00 & 0.84 & 0.91 \\
-  article\_pagination & 0.99 & 0.80 & 0.89 & 0.84 & 0.70 & 0.76 \\
-  author\_list & 0.45 & 0.49 & 0.47 & 0.43 & 0.46 & 0.44 \\
-  \bottomrule[1.5pt]
-  \end{tabular}
-}
-\caption{Column-level metrics for Rayyan dataset}
-\label{tab:rayyan_metrics}
-\end{table}
+Functional dependency reasoning further enhances correction quality. Errors that cannot be corrected from cell-level context alone are repaired using dependency information. 
+Invalid identifier values (e.g., '100x8') are corrected based on redundancy in related columns, and missing values are imputed when dependencies allow reliable inference. 
+A notable example illustrating the effectiveness of using an LLM as a semantic decision-maker involves the dependency between columns brewery\_name and brewery\_id. 
+Multiple rows corresponding to 'Oskar Blues Brewery' have different IDs and cities because the brewery operates in multiple locations. 
+This triggers a statistical dependency violation, and a naive repair strategy based on majority voting would incorrectly overwrite these valid differences. 
+In contrast, the framework uses the row-level context to infer the true logic and preserves the legitimate variations, thereby maintaining semantic correctness rather than enforcing purely statistical consistency.
+\newline\newline
+Rare errors occur when the LLM replaces a detected error with NaN instead of inferring the correct value, usually due to insufficient context. 
+Most false positives are minor formatting changes, such as inserting spaces after commas or converting curly apostrophes to straight ones. 
+Although these changes are counted as errors in evaluation, they improve readability and consistency and could be avoided by stricter validation. 
+This demonstrates that LLMs may apply learned formatting habits even when explicitly instructed not to, reinforcing the importance of validation mechanisms within the framework.
+\newline\newline
+Error correction performance is weakest in unstructured free-text columns, such as those in the Rayyan dataset. 
+Complex columns containing HTML entities, corrupted symbols or inconsistent formatting make it difficult for the framework to infer reliable repair strategies. 
+In these cases, detected errors are often replaced with NaN rather than corrected, as no reliable correction can be inferred. 
+This limitation reflects the inherent difficulty of cleaning unstructured text and is shared by all baseline methods.
 
 \subsection{Runtime and Token Usage}
 The runtime results in table \ref{tab:runtimes} indicate that the proposed framework outperforms Raha+Baran and RetClean and achieves a runtime comparable to Cocoon. 
 HoloClean is faster than the framework, but its cleaning performance is substantially lower. 
 While Raha+Baran achieves similar cleaning quality to the proposed framework, it requires significantly more time, highlighting that the proposed framework is the more efficient choice for practical data cleaning.
-\newline
 Interestingly, the Movies dataset, which is the largest in terms of rows, has the shortest runtime. 
 This is because the framework samples the dataset, making runtime largely independent of the number of rows. 
 Instead, runtime scales with the number of columns and the number of detected functional dependencies. 
 For example, the Hospital dataset has many columns and FDs, resulting in the longest runtime.
 The Rayyan dataset also exhibits a relatively high runtime. 
-As described earlier, difficulties in inferring consistent cleaning rules likely cause many operations to be rejected by the verifier, requiring multiple retries and increasing overall runtime.
+As described earlier, difficulties in inferring consistent cleaning rules likely cause many operations to be rejected by the validator, requiring multiple retries and increasing overall runtime.
 
 \begin{table}[h]
 \centering

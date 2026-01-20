@@ -49,7 +49,7 @@ Since these additional characters usually add little analytical value, the frame
 \newline\newline
 String-valued columns are further divided into three categories. 
 Named entities include well-known entities such as countries, organizations, languages, names, or brands. 
-These are identified using the spaCy named entity recognition model \texttt{en\_core\_web\_sm}.
+These are identified using the spaCy \cite{SPACY} named entity recognition model \texttt{en\_core\_web\_sm}.
 Discrete strings represent structured but non-semantic values such as email addresses, zip codes, or identifiers. 
 Natural language text consists of free-text fields such as reviews or descriptions. 
 LLMs typically perform well on named entities and structured patterns, as such data is likely well represented in their training data. 
@@ -84,7 +84,9 @@ Outlier detection is applied to numeric columns to identify values that may devi
 However, not all statistical outliers represent errors: some may be valid extreme values, while others may be placeholders for missing data. 
 To make informed cleaning decisions, the framework leverages LLMs to semantically evaluate each outlier in context before any modification.
 \newline\newline
-The first step uses a Modified Z-score \cite{MZSCORE}, a robust measure that reduces sensitivity to extreme outliers commonly found in dirty datasets.
+The first step uses a Modified Z-score \cite{MZSCORE}, a robust measure less sensitive to extreme outliers than the standard Z-score, and therefore preferred for dirty datasets. 
+Since the focus of this work is not on outlier detection itself but on evaluating how LLMs can interact with and handle outliers, we limit our approach to this relatively simple column-level method. 
+Thanks to the framework's modular design, replacing it with more advanced detection techniques is straightforward. 
 For a column  \( X = \{ X_1, X_2, \dots, X_n \},\) the Modified Z-score for each value \(X_i\) is computed as:
 \[
 M_i = \frac{0.6745 \, (X_i - \text{median}(X))}{\text{MAD}}
@@ -99,9 +101,9 @@ Instead of automatically correcting or removing detected outliers, the framework
 For each unique outlier, typically 3-5 full rows containing the outlier are sampled to provide context. 
 This allows the LLM to leverage semantic reasoning and classify each outlier as one of the following:
 \begin{enumerate}
-    \item \textbf{A real outlier} - convert to the column median.
-    \item \textbf{A placeholder for a missing value} (e.g., '999999', '12345678') - convert to NaN.
-    \item \textbf{A valid value} - leave unchanged.
+    \item \textbf{A real outlier:} Convert to the column median.
+    \item \textbf{A placeholder for a missing value} (e.g., '999999', '12345678'): Convert to NaN.
+    \item \textbf{A valid value:} Leave unchanged.
 \end{enumerate}
 This hybrid approach combines the precision of statistical outlier detection with the semantic intelligence of the LLM, ensuring that only genuine errors are corrected, while valid extreme values and placeholders are treated appropriately.
 
@@ -119,8 +121,9 @@ This includes the violating tuples, which correspond to the complete rows involv
 Providing full row-level context allows the LLM to act as a semantic reasoner and assess each case in detail to determine whether a violation represents a genuine data error or a valid exception.
 This design reflects a central principle of the framework, which is that a truly intelligent data cleaning system combines deterministic, algorithmic modules for strict constraints with LLMs as semantic decision-makers, where the profiler reports potential issues objectively and the LLM interprets them in context.
 For simplicity, the current implementation enforces 1:1 FDs (single LHS $\longrightarrow$ single RHS), but can be easily modified to handle N:1 mappings. 
-We use approximate functional dependencies because exact dependencies rarely hold in dirty datasets.
-The score of a candidate FD is computed as:
+We use approximate functional dependencies because exact dependencies rarely hold in dirty datasets. 
+Our experiments showed that a custom implementation was more effective at detecting relevant FDs than existing tools, as few available implementations met our needs. 
+Similar to the outlier detection approach, the framework's modular design allows effortless integration of alternative FD detection methods.The score of a candidate FD is computed as:
 
 \[
 \text{FD score} = \frac{\sum_{l \in LHS} \text{count of majority RHS values for } l}{\text{total number of rows}}
@@ -138,7 +141,7 @@ Although the current implementation addresses the most common data quality issue
 To accommodate this, the framework is designed with scalability and extensibility in mind.
 The core mechanism for extensibility is an enriched context container, which stores profiling results and metadata for each column. 
 Instead of hard-coding cleaning rules, the framework accumulates contextual information such as semantic types, samples, detected outliers and functional dependencies in this container. 
-Standard profiling components are included by default, but additional user-defined logic (e.g., missing value analysis, domain-specific constraints or correlation-based error detection) can easily be added.
+Standard profiling components are included by default, but additional user-defined logic (e.g., missing value analysis, domain-specific constraints or correlation-based error detection) can easily be added, for example, to support domain-specific datasets.
 When an LLM agent processes a column, it receives the full enriched context rather than a static prompt. 
 On top of a base prompt template, context blocks are dynamically appended based on the available information in the context container. 
 This approach avoids using large, complex prompt templates and lets the framework scale smoothly as new profiling and cleaning components are added.
@@ -195,7 +198,7 @@ Once a task-specific prompt is generated for a cleaning operation, it processed 
 \begin{enumerate}
     \item \textbf{Recommender Agent:} Analyzes the column profile and contextual explanations, generating structured instructions based on observed errors, patterns and examples. 
     \item \textbf{Coding Agent:} Translates instructions into executable Python code to perform the cleaning operation.
-    \item \textbf{Validation Agent} Compares the cleaned output against the original data to verify correctness and provides feedback if inconsistencies are found.
+    \item \textbf{Validation Agent} Compares the cleaned output against the original data to validate correctness and provides feedback if inconsistencies are found.
 \end{enumerate}
 This modular design ensures transparency and control over the cleaning process. 
 A single end-to-end LLM would act as a black box, making it difficult to diagnose errors or improve performance. 
@@ -232,13 +235,13 @@ This feedback-driven execution loop significantly increases the reliability of a
 
 \subsection{Validation Agent}
 The final stage is handled by the Validation Agent, which serves as a quality control mechanism. 
-Even when code executes successfully, LLMs may introduce undesired transformations based on biases learned during training. 
+Even when code executes successfully, LLMs may introduce undesired transformations or hallucinations based on biases learned during training. 
 For instance, because much of the  publicly available data originates from US sources, LLMs may standardize dates to US formats, even when the dataset follows a different convention. 
 While these changes may seem minor, they are undesirable in a data cleaning framework that aims to be deterministic and reliable. 
 \newline\newline
 The Validation Agent compares the cleaned output against the original data and the intended cleaning rules. 
 For each column type, a tailored validation strategy is constructed, with prompts specifying the types of modifications that are allowed or disallowed. 
-The agent verifies that transformations are consistent with the dominant patterns in the dataset and identifies any unintended modifications. 
+The agent validates that transformations are consistent with the dominant patterns in the dataset and identifies any unintended modifications. 
 When issues are detected, feedback is directed either to the Recommender Agent, if errors were missed or cleaned incorrectly, or to the Coding Agent, if code-level errors were introduced, such as all fields being set to NaN by mistake or incorrect string encoding applied. 
 The corresponding agent then updates its output based on this feedback. 
 This feedback loop substantially reduces false positives, particularly in string and datetime columns, and improves overall precision.

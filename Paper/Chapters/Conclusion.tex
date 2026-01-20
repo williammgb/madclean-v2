@@ -2,7 +2,7 @@
 In this thesis, we presented a tabular data cleaning framework that leverages an iterative, multi-agent LLM architecture to produce more effective, reliable and consistent cleaning results. 
 By combining statistical profiling, code generation, validation and semantic reasoning, the framework addresses a wide range of error types while avoiding common limitations of single-pass LLM approaches.
 
-\section{Discussion / Summary}
+\section{Summary}
 Based on the evaluation, we conclude that the proposed framework matches or outperforms the baseline methods in both error detection and correction across the benchmark datasets. 
 It achieves consistently high precision and recall, and demonstrates better performance compared to the state-of-the-art Raha+Baran system, particularly when runtime is taken into account. 
 This indicates that the framework not only improves cleaning quality but also offers a more efficient end-to-end solution.
@@ -53,6 +53,7 @@ Sub-Research Questions
     Data type-specific prompts with clear instructions and examples improve both accuracy and consistency, particularly for heterogeneous datasets. 
     By reducing ambiguity and task complexity, these prompts lead to more deterministic LLM behavior and more efficient cleaning.
     \item \textbf{How well does the proposed framework generalize across different types of tabular datasets?}
+    \newline
     The framework generalizes well to structured datasets with redundancy and consistent column formats, where it achieves high and stable performance. 
     In contrast, performance is lower and more variable for datasets with heterogeneous or highly noisy columns, reflecting the inherent difficulty of inferring consistent cleaning rules in such settings. 
     Nevertheless, the framework remains competitive with or superior to baseline methods across all evaluated datasets.
@@ -70,8 +71,8 @@ Although the framework employs subprocess isolation, temporary execution environ
 As a result, there remains a theoretical risk that generated code could execute malicious commands, such as accessing sensitive files or system resources. 
 Consequently, executing LLM-generated code should be restricted to trusted models and environments. 
 \newline\newline
-Finally, the framework relies on sampling datasets to reduce runtime, particularly for large datasets. 
-While this significantly improves efficiency, it may result in some errors being missed, reflecting a trade-off between runtime and completeness of cleaning.
+Finally, the framework relies on sampling datasets to reduce runtime and computational costs, particularly for large datasets. 
+While this significantly improves efficiency, it may result in errors being ignored, reflecting a trade-off between runtime and completeness of cleaning.
 
 \section{Future Work}
 Future extensions of the framework could focus on adaptive agent coordination and iterative prompt optimization. 

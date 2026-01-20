@@ -91,7 +91,7 @@ Statistical properties such as distributions, frequency patterns, correlations a
 Explicitly providing this information reduces the reasoning burden on the LLM and supports more informed and accurate cleaning decisions. 
 Moreover, statistical profiling is computationally efficient and scalable, making it well suited for large datasets.
 
-\subsection{Assumptions}
+\section{Assumptions}
 The framework assumes that tabular datasets exhibit a certain degree of structure and redundancy at the column level, which can be leveraged to infer the intended data format. 
 To reduce computational costs, the framework relies on sampling rather than processing entire datasets, assuming that sampled values are representative of the overall column content. 
 As a result, rare or highly irregular errors may remain undetected.

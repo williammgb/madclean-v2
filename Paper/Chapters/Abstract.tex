@@ -1,9 +1,13 @@
-\chapter*{Abstract (update)}
+\chapter*{Abstract}
  
-High-quality data is essential for effective decision-making, data analytics and training AI models. However, real-world datasets often contain errors, inconsistencies and missing values that can negatively impact their quality. This project aims to create an automated data cleaning pipeline that combines the strength of ontologies, knowledge graphs and Large Language Models (LLMs). The goal is to eliminate manual prompt engineering by using a structured system that dynamically generates prompts for data cleaning tasks based on a dataset's profile.
-The core of the system is a generalized ontology-driven knowledge graph, which stores information about data types (e.g., integers, categories, dates), common data quality issues (such as missing values or incorrect formats), validation rules (like regex checks) and correction strategies. This ontology acts as the system’s decision-making guide.
-When a dataset is uploaded, a data profiler analyzes each column's characteristics and identifies inter-column relationships. This information is used to query a knowledge graph, which contains structured prompt templates enriched with cleaning strategies, examples, and task-specific instructions. These templates are then instantiated with dataset-specific data and passed to an LLM to generate cleaned data. This approach makes data cleaning automatic, adaptive to different datasets and scalable. 
-% Resulting in a flexible framework that enables ontology-aware data preprocessing across domains.
-
-
+High-quality data is essential for effective decision-making, data analytics and the training of machine learning models. 
+However, real-world tabular datasets frequently contain errors, inconsistencies and missing values that degrade data quality and hinder downstream tasks.
+Although numerous data cleaning methods have been proposed, many struggle to detect and correct semantic errors that require contextual understanding. 
+Recent approaches leveraging Large Language Models (LLMs) address this limitation but often lack robustness guarantees, leading to unreliable or inconsistent transformations.
+This thesis proposed an automated tabular data cleaning framework that integrates statistical data profiling with the semantic reasoning and code generation capabilities of LLMs.
+The framework first analyzes datasets using statistical profiling techniques to identify column characteristics, error patterns and inter-column relationships. 
+Based on this analysis, dataset-specific cleaning instructions and examples are derived to guide the LLM in selecting appropriate cleaning operations. 
+Rather than performing isolated cell-level repairs, the framework produces executable cleaning logic that is applied consistently at the column level, improving scalability and output consistency.
+To ensure reliability and generalizability across diverse datasets, the framework employs a multi-agent LLM architecture with validation mechanisms that verify the correctness and consistency of generated transformations.
+By combining deterministic statistical analysis with LLM-based semantic reasoning and code generation, the proposed approach enables automated, adaptive and scalable data cleaning, producing high-quality tabular datasets that are well suited for downstream analytical and machine learning tasks.
 

@@ -1,0 +1,252 @@
+{
+    "id": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 2410.0,
+            "total_errors": 0.0,
+            "total_changes": 0.0
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "beer_name": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 11.75,
+            "false_negatives": 0.0,
+            "true_negatives": 2398.25,
+            "total_errors": 0.0,
+            "total_changes": 11.75
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 11.75
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "style": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 2410.0,
+            "total_errors": 0.0,
+            "total_changes": 0.0
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "ounces": {
+        "detection_counts": {
+            "true_positives": 2410.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 0.0,
+            "total_errors": 2410.0,
+            "total_changes": 2410.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 2410.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "abv": {
+        "detection_counts": {
+            "true_positives": 693.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 1717.0,
+            "total_errors": 693.0,
+            "total_changes": 693.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 693.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "ibu": {
+        "detection_counts": {
+            "true_positives": 5.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 2405.0,
+            "total_errors": 5.0,
+            "total_changes": 5.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 5.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "brewery_id": {
+        "detection_counts": {
+            "true_positives": 1.5,
+            "false_positives": 1.25,
+            "false_negatives": 0.5,
+            "true_negatives": 2406.75,
+            "total_errors": 2.0,
+            "total_changes": 2.75
+        },
+        "detection_metrics": {
+            "precision": 0.6,
+            "recall": 0.75,
+            "f1_score": 0.6428571428571429
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 1.5,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 1.25
+        },
+        "correction_metrics": {
+            "precision": 0.6,
+            "recall": 0.75,
+            "f1_score": 0.6428571428571429
+        }
+    },
+    "brewery_name": {
+        "detection_counts": {
+            "true_positives": 11.5,
+            "false_positives": 4.5,
+            "false_negatives": 11.5,
+            "true_negatives": 2382.5,
+            "total_errors": 23.0,
+            "total_changes": 16.0
+        },
+        "detection_metrics": {
+            "precision": 0.3942857142857143,
+            "recall": 0.5,
+            "f1_score": 0.4378591954022989
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 11.5,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 4.5
+        },
+        "correction_metrics": {
+            "precision": 0.3942857142857143,
+            "recall": 0.5,
+            "f1_score": 0.4378591954022989
+        }
+    },
+    "city": {
+        "detection_counts": {
+            "true_positives": 137.5,
+            "false_positives": 24.25,
+            "false_negatives": 3.5,
+            "true_negatives": 2244.75,
+            "total_errors": 141.0,
+            "total_changes": 161.75
+        },
+        "detection_metrics": {
+            "precision": 0.8502654798157601,
+            "recall": 0.975177304964539,
+            "f1_score": 0.9083383969196327
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 136.0,
+            "incorrectly_repaired_cells": 1.5,
+            "repaired_clean_cells": 24.25
+        },
+        "correction_metrics": {
+            "precision": 0.8409641051591089,
+            "recall": 0.9645390070921986,
+            "f1_score": 0.8984143983400277
+        }
+    },
+    "state": {
+        "detection_counts": {
+            "true_positives": 121.0,
+            "false_positives": 0.0,
+            "false_negatives": 6.0,
+            "true_negatives": 2283.0,
+            "total_errors": 127.0,
+            "total_changes": 121.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 0.952755905511811,
+            "f1_score": 0.9758064516129031
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 121.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 0.952755905511811,
+            "f1_score": 0.9758064516129031
+        }
+    }
+}

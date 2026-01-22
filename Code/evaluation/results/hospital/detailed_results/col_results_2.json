@@ -1,0 +1,452 @@
+{
+    "ProviderNumber": {
+        "detection_counts": {
+            "true_positives": 28,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 972,
+            "total_errors": 28,
+            "total_changes": 28
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 28,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "HospitalName": {
+        "detection_counts": {
+            "true_positives": 24,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 976,
+            "total_errors": 24,
+            "total_changes": 24
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 24,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "Address1": {
+        "detection_counts": {
+            "true_positives": 31,
+            "false_positives": 1,
+            "false_negatives": 0,
+            "true_negatives": 968,
+            "total_errors": 31,
+            "total_changes": 32
+        },
+        "detection_metrics": {
+            "precision": 0.96875,
+            "recall": 1.0,
+            "f1_score": 0.9841269841269841
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 28,
+            "incorrectly_repaired_cells": 3,
+            "repaired_clean_cells": 1
+        },
+        "correction_metrics": {
+            "precision": 0.875,
+            "recall": 0.9032258064516129,
+            "f1_score": 0.8888888888888888
+        }
+    },
+    "Address2": {
+        "detection_counts": {
+            "true_positives": 1000,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 0,
+            "total_errors": 1000,
+            "total_changes": 1000
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 1000,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "City": {
+        "detection_counts": {
+            "true_positives": 33,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 967,
+            "total_errors": 33,
+            "total_changes": 33
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 33,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "State": {
+        "detection_counts": {
+            "true_positives": 26,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 974,
+            "total_errors": 26,
+            "total_changes": 26
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 16,
+            "incorrectly_repaired_cells": 10,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 0.6153846153846154,
+            "recall": 0.6153846153846154,
+            "f1_score": 0.6153846153846154
+        }
+    },
+    "ZipCode": {
+        "detection_counts": {
+            "true_positives": 30,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 970,
+            "total_errors": 30,
+            "total_changes": 30
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 30,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "CountyName": {
+        "detection_counts": {
+            "true_positives": 39,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 961,
+            "total_errors": 39,
+            "total_changes": 39
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 39,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "PhoneNumber": {
+        "detection_counts": {
+            "true_positives": 34,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 966,
+            "total_errors": 34,
+            "total_changes": 34
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0,
+            "incorrectly_repaired_cells": 34,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "HospitalType": {
+        "detection_counts": {
+            "true_positives": 32,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 968,
+            "total_errors": 32,
+            "total_changes": 32
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 32,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "HospitalOwner": {
+        "detection_counts": {
+            "true_positives": 27,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 973,
+            "total_errors": 27,
+            "total_changes": 27
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 27,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "EmergencyService": {
+        "detection_counts": {
+            "true_positives": 27,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 973,
+            "total_errors": 27,
+            "total_changes": 27
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 27,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "Condition": {
+        "detection_counts": {
+            "true_positives": 41,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 959,
+            "total_errors": 41,
+            "total_changes": 41
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 41,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "MeasureCode": {
+        "detection_counts": {
+            "true_positives": 29,
+            "false_positives": 1,
+            "false_negatives": 0,
+            "true_negatives": 970,
+            "total_errors": 29,
+            "total_changes": 30
+        },
+        "detection_metrics": {
+            "precision": 0.9666666666666667,
+            "recall": 1.0,
+            "f1_score": 0.983050847457627
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 29,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 1
+        },
+        "correction_metrics": {
+            "precision": 0.9666666666666667,
+            "recall": 1.0,
+            "f1_score": 0.983050847457627
+        }
+    },
+    "MeasureName": {
+        "detection_counts": {
+            "true_positives": 34,
+            "false_positives": 1,
+            "false_negatives": 80,
+            "true_negatives": 885,
+            "total_errors": 114,
+            "total_changes": 35
+        },
+        "detection_metrics": {
+            "precision": 0.9714285714285714,
+            "recall": 0.2982456140350877,
+            "f1_score": 0.4563758389261745
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 34,
+            "incorrectly_repaired_cells": 0,
+            "repaired_clean_cells": 1
+        },
+        "correction_metrics": {
+            "precision": 0.9714285714285714,
+            "recall": 0.2982456140350877,
+            "f1_score": 0.4563758389261745
+        }
+    },
+    "Score": {
+        "detection_counts": {
+            "true_positives": 1000,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 0,
+            "total_errors": 1000,
+            "total_changes": 1000
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 977,
+            "incorrectly_repaired_cells": 23,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 0.977,
+            "recall": 0.977,
+            "f1_score": 0.977
+        }
+    },
+    "Sample": {
+        "detection_counts": {
+            "true_positives": 1000,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 0,
+            "total_errors": 1000,
+            "total_changes": 1000
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 997,
+            "incorrectly_repaired_cells": 3,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 0.997,
+            "recall": 0.997,
+            "f1_score": 0.997
+        }
+    },
+    "Stateavg": {
+        "detection_counts": {
+            "true_positives": 27,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "true_negatives": 973,
+            "total_errors": 27,
+            "total_changes": 27
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 26,
+            "incorrectly_repaired_cells": 1,
+            "repaired_clean_cells": 0
+        },
+        "correction_metrics": {
+            "precision": 0.9629629629629629,
+            "recall": 0.9629629629629629,
+            "f1_score": 0.9629629629629629
+        }
+    }
+}

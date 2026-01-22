@@ -1,0 +1,2 @@
+# Verbosity flag
+VERBOSE = True

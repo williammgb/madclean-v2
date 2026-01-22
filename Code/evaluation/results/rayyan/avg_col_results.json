@@ -1,0 +1,277 @@
+{
+    "id": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 1000.0,
+            "total_errors": 0.0,
+            "total_changes": 0.0
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "article_title": {
+        "detection_counts": {
+            "true_positives": 46.25,
+            "false_positives": 2.5,
+            "false_negatives": 2.75,
+            "true_negatives": 948.5,
+            "total_errors": 49.0,
+            "total_changes": 48.75
+        },
+        "detection_metrics": {
+            "precision": 0.9489160839160838,
+            "recall": 0.9438775510204082,
+            "f1_score": 0.9455276172778568
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 36.5,
+            "incorrectly_repaired_cells": 9.75,
+            "repaired_clean_cells": 2.5
+        },
+        "correction_metrics": {
+            "precision": 0.7514596118167547,
+            "recall": 0.7448979591836735,
+            "f1_score": 0.7473999868716299
+        }
+    },
+    "article_language": {
+        "detection_counts": {
+            "true_positives": 138.5,
+            "false_positives": 0.0,
+            "false_negatives": 0.5,
+            "true_negatives": 861.0,
+            "total_errors": 139.0,
+            "total_changes": 138.5
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 0.9964028776978417,
+            "f1_score": 0.9981884057971014
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 130.5,
+            "incorrectly_repaired_cells": 8.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.9422359922281153,
+            "recall": 0.9388489208633093,
+            "f1_score": 0.9405301845480137
+        }
+    },
+    "journal_title": {
+        "detection_counts": {
+            "true_positives": 5.25,
+            "false_positives": 15.0,
+            "false_negatives": 4.75,
+            "true_negatives": 975.0,
+            "total_errors": 10.0,
+            "total_changes": 20.25
+        },
+        "detection_metrics": {
+            "precision": 0.6084745762711864,
+            "recall": 0.525,
+            "f1_score": 0.5402237477752352
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 3.25,
+            "incorrectly_repaired_cells": 2.0,
+            "repaired_clean_cells": 15.0
+        },
+        "correction_metrics": {
+            "precision": 0.3688912429378531,
+            "recall": 0.325,
+            "f1_score": 0.32238749046529364
+        }
+    },
+    "journal_abbreviation": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 36.5,
+            "false_negatives": 0.0,
+            "true_negatives": 963.5,
+            "total_errors": 0.0,
+            "total_changes": 36.5
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 36.5
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "journal_issn": {
+        "detection_counts": {
+            "true_positives": 98.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 902.0,
+            "total_errors": 98.0,
+            "total_changes": 98.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 97.5,
+            "incorrectly_repaired_cells": 0.5,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.9948979591836735,
+            "recall": 0.9948979591836735,
+            "f1_score": 0.9948979591836735
+        }
+    },
+    "article_jvolumn": {
+        "detection_counts": {
+            "true_positives": 27.5,
+            "false_positives": 24.0,
+            "false_negatives": 10.5,
+            "true_negatives": 938.0,
+            "total_errors": 38.0,
+            "total_changes": 51.5
+        },
+        "detection_metrics": {
+            "precision": 0.8064516129032258,
+            "recall": 0.7236842105263158,
+            "f1_score": 0.7139255805922473
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 22.0,
+            "incorrectly_repaired_cells": 5.5,
+            "repaired_clean_cells": 24.0
+        },
+        "correction_metrics": {
+            "precision": 0.6481908175456562,
+            "recall": 0.5789473684210527,
+            "f1_score": 0.5730294396961063
+        }
+    },
+    "article_jissue": {
+        "detection_counts": {
+            "true_positives": 53.0,
+            "false_positives": 0.0,
+            "false_negatives": 10.0,
+            "true_negatives": 937.0,
+            "total_errors": 63.0,
+            "total_changes": 53.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 0.8412698412698413,
+            "f1_score": 0.9137931034482758
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 53.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 0.8412698412698413,
+            "f1_score": 0.9137931034482758
+        }
+    },
+    "article_jcreated_at": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 456.5,
+            "false_negatives": 0.0,
+            "true_negatives": 543.5,
+            "total_errors": 0.0,
+            "total_changes": 456.5
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 456.5
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "article_pagination": {
+        "detection_counts": {
+            "true_positives": 82.0,
+            "false_positives": 0.5,
+            "false_negatives": 20.0,
+            "true_negatives": 897.5,
+            "total_errors": 102.0,
+            "total_changes": 82.5
+        },
+        "detection_metrics": {
+            "precision": 0.9935876623376624,
+            "recall": 0.803921568627451,
+            "f1_score": 0.8869602212013473
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 71.0,
+            "incorrectly_repaired_cells": 11.0,
+            "repaired_clean_cells": 0.5
+        },
+        "correction_metrics": {
+            "precision": 0.837142670547843,
+            "recall": 0.6960784313725491,
+            "f1_score": 0.7593147185558446
+        }
+    },
+    "author_list": {
+        "detection_counts": {
+            "true_positives": 72.5,
+            "false_positives": 8.75,
+            "false_negatives": 74.5,
+            "true_negatives": 844.25,
+            "total_errors": 147.0,
+            "total_changes": 81.25
+        },
+        "detection_metrics": {
+            "precision": 0.4519230769230769,
+            "recall": 0.4931972789115646,
+            "f1_score": 0.46995597945707995
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 68.25,
+            "incorrectly_repaired_cells": 4.25,
+            "repaired_clean_cells": 8.75
+        },
+        "correction_metrics": {
+            "precision": 0.4270729270729271,
+            "recall": 0.4642857142857143,
+            "f1_score": 0.443302588827167
+        }
+    }
+}

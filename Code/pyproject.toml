@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "macs"
+version = "0.1.0"
+description = "MACS: Multi-Agent data Cleaning System"
+requires-python = ">=3.9"
+dependencies = [
+  "python-dotenv>=1.0.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["macs*"]
+
+[project.scripts]
+macs = "macs.main:cli"

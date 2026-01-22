@@ -1,0 +1,662 @@
+{
+    "my_framework": {
+        "hospital": [
+            {
+                "detection_counts": {
+                    "true_positives": 3516.5,
+                    "false_positives": 65.75,
+                    "false_negatives": 25.5,
+                    "true_negatives": 14392.25,
+                    "total_errors": 3542.0,
+                    "total_changes": 3582.25
+                },
+                "detection_metrics": {
+                    "precision": 0.9826237171072834,
+                    "recall": 0.9928006775832863,
+                    "f1_score": 0.9874059807119638
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 3435.0,
+                    "incorrectly_repaired_cells": 81.5,
+                    "repaired_clean_cells": 65.75
+                },
+                "correction_metrics": {
+                    "precision": 0.9598784581147817,
+                    "recall": 0.9697910784867307,
+                    "f1_score": 0.9645359186717202
+                },
+                "token_usage": {
+                    "input_tokens": 366907,
+                    "output_tokens": 231973,
+                    "total_tokens": 598880
+                },
+                "runtime_seconds": 632.0
+            }
+        ],
+        "beers": [
+            {
+                "detection_counts": {
+                    "true_positives": 3379.5,
+                    "false_positives": 41.75,
+                    "false_negatives": 21.5,
+                    "true_negatives": 20657.25,
+                    "total_errors": 3401.0,
+                    "total_changes": 3421.25
+                },
+                "detection_metrics": {
+                    "precision": 0.987810494576569,
+                    "recall": 0.9936783299029698,
+                    "f1_score": 0.9907272544137296
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 3378.0,
+                    "incorrectly_repaired_cells": 1.5,
+                    "repaired_clean_cells": 41.75
+                },
+                "correction_metrics": {
+                    "precision": 0.9873721647132804,
+                    "recall": 0.9932372831520142,
+                    "f1_score": 0.990287573080201
+                },
+                "token_usage": {
+                    "input_tokens": 127876,
+                    "output_tokens": 69876,
+                    "total_tokens": 197752
+                },
+                "runtime_seconds": 303.0
+            }
+        ],
+        "movies": [
+            {
+                "detection_counts": {
+                    "true_positives": 13625.75,
+                    "false_positives": 390.0,
+                    "false_negatives": 23.25,
+                    "true_negatives": 111591.0,
+                    "total_errors": 13649.0,
+                    "total_changes": 14015.75
+                },
+                "detection_metrics": {
+                    "precision": 0.9728316336605651,
+                    "recall": 0.9982965785039197,
+                    "f1_score": 0.985233892133878
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 13620.25,
+                    "incorrectly_repaired_cells": 5.5,
+                    "repaired_clean_cells": 390.0
+                },
+                "correction_metrics": {
+                    "precision": 0.9724385814210238,
+                    "recall": 0.9978936185801158,
+                    "f1_score": 0.9848360096532731
+                },
+                "token_usage": {
+                    "input_tokens": 239393,
+                    "output_tokens": 90325,
+                    "total_tokens": 329718
+                },
+                "runtime_seconds": 171.0
+            }
+        ],
+        "rayyan": [
+            {
+                "detection_counts": {
+                    "true_positives": 523.0,
+                    "false_positives": 543.75,
+                    "false_negatives": 123.0,
+                    "true_negatives": 9810.25,
+                    "total_errors": 646.0,
+                    "total_changes": 1066.75
+                },
+                "detection_metrics": {
+                    "precision": 0.650537483536981,
+                    "recall": 0.8095975232198143,
+                    "f1_score": 0.6726315174476369
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 482.0,
+                    "incorrectly_repaired_cells": 41.0,
+                    "repaired_clean_cells": 543.75
+                },
+                "correction_metrics": {
+                    "precision": 0.5926718867155059,
+                    "recall": 0.7461300309597523,
+                    "f1_score": 0.6148758352292868
+                },
+                "token_usage": {
+                    "input_tokens": 306225,
+                    "output_tokens": 194494,
+                    "total_tokens": 500722
+                },
+                "runtime_seconds": 556.0
+            }
+        ]
+    },
+    "raha_baran": {
+        "hospital": [
+            {
+                "detection_counts": {
+                    "true_positives": 3252,
+                    "false_positives": 0,
+                    "false_negatives": 290,
+                    "true_negatives": 14458,
+                    "total_errors": 3542,
+                    "total_changes": 3252
+                },
+                "detection_metrics": {
+                    "precision": 1.0,
+                    "recall": 0.9181253529079616,
+                    "f1_score": 0.9573152781866353
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 3246,
+                    "incorrectly_repaired_cells": 6,
+                    "repaired_clean_cells": 0
+                },
+                "correction_metrics": {
+                    "precision": 0.9981549815498155,
+                    "recall": 0.9164313946922643,
+                    "f1_score": 0.9555490138357375
+                },
+                "runtime_seconds": 17051.0
+            }
+        ],
+        "beers": [
+            {
+                "detection_counts": {
+                    "true_positives": 3269,
+                    "false_positives": 1,
+                    "false_negatives": 132,
+                    "true_negatives": 20698,
+                    "total_errors": 3401,
+                    "total_changes": 3270
+                },
+                "detection_metrics": {
+                    "precision": 0.9996941896024465,
+                    "recall": 0.9611878859159071,
+                    "f1_score": 0.9800629590766002
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 3086,
+                    "incorrectly_repaired_cells": 183,
+                    "repaired_clean_cells": 1
+                },
+                "correction_metrics": {
+                    "precision": 0.9437308868501529,
+                    "recall": 0.9073801822993237,
+                    "f1_score": 0.9251986208964172
+                },
+                "runtime_seconds": 9163.0
+            }
+        ],
+        "movies": [
+            {
+                "detection_counts": {
+                    "true_positives": 12453,
+                    "false_positives": 724,
+                    "false_negatives": 1196,
+                    "true_negatives": 111257,
+                    "total_errors": 13649,
+                    "total_changes": 13177
+                },
+                "detection_metrics": {
+                    "precision": 0.9450557790088792,
+                    "recall": 0.9123745329328156,
+                    "f1_score": 0.9284276448221874
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 12248,
+                    "incorrectly_repaired_cells": 205,
+                    "repaired_clean_cells": 724
+                },
+                "correction_metrics": {
+                    "precision": 0.929498368369128,
+                    "recall": 0.8973551175910323,
+                    "f1_score": 0.9131439648102586
+                },
+                "runtime_seconds": 48368.0
+            }
+        ],
+        "rayyan": [
+            {
+                "detection_counts": {
+                    "true_positives": 411,
+                    "false_positives": 76,
+                    "false_negatives": 235,
+                    "true_negatives": 10278,
+                    "total_errors": 646,
+                    "total_changes": 487
+                },
+                "detection_metrics": {
+                    "precision": 0.8439425051334702,
+                    "recall": 0.6362229102167183,
+                    "f1_score": 0.7255075022065315
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 295,
+                    "incorrectly_repaired_cells": 116,
+                    "repaired_clean_cells": 76
+                },
+                "correction_metrics": {
+                    "precision": 0.6057494866529775,
+                    "recall": 0.456656346749226,
+                    "f1_score": 0.5207413945278022
+                },
+                "runtime_seconds": 9439.0
+            }
+        ]
+    },
+    "holoclean": {
+        "hospital": [
+            {
+                "detection_counts": {
+                    "true_positives": 434,
+                    "false_positives": 22,
+                    "false_negatives": 3108,
+                    "true_negatives": 14436,
+                    "total_errors": 3542,
+                    "total_changes": 456
+                },
+                "detection_metrics": {
+                    "precision": 0.9517543859649122,
+                    "recall": 0.1225296442687747,
+                    "f1_score": 0.21710855427713857
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 434,
+                    "incorrectly_repaired_cells": 0,
+                    "repaired_clean_cells": 22
+                },
+                "correction_metrics": {
+                    "precision": 0.9517543859649122,
+                    "recall": 0.1225296442687747,
+                    "f1_score": 0.21710855427713857
+                },
+                "runtime_seconds": 225.0
+            }
+        ],
+        "beers": [
+            {
+                "detection_counts": {
+                    "true_positives": 585,
+                    "false_positives": 12818,
+                    "false_negatives": 2816,
+                    "true_negatives": 7881,
+                    "total_errors": 3401,
+                    "total_changes": 13403
+                },
+                "detection_metrics": {
+                    "precision": 0.04364694471387003,
+                    "recall": 0.1720082328726845,
+                    "f1_score": 0.06962627945727208
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 0,
+                    "incorrectly_repaired_cells": 585,
+                    "repaired_clean_cells": 12818
+                },
+                "correction_metrics": {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0
+                },
+                "runtime_seconds": 158.0
+            }
+        ],
+        "movies": [
+            {
+                "detection_metrics": {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0
+                },
+                "correction_metrics": {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0
+                },
+                "runtime_seconds": 0.0,
+                "error": "Cleaned file does not exist"
+            }
+        ],
+        "rayyan": [
+            {
+                "detection_counts": {
+                    "true_positives": 473,
+                    "false_positives": 4835,
+                    "false_negatives": 173,
+                    "true_negatives": 5519,
+                    "total_errors": 646,
+                    "total_changes": 5308
+                },
+                "detection_metrics": {
+                    "precision": 0.08911077618688772,
+                    "recall": 0.7321981424148607,
+                    "f1_score": 0.15888478333893183
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 25,
+                    "incorrectly_repaired_cells": 448,
+                    "repaired_clean_cells": 4835
+                },
+                "correction_metrics": {
+                    "precision": 0.004709871891484552,
+                    "recall": 0.03869969040247678,
+                    "f1_score": 0.008397715821296609
+                },
+                "runtime_seconds": 192.0
+            }
+        ]
+    },
+    "retclean": {
+        "hospital": [
+            {
+                "detection_counts": {
+                    "true_positives": 1052,
+                    "false_positives": 2293,
+                    "false_negatives": 2490,
+                    "true_negatives": 12165,
+                    "total_errors": 3542,
+                    "total_changes": 3345
+                },
+                "detection_metrics": {
+                    "precision": 0.31449925261584455,
+                    "recall": 0.29700734048560135,
+                    "f1_score": 0.3055031218237259
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 151,
+                    "incorrectly_repaired_cells": 901,
+                    "repaired_clean_cells": 2293
+                },
+                "correction_metrics": {
+                    "precision": 0.04514200298953662,
+                    "recall": 0.042631281761716544,
+                    "f1_score": 0.04385073326557282
+                },
+                "runtime_seconds": 8462.0
+            }
+        ],
+        "beers": [
+            {
+                "detection_counts": {
+                    "true_positives": 2320,
+                    "false_positives": 3543,
+                    "false_negatives": 1081,
+                    "true_negatives": 17156,
+                    "total_errors": 3401,
+                    "total_changes": 5863
+                },
+                "detection_metrics": {
+                    "precision": 0.39570185911649325,
+                    "recall": 0.6821523081446633,
+                    "f1_score": 0.5008635578583764
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 1697,
+                    "incorrectly_repaired_cells": 623,
+                    "repaired_clean_cells": 3543
+                },
+                "correction_metrics": {
+                    "precision": 0.28944226505202114,
+                    "recall": 0.4989708909144369,
+                    "f1_score": 0.36636442141623493
+                },
+                "runtime_seconds": 13506.0
+            }
+        ],
+        "movies": [
+            {
+                "detection_metrics": {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0
+                },
+                "correction_metrics": {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0
+                },
+                "runtime_seconds": 0.0,
+                "error": "Cleaned file does not exist"
+            }
+        ],
+        "rayyan": [
+            {
+                "detection_counts": {
+                    "true_positives": 444,
+                    "false_positives": 5474,
+                    "false_negatives": 202,
+                    "true_negatives": 4880,
+                    "total_errors": 646,
+                    "total_changes": 5918
+                },
+                "detection_metrics": {
+                    "precision": 0.07502534640081109,
+                    "recall": 0.6873065015479877,
+                    "f1_score": 0.13528336380255943
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 127,
+                    "incorrectly_repaired_cells": 317,
+                    "repaired_clean_cells": 5474
+                },
+                "correction_metrics": {
+                    "precision": 0.021459952686718485,
+                    "recall": 0.19659442724458204,
+                    "f1_score": 0.038695917123705056
+                },
+                "runtime_seconds": 5271.0
+            }
+        ]
+    },
+    "cocoon": {
+        "hospital": [
+            {
+                "detection_counts": {
+                    "true_positives": 3288,
+                    "false_positives": 1257,
+                    "false_negatives": 254,
+                    "true_negatives": 13201,
+                    "total_errors": 3542,
+                    "total_changes": 4545
+                },
+                "detection_metrics": {
+                    "precision": 0.7234323432343235,
+                    "recall": 0.9282891022021457,
+                    "f1_score": 0.8131569185111908
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 3211,
+                    "incorrectly_repaired_cells": 77,
+                    "repaired_clean_cells": 1257
+                },
+                "correction_metrics": {
+                    "precision": 0.7064906490649064,
+                    "recall": 0.9065499717673631,
+                    "f1_score": 0.7941140101397304
+                },
+                "runtime_seconds": 763.0
+            }
+        ],
+        "beers": [
+            {
+                "detection_counts": {
+                    "true_positives": 3103,
+                    "false_positives": 0,
+                    "false_negatives": 298,
+                    "true_negatives": 20699,
+                    "total_errors": 3401,
+                    "total_changes": 3103
+                },
+                "detection_metrics": {
+                    "precision": 1.0,
+                    "recall": 0.9123787121434872,
+                    "f1_score": 0.9541820418204182
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 3103,
+                    "incorrectly_repaired_cells": 0,
+                    "repaired_clean_cells": 0
+                },
+                "correction_metrics": {
+                    "precision": 1.0,
+                    "recall": 0.9123787121434872,
+                    "f1_score": 0.9541820418204182
+                },
+                "runtime_seconds": 148.0
+            }
+        ],
+        "movies": [
+            {
+                "detection_counts": {
+                    "true_positives": 13602,
+                    "false_positives": 43559,
+                    "false_negatives": 47,
+                    "true_negatives": 68422,
+                    "total_errors": 13649,
+                    "total_changes": 57161
+                },
+                "detection_metrics": {
+                    "precision": 0.2379594478752996,
+                    "recall": 0.9965565242874936,
+                    "f1_score": 0.38418302499646945
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 12932,
+                    "incorrectly_repaired_cells": 670,
+                    "repaired_clean_cells": 43559
+                },
+                "correction_metrics": {
+                    "precision": 0.22623816938122146,
+                    "recall": 0.9474686790241044,
+                    "f1_score": 0.3652591441886739
+                },
+                "runtime_seconds": 585.0
+            }
+        ],
+        "rayyan": [
+            {
+                "detection_counts": {
+                    "true_positives": 211,
+                    "false_positives": 913,
+                    "false_negatives": 435,
+                    "true_negatives": 9441,
+                    "total_errors": 646,
+                    "total_changes": 1124
+                },
+                "detection_metrics": {
+                    "precision": 0.18772241992882563,
+                    "recall": 0.326625386996904,
+                    "f1_score": 0.23841807909604518
+                },
+                "correction_counts": {
+                    "correctly_repaired_cells": 203,
+                    "incorrectly_repaired_cells": 8,
+                    "repaired_clean_cells": 913
+                },
+                "correction_metrics": {
+                    "precision": 0.1806049822064057,
+                    "recall": 0.3142414860681115,
+                    "f1_score": 0.22937853107344633
+                },
+                "runtime_seconds": 426.0
+            }
+        ]
+    },
+    "saged": {
+        "hospital": [
+            {
+                "detection_counts": {
+                    "true_positives": 3220,
+                    "false_positives": 2964,
+                    "false_negatives": 322,
+                    "true_negatives": 11494,
+                    "total_errors": 3542,
+                    "total_changes": 6184
+                },
+                "detection_metrics": {
+                    "precision": 0.5206985769728332,
+                    "recall": 0.9090909090909091,
+                    "f1_score": 0.6621427102611558
+                },
+                "correction_metrics": {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0
+                },
+                "runtime_seconds": 5.4
+            }
+        ],
+        "beers": [
+            {
+                "detection_counts": {
+                    "true_positives": 3110,
+                    "false_positives": 2889,
+                    "false_negatives": 291,
+                    "true_negatives": 17810,
+                    "total_errors": 3401,
+                    "total_changes": 5999
+                },
+                "detection_metrics": {
+                    "precision": 0.5184197366227704,
+                    "recall": 0.9144369303146134,
+                    "f1_score": 0.6617021276595745
+                },
+                "correction_metrics": {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0
+                },
+                "runtime_seconds": 5.1
+            }
+        ],
+        "movies": [
+            {
+                "detection_counts": {
+                    "true_positives": 12874,
+                    "false_positives": 16692,
+                    "false_negatives": 775,
+                    "true_negatives": 95289,
+                    "total_errors": 13649,
+                    "total_changes": 29566
+                },
+                "detection_metrics": {
+                    "precision": 0.4354325914902253,
+                    "recall": 0.9432192834639901,
+                    "f1_score": 0.5958116394770335
+                },
+                "correction_metrics": {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0
+                },
+                "runtime_seconds": 20.4
+            }
+        ],
+        "rayyan": [
+            {
+                "detection_counts": {
+                    "true_positives": 300,
+                    "false_positives": 3090,
+                    "false_negatives": 346,
+                    "true_negatives": 7264,
+                    "total_errors": 646,
+                    "total_changes": 3390
+                },
+                "detection_metrics": {
+                    "precision": 0.08849557522123894,
+                    "recall": 0.46439628482972134,
+                    "f1_score": 0.14866204162537167
+                },
+                "correction_metrics": {
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0
+                },
+                "runtime_seconds": 3.2
+            }
+        ]
+    }
+}

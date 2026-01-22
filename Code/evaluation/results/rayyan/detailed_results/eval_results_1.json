@@ -1,0 +1,25 @@
+{
+    "detection_counts": {
+        "true_positives": 578,
+        "false_positives": 7,
+        "false_negatives": 68,
+        "true_negatives": 10347,
+        "total_errors": 646,
+        "total_changes": 585
+    },
+    "detection_metrics": {
+        "precision": 0.9880341880341881,
+        "recall": 0.8947368421052632,
+        "f1_score": 0.9390739236393176
+    },
+    "correction_counts": {
+        "correctly_repaired_cells": 487,
+        "incorrectly_repaired_cells": 91,
+        "repaired_clean_cells": 7
+    },
+    "correction_metrics": {
+        "precision": 0.8324786324786325,
+        "recall": 0.7538699690402477,
+        "f1_score": 0.7912266450040618
+    }
+}

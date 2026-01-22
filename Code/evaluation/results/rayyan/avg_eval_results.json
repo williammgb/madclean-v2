@@ -1,0 +1,31 @@
+{
+    "detection_counts": {
+        "true_positives": 523.0,
+        "false_positives": 543.75,
+        "false_negatives": 123.0,
+        "true_negatives": 9810.25,
+        "total_errors": 646.0,
+        "total_changes": 1066.75
+    },
+    "detection_metrics": {
+        "precision": 0.650537483536981,
+        "recall": 0.8095975232198143,
+        "f1_score": 0.6726315174476369
+    },
+    "correction_counts": {
+        "correctly_repaired_cells": 482.0,
+        "incorrectly_repaired_cells": 41.0,
+        "repaired_clean_cells": 543.75
+    },
+    "correction_metrics": {
+        "precision": 0.5926718867155059,
+        "recall": 0.7461300309597523,
+        "f1_score": 0.6148758352292868
+    },
+    "token_usage": {
+      "input_tokens": 306225,
+      "output_tokens": 194494,
+      "total_tokens": 500722
+    },
+    "runtime_seconds": 556.0
+}

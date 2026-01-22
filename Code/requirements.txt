@@ -1,0 +1,11 @@
+numpy==2.3.2
+openai==1.102.0
+pandas==2.3.2
+protobuf==5.29.5
+pydantic==2.11.7
+python-dotenv==1.1.1
+google-genai==1.39.1
+python_dateutil==2.9.0.post0
+spacy==3.8.7
+fuzzywuzzy==0.18.0
+RapidFuzz==3.14.3

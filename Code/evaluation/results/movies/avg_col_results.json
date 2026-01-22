@@ -1,0 +1,427 @@
+{
+    "Id": {
+        "detection_counts": {
+            "true_positives": 39.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 7351.0,
+            "total_errors": 39.0,
+            "total_changes": 39.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 39.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "Name": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 7390.0,
+            "total_errors": 0.0,
+            "total_changes": 0.0
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "Year": {
+        "detection_counts": {
+            "true_positives": 186.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 7204.0,
+            "total_errors": 186.0,
+            "total_changes": 186.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 186.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "Release Date": {
+        "detection_counts": {
+            "true_positives": 192.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 7198.0,
+            "total_errors": 192.0,
+            "total_changes": 192.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 190.0,
+            "incorrectly_repaired_cells": 2.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.9895833333333334,
+            "recall": 0.9895833333333334,
+            "f1_score": 0.9895833333333334
+        }
+    },
+    "Director": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 166.25,
+            "false_negatives": 0.0,
+            "true_negatives": 7223.75,
+            "total_errors": 0.0,
+            "total_changes": 166.25
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 166.25
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "Creator": {
+        "detection_counts": {
+            "true_positives": 281.0,
+            "false_positives": 3.0,
+            "false_negatives": 9.0,
+            "true_negatives": 7097.0,
+            "total_errors": 290.0,
+            "total_changes": 284.0
+        },
+        "detection_metrics": {
+            "precision": 0.9894366197183099,
+            "recall": 0.9689655172413794,
+            "f1_score": 0.9790940766550522
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 281.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 3.0
+        },
+        "correction_metrics": {
+            "precision": 0.9894366197183099,
+            "recall": 0.9689655172413794,
+            "f1_score": 0.9790940766550522
+        }
+    },
+    "Actors": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 0.25,
+            "false_negatives": 0.0,
+            "true_negatives": 7389.75,
+            "total_errors": 0.0,
+            "total_changes": 0.25
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.25
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "Cast": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 7390.0,
+            "total_errors": 0.0,
+            "total_changes": 0.0
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "Language": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 132.5,
+            "false_negatives": 0.0,
+            "true_negatives": 7257.5,
+            "total_errors": 0.0,
+            "total_changes": 132.5
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 132.5
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "Country": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 12.75,
+            "false_negatives": 0.0,
+            "true_negatives": 7377.25,
+            "total_errors": 0.0,
+            "total_changes": 12.75
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 12.75
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "Duration": {
+        "detection_counts": {
+            "true_positives": 7009.0,
+            "false_positives": 0.0,
+            "false_negatives": 3.0,
+            "true_negatives": 378.0,
+            "total_errors": 7012.0,
+            "total_changes": 7009.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 0.9995721620079863,
+            "f1_score": 0.9997860352328649
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 7008.0,
+            "incorrectly_repaired_cells": 1.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.9998573262947639,
+            "recall": 0.9994295493439818,
+            "f1_score": 0.999643392054775
+        }
+    },
+    "RatingValue": {
+        "detection_counts": {
+            "true_positives": 168.5,
+            "false_positives": 0.0,
+            "false_negatives": 1.5,
+            "true_negatives": 7220.0,
+            "total_errors": 170.0,
+            "total_changes": 168.5
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 0.9911764705882353,
+            "f1_score": 0.9955089820359282
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 166.0,
+            "incorrectly_repaired_cells": 2.5,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 0.9852941176470589,
+            "recall": 0.9764705882352942,
+            "f1_score": 0.9808030996829871
+        }
+    },
+    "RatingCount": {
+        "detection_counts": {
+            "true_positives": 5505.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 1885.0,
+            "total_errors": 5505.0,
+            "total_changes": 5505.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 5505.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "ReviewCount": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 75.0,
+            "false_negatives": 0.0,
+            "true_negatives": 7315.0,
+            "total_errors": 0.0,
+            "total_changes": 75.0
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 75.0
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "Genre": {
+        "detection_counts": {
+            "true_positives": 4.0,
+            "false_positives": 0.0,
+            "false_negatives": 0.0,
+            "true_negatives": 7386.0,
+            "total_errors": 4.0,
+            "total_changes": 4.0
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 4.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1_score": 1.0
+        }
+    },
+    "Filming Locations": {
+        "detection_counts": {
+            "true_positives": 0.0,
+            "false_positives": 0.25,
+            "false_negatives": 0.0,
+            "true_negatives": 7389.75,
+            "total_errors": 0.0,
+            "total_changes": 0.25
+        },
+        "detection_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 0.0,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.25
+        },
+        "correction_metrics": {
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0
+        }
+    },
+    "Description": {
+        "detection_counts": {
+            "true_positives": 241.25,
+            "false_positives": 0.0,
+            "false_negatives": 9.75,
+            "true_negatives": 7139.0,
+            "total_errors": 251.0,
+            "total_changes": 241.25
+        },
+        "detection_metrics": {
+            "precision": 1.0,
+            "recall": 0.9611553784860558,
+            "f1_score": 0.9801922030376491
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 241.25,
+            "incorrectly_repaired_cells": 0.0,
+            "repaired_clean_cells": 0.0
+        },
+        "correction_metrics": {
+            "precision": 1.0,
+            "recall": 0.9611553784860558,
+            "f1_score": 0.9801922030376491
+        }
+    }
+}

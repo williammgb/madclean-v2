@@ -1,0 +1,126 @@
+{
+    "beers": {
+        "detection_counts": {
+            "true_positives": 3380.0,
+            "false_positives": 323.5,
+            "false_negatives": 21.0,
+            "true_negatives": 20375.5,
+            "total_errors": 3401.0,
+            "total_changes": 3703.5
+        },
+        "detection_metrics": {
+            "precision": 0.9172533991091025,
+            "recall": 0.9938253454866215,
+            "f1_score": 0.9528531741256391
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 3375.0,
+            "incorrectly_repaired_cells": 5.0,
+            "repaired_clean_cells": 323.5
+        },
+        "correction_metrics": {
+            "precision": 0.9159344965708167,
+            "recall": 0.9923551896501029,
+            "f1_score": 0.9514641974523927
+        },
+        "token_usage": {
+            "input_tokens": 50140,
+            "output_tokens": 42995,
+            "total_tokens": 93135
+            },
+        "runtime_seconds": 163.0
+    },
+    "hospital": {
+        "detection_counts": {
+            "true_positives": 3530.5,
+            "false_positives": 412.5,
+            "false_negatives": 11.5,
+            "true_negatives": 14045.5,
+            "total_errors": 3542.0,
+            "total_changes": 3943.0
+        },
+        "detection_metrics": {
+            "precision": 0.8960337414230358,
+            "recall": 0.9967532467532467,
+            "f1_score": 0.9435404604752946
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 3440.0,
+            "incorrectly_repaired_cells": 90.5,
+            "repaired_clean_cells": 412.5
+        },
+        "correction_metrics": {
+            "precision": 0.8730957530349257,
+            "recall": 0.9712027103331451,
+            "f1_score": 0.9193710133021562
+        },
+        "token_usage": {
+            "input_tokens": 121605,
+            "output_tokens": 164230,
+            "total_tokens": 285835
+            },
+        "runtime_seconds": 397.0
+    },
+    "movies": {
+        "detection_counts": {
+            "true_positives": 13490.5,
+            "false_positives": 7359.0,
+            "false_negatives": 158.5,
+            "true_negatives": 104622.0,
+            "total_errors": 13649.0,
+            "total_changes": 20849.5
+        },
+        "detection_metrics": {
+            "precision": 0.6887081263143728,
+            "recall": 0.9883874276503773,
+            "f1_score": 0.7992229072664866
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 13343.5,
+            "incorrectly_repaired_cells": 147.0,
+            "repaired_clean_cells": 7359.0
+        },
+        "correction_metrics": {
+            "precision": 0.6830337249373533,
+            "recall": 0.9776174078687083,
+            "f1_score": 0.7917963244563795
+        },
+        "token_usage": {
+            "input_tokens": 109448,
+            "output_tokens": 61282,
+            "total_tokens": 170730
+            },
+        "runtime_seconds": 96.0
+    },
+    "rayyan": {
+        "detection_counts": {
+            "true_positives": 566.0,
+            "false_positives": 1526.5,
+            "false_negatives": 80.0,
+            "true_negatives": 8827.5,
+            "total_errors": 646.0,
+            "total_changes": 2092.5
+        },
+        "detection_metrics": {
+            "precision": 0.3199186991869919,
+            "recall": 0.8761609907120743,
+            "f1_score": 0.4525006083953226
+        },
+        "correction_counts": {
+            "correctly_repaired_cells": 398.5,
+            "incorrectly_repaired_cells": 167.5,
+            "repaired_clean_cells": 1526.5
+        },
+        "correction_metrics": {
+            "precision": 0.23879328133382854,
+            "recall": 0.6168730650154799,
+            "f1_score": 0.33317000904155386
+        },
+        "token_usage": {
+            "input_tokens": 60582,
+            "output_tokens": 77875,
+            "total_tokens": 138457
+            },
+        "runtime_seconds": 186.0
+    }
+}

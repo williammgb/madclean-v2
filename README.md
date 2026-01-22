@@ -3,7 +3,13 @@ High-quality data is essential for effective decision-making, data analytics and
 training of machine learning models. However, real-world tabular datasets frequently
 contain errors, inconsistencies and missing values that degrade data quality and hinder
 downstream tasks. This thesis proposed an automated tabular data cleaning framework
-that integrates statistical data profiling with the semantic reasoning and code generation capabilities of LLMs. This enables automated, adaptive and scalable data cleaning,
+that integrates statistical data profiling with the semantic reasoning and code generation capabilities of LLMs. 
+The framework first analyzes datasets using statistical
+profiling techniques to identify column characteristics, error patterns and inter-column
+relationships. Based on this analysis, dataset-specific cleaning instructions and examples are selected to guide the LLM in choosing appropriate cleaning operations. To ensure reliability and generalizability across diverse datasets, the
+framework employs a multi-agent LLM architecture with validation mechanisms that
+verify the correctness and consistency of generated transformations.
+This enables automated, adaptive and scalable data cleaning,
 producing high-quality tabular datasets that are well suited for downstream analytical
 and machine learning tasks.
 

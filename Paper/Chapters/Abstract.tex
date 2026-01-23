@@ -6,7 +6,7 @@ Although numerous data cleaning methods have been proposed, many struggle to det
 Recent approaches leveraging Large Language Models (LLMs) address this limitation but often lack robustness guarantees, leading to unreliable or inconsistent transformations.
 This thesis proposed an automated tabular data cleaning framework that integrates statistical data profiling with the semantic reasoning and code generation capabilities of LLMs.
 The framework first analyzes datasets using statistical profiling techniques to identify column characteristics, error patterns and inter-column relationships. 
-Based on this analysis, dataset-specific cleaning instructions and examples are derived to guide the LLM in selecting appropriate cleaning operations. 
+Based on this analysis, dataset-specific cleaning instructions and examples are selected to guide the LLM in choosing appropriate cleaning operations. 
 Rather than performing isolated cell-level repairs, the framework produces executable cleaning logic that is applied consistently at the column level, improving scalability and output consistency.
 To ensure reliability and generalizability across diverse datasets, the framework employs a multi-agent LLM architecture with validation mechanisms that verify the correctness and consistency of generated transformations.
 By combining deterministic statistical analysis with LLM-based semantic reasoning and code generation, the proposed approach enables automated, adaptive and scalable data cleaning, producing high-quality tabular datasets that are well suited for downstream analytical and machine learning tasks.

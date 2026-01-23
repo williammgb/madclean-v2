@@ -31,37 +31,44 @@ Overall, considering both performance and runtime, the proposed framework provid
 \subsection{Answering the Research Questions}
 We now provide answers to the research questions formulated in the introduction of this thesis, beginning with the main research question.
 \newline\newline
-\textbf{How can a reliable, automated LLM-based data cleaning framework be designed, and to what extent does it improve upon standard single-pass LLM approaches and traditional statistical cleaning methods?}
+\textbf{How can a reliable, automated LLM-based data cleaning framework be designed, and to what extent does it improve upon standard single-pass LLM approaches and traditional cleaning methods?}
 \newline
-The proposed framework improves reliability by combining statistical profiling with a modular, multi-agent LLM architecture. 
-Instead of applying generic cleaning operations, the framework first analyzes dataset characteristics and selects cleaning strategies tailored to column types. 
-Tasks are divided among specialized LLM agents, each responsible for a specific function, which leads to more structured and controllable outputs than single-pass approaches. 
-A validator agent further improves reliability by verifying corrections and providing feedback, reducing hallucinations and unstable outputs. 
-Statistical tools flag potential errors, while the LLM semantically determines whether flagged values are true errors and how they should be corrected, replacing manual inspection.
+The proposed framework improves reliability by combining statistical profiling with a modular, multi-agent LLM architecture, thereby addressing key limitations of both traditional cleaning methods and single-pass LLM approaches. 
+Instead of applying generic cleaning operations, it enables more flexible and dataset-specific cleaning by analyzing dataset characteristics and selecting cleaning strategies tailored to column types. 
+As a result, it addresses a broader range of error types than traditional approaches. 
+Compared to standard single-pass LLM approaches, the proposed framework splits the task across specialized LLM agents, each responsible for a specific function. 
+This modular design enables structured processing and refinement, providing better control over the cleaning process and leading to more stable and consistent outputs. 
+A validator agent further improves reliability by verifying corrections and providing feedback, which reduces hallucinations and unstable outputs that are common in single-pass settings.
+In addition, statistical tools are used to flag potential errors, overcoming the limited numerical reasoning capabilities of LLMs. 
+The LLM then performs semantic reasoning to determine whether flagged values are true errors and how they should be corrected, replacing manual inspection and enabling the detection of semantic errors that are typically missed by traditional methods.
 \newline\newline
-Sub-Research Questions
+The sub-research questions are adrdressed below.
 \begin{enumerate}
     \item \textbf{How can statistical profiling be used to construct a meaningful understanding of tabular datasets to support dataset-specific cleaning strategies?}
     \newline
-    Statistical profiling provides a fast, deterministic overview of dataset characteristics and is well suited for large datasets. 
-    In the framework, these tools are used to summarize column properties, detect potential errors and sample informative values. 
-    This reduces the amount of data presented to the LLM and guides it toward relevant cleaning decisions. 
-    Since LLMs are not well-suited for statistical analysis, delegating these tasks to statistical methods allows the LLM to focus on higher-level semantic reasoning, leading to more accurate and efficient cleaning.
+    Statistical profiling provides a fast and deterministic overview of dataset characteristics and is well suited for large datasets. 
+    In the framework, profiling tools summarize column properties, detect potential errors and sample informative values, thereby reducing the amount of raw data while providing structured and informative inputs to the LLM. 
+    These outputs support cleaning decisions and allow the framework to combine statistical evidence with semantic reasoning. 
+    Since LLMs are not well-suited for statistical analysis, delegating these tasks allows the LLM to focus on higher-level reasoning while still incorporating dataset-specific characteristics into its decision-making. 
+    As a result, the framework supports dataset-specific cleaning strategies tailored to the properties of each individual dataset.
     \item \textbf{To what extent do high-quality, data type-aware prompt templates improve the accuracy and reliability of LLM-based data cleaning?}
     \newline
     The evaluation and ablation study show that prompt quality has a substantial impact on performance. 
     Data type-specific prompts with clear instructions and examples improve both accuracy and consistency, particularly for heterogeneous datasets. 
-    By reducing ambiguity and task complexity, these prompts lead to more deterministic LLM behavior and more efficient cleaning.
+    By explicitly specifying expected error types, appropriate cleaning operations, valid transformations and constraints on what changes should not be applied, these prompts reduce ambiguity and task complexity.  
+    In addition, guidance on how to interpret and analyze raw column values helps align the LLM's behavior with dataset-specific requirements. 
+    As a result, high-quality prompt templates lead to more deterministic LLM behavior and more efficient and reliable cleaning.
     \item \textbf{How well does the proposed framework generalize across different types of tabular datasets?}
     \newline
     The framework generalizes well to structured datasets with redundancy and consistent column formats, where it achieves high and stable performance. 
+    This reflects the framework's design goal of enabling the LLM to infer what correct data should look like and to devise appropriate cleaning strategies based on observed patterns.
     In contrast, performance is lower and more variable for datasets with heterogeneous or highly noisy columns, reflecting the inherent difficulty of inferring consistent cleaning rules in such settings. 
     Nevertheless, the framework remains competitive with or superior to baseline methods across all evaluated datasets.
 \end{enumerate}
 
 \section{Limitations}
 The current framework primarily relies on column-level context, with row-level context used only for specific tasks such as outlier detection and functional dependency enforcement. 
-While effective in these cases, broader use of row-level context could improve cleaning performance by detecting semantic errors (e.g., correcting 'female' to 'male' when the name is 'Mr. John Doe') or complex inter-column dependencies (e.g., age should correspond to the date of birth).
+As a result, the framework has limited ability to capture errors that require broader row-level semantic context, such as inconsistencies between titles and gender (e.g., 'Mr. John Doe' and 'female') or dependencies between columns such as age and date of birth.
 \newline\newline
 The performance of the framework is inherently dependent on the capabilities, reasoning quality and stability of the underlying LLM. 
 Variations across models or API parameters, such as temperature settings, may affect cleaning quality. 
@@ -83,6 +90,10 @@ Currently, validation decisions can vary across runs due to differences in sampl
 Providing the validator with labeled clean examples could reduce this variability by clearly defining correct values or formats. 
 These examples would serve as a stable reference, leading to more consistent validation decisions. 
 Extending this approach to the Recommender Agent could further improve the overall performance of the cleaning process.
+\newline\newline
+As LLM context window sizes continue to increase, future work could explore incorporating row-level context into the cleaning process.
+Analyzing more data at once would allow the LLM to develop a better understanding of the existing inter-column relationships. 
+As a result, the framework could more effectively detect and correct semantic inconsistencies that depend on interactions between multiple columns.
 \newline\newline
 Enhancing explainability for end users is another relevant direction for future work. 
 While the framework applies a range of automated cleaning operations, users currently have limited insight into why specific changes were made. 

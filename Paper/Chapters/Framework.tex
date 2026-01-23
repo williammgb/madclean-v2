@@ -1,12 +1,13 @@
 \chapter{Framework}
 This chapter presents an overview of the proposed data cleaning framework. 
 The framework is designed to clean raw tabular datasets by combining statistical data profiling techniques with LLMs that generate executable cleaning code.
-Each component of the framework is described and analyzed in detail, with Figure \ref{fig:framwork_architecture} illustrating the overall architecture.
+Each component of the framework, along with its modules, is described and analyzed in detail, with Figure \ref{fig:framwork_architecture} illustrating the overall architecture.
+% Our implementation is available online. \footnote{\url{https://github.com/qahtanaa/COSC-Thesis-William}}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.95\linewidth]{Figures/framework_fig.pdf}
-    \caption{DRAFT! Proposed Framework Architecture}
+    \includegraphics[width=\linewidth]{Figures/final_diagram.pdf}
+    \caption{Overview of the proposed framework architecture.}
     \label{fig:framwork_architecture}
 \end{figure}
 
@@ -27,17 +28,17 @@ For this reason, the Data Profiler creates a separate profile for each column.
 This column-level focus is central to the framework design, as it allows the system to capture the specific characteristics, errors and constraints of each column before applying cleaning operations. 
 Multi-column cleaning operations are applied in later stages when relationships between columns need to be considered.
 \newline\newline
-The Data Profiler consists of two core components: the Semantic Type Detector and the Data Sampler. 
-In addition, the profiler supports optional single-column and multi-column cleaning components. 
-In the current implementation, these include Outlier Detection as a single-column cleaning component and Functional Dependency Detection as a multi-column component, which identifies and enforces dependencies between columns. 
-The framework is designed in a modular way, allowing new profiling and cleaning components to be added with minimal changes, which supports scalability and future extensions.
+The Data Profiler consists of two core modules: semantic type detection and data sampling. 
+In addition, the profiler supports optional single-column and multi-column cleaning modules. 
+In the current implementation, these include Outlier Detection as a single-column cleaning module and Functional Dependency Detection as a multi-column cleaning module, which identifies and enforces dependencies between columns. 
+The framework is designed in a modular way, allowing new profiling and cleaning modules to be added with minimal changes, which supports scalability and future extensions.
 
-\subsection{Semantic Type Detector}
+\subsection{Semantic Type Detection}
 Applying the same generic cleaning operations to all columns is often ineffective, as different types of data require different cleaning strategies. 
 For example, datetime columns require format standardization, whereas numeric columns require validation, noise removal and outlier detection. 
 Therefore, accurately identifying the semantic type of each column is a crucial step in a robust data cleaning framework, especially when dealing with dirty real-world data.
 \newline\newline
-The Semantic Type Detector assigns each column to a predefined semantic type. 
+The semantic type detection module assigns each column to a predefined semantic type. 
 Once a column is classified, the framework can apply a type-specific cleaning strategy instead of relying on generic rules. 
 This is particularly important in an LLM-based framework, as each semantic type is associated with a tailored prompt that includes explanations, examples and explicit cleaning instructions. 
 For instance, for a column of type boolean, the LLM is instructed to standardize all values to either True, False or NaN, while for a column of type integer, the focus is on removing invalid values and producing a purely numeric column.
@@ -48,9 +49,9 @@ Such columns are common in real-world datasets and are typically interpreted as 
 Since these additional characters usually add little analytical value, the framework aims to convert these columns into clean numeric representations that can be used in downstream tasks such as statistical analysis or machine learning.
 \newline\newline
 String-valued columns are further divided into three categories. 
-Named entities include well-known entities such as countries, organizations, languages, names, or brands. 
-These are identified using the spaCy \cite{SPACY} named entity recognition model \texttt{en\_core\_web\_sm}.
-Discrete strings represent structured but non-semantic values such as email addresses, zip codes, or identifiers. 
+Named entities include well-known entities such as countries, organizations, languages, names or brands. 
+These are identified using the spaCy named entity recognition model \texttt{en\_core\_web\_sm}. \footnote{\url{https://spacy.io}}
+Discrete strings represent structured but non-semantic values such as email addresses, zip codes or identifiers. 
 Natural language text consists of free-text fields such as reviews or descriptions. 
 LLMs typically perform well on named entities and structured patterns, as such data is likely well represented in their training data. 
 Free-text columns, however, exhibit high variability and do not follow predictable formats. 
@@ -63,7 +64,7 @@ The framework iterates over the sampled values, detects the type of each individ
 In practice, setting $N$ to a relatively small value (e.g., 1000 rows) has proven both efficient and reliable. 
 This approach significantly reduces runtime while maintaining accurate type detection, making it suitable for large datasets.
 
-\subsection{Data Sampler}
+\subsection{Data Sampling}
 In order for an LLM to effectively clean data, it must be shown representative examples of clean \emph{and} dirty data. 
 However, as mentioned earlier, passing entire columns to the LLM is infeasible. 
 Therefore, the framework uses a sampling strategy that minimizes the amount of data sent to the LLM while maximizing the information it provides.
@@ -107,12 +108,12 @@ This allows the LLM to leverage semantic reasoning and classify each outlier as 
 \end{enumerate}
 This hybrid approach combines the precision of statistical outlier detection with the semantic intelligence of the LLM, ensuring that only genuine errors are corrected, while valid extreme values and placeholders are treated appropriately.
 
-\subsection{Functional Dependencies}
+\subsection{Detecting Functional Dependencies}
 Functional dependencies describe deterministic relationships between columns. 
 Detecting and enforcing these dependencies can improve data consistency, but in dirty datasets, naive enforcement may incorrectly modify valid exceptions. 
-The proposed framework combines deterministic FD detection with LLM-based semantic reasoning to distinguish true violations from exceptions.
-Providing the complete rows associated with each violation allows the LLM to analyze the violations in detail.
+The proposed framework combines deterministic functional dependency detection with LLM-based semantic reasoning to distinguish true violations from exceptions.
 Instead of relying solely on deterministic methods, the framework uses a hybrid approach. 
+\newline\newline
 First, candidate FDs are identified algorithmically. 
 To reduce runtime and irrelevant checks, only columns with high uniqueness or frequent duplicates are considered. 
 Columns with exclusively unique values are pruned, as they provide little information for detecting violations. 
@@ -120,6 +121,7 @@ Once FDs are identified, the LLM handles each one individually, receiving all de
 This includes the violating tuples, which correspond to the complete rows involved in each violation, as well as imputable values, referring to missing cells that can be filled using the functional dependency (i.e., RHS cells with missing values whose corresponding LHS values appear elsewhere with a non-null RHS value). 
 Providing full row-level context allows the LLM to act as a semantic reasoner and assess each case in detail to determine whether a violation represents a genuine data error or a valid exception.
 This design reflects a central principle of the framework, which is that a truly intelligent data cleaning system combines deterministic, algorithmic modules for strict constraints with LLMs as semantic decision-makers, where the profiler reports potential issues objectively and the LLM interprets them in context.
+\newline\newline
 For simplicity, the current implementation enforces 1:1 FDs (single LHS $\longrightarrow$ single RHS), but can be easily modified to handle N:1 mappings. 
 We use approximate functional dependencies because exact dependencies rarely hold in dirty datasets. 
 Our experiments showed that a custom implementation was more effective at detecting relevant FDs than existing tools, as few available implementations met our needs. 
@@ -136,22 +138,22 @@ By including row counts, the framework avoids biases introduced by skewed or imb
 The LLM can determine whether the violations reflect true errors in the RHS, whether the LHS itself contains incorrect values that contribute to the violations, and how to resolve inconsistencies without overwriting valid exceptions. 
 This flexible approach allows the framework to handle complex, real-world cases that deterministic FD enforcement alone might misinterpret.
 
-\subsection{(Scalability and) Extensibility}
+\subsection{Extensibility}
 Although the current implementation addresses the most common data quality issues, real-world datasets often contain complex and domain-specific errors that cannot be fully anticipated. 
 To accommodate this, the framework is designed with scalability and extensibility in mind.
 The core mechanism for extensibility is an enriched context container, which stores profiling results and metadata for each column. 
 Instead of hard-coding cleaning rules, the framework accumulates contextual information such as semantic types, samples, detected outliers and functional dependencies in this container. 
-Standard profiling components are included by default, but additional user-defined logic (e.g., missing value analysis, domain-specific constraints or correlation-based error detection) can easily be added, for example, to support domain-specific datasets.
+Standard profiling modules are included by default, but additional user-defined logic (e.g., missing value analysis, domain-specific constraints or correlation-based error detection) can easily be added, for example, to support domain-specific datasets.
 When an LLM agent processes a column, it receives the full enriched context rather than a static prompt. 
 On top of a base prompt template, context blocks are dynamically appended based on the available information in the context container. 
-This approach avoids using large, complex prompt templates and lets the framework scale smoothly as new profiling and cleaning components are added.
+This approach avoids using large, complex prompt templates and lets the framework scale smoothly as new profiling and cleaning modules are added.
 
-\section{Coordinator}
-Once the dataset has been fully profiled, the resulting column profiles, as well as multi-column cleaning tasks (such as enforcing functional dependencies), are passed to the Coordinator, which serves as the central orchestrator of the cleaning process.
+\section{Cleaning Coordinator}
+Once the dataset has been fully profiled, the resulting column profiles, as well as multi-column cleaning tasks (such as enforcing functional dependencies), are passed to the Cleaning Coordinator, which serves as the central orchestrator of the cleaning process.
 For each individual column and for each cleaning task (with the enforcement of a single functional dependency considered as one task), a separate iteration through the multi-agent system is performed, allowing the framework to handle each task independently and apply feedback iteratively.
-The Coordinator is responsible for determining the correct order of execution for all cleaning tasks and for inserting data from the column profiles into prompt templates, ensuring that each LLM agent receives the information it requires to perform effective cleaning operations.
+The Cleaning Coordinator is responsible for determining the correct order of execution for all cleaning tasks and for inserting data from the column profiles into prompt templates, ensuring that each LLM agent receives the information it requires to perform effective cleaning operations.
 
-\subsection{Dependency Resolver}
+\subsection{Resolving Execution Dependencies}
 To optimize runtime, especially when LLM API calls are involved, the framework executes tasks asynchronously wherever possible. 
 While isolated, single-column operations can run independently, multi-column operations often involve interdependencies that must be respected to maintain data consistency, requiring careful coordination, such as when enforcing functional dependencies. 
 For example, consider a chain of dependencies:
@@ -163,7 +165,7 @@ To manage such dependencies, the framework models columns and their interdepende
 The execution order is then determined using a topological sort (Kahn's algorithm \cite{KAHN}), ensuring that all dependent tasks execute in the correct sequence.
 This mechanism guarantees that multi-column cleaning operations respect dependencies, while allowing independent, single-column tasks to run concurrently, thereby improving overall efficiency.
 
-\subsection{Prompt Generator}
+\subsection{Prompt Generation}
 High-quality prompts are essential for enabling LLMs to clean data effectively. 
 The Prompt Generator combines data from the Data Profiler with predefined prompt templates to create detailed instructions that guide the LLM. 
 The goal is to ensure that the LLM understands the nature of the column it is cleaning, the type of errors present, and the appropriate cleaning operations to apply.
@@ -189,7 +191,7 @@ During the process, the LLM's reasoning was analyzed iteratively and the prompt 
 This design ensures that LLMs are not only executing predefined transformations but also making informed decisions based on the data context. 
 Careful prompt construction thus enables the framework to achieve high-quality, column-specific data cleaning.
 
-\section{Multi-Agent Cleaning System / Multi-Agent Data Cleaning}
+\section{Multi-Agent Data Cleaner}
 The proposed framework employs a multi-agent, feedback-driven LLM cleaning loop to perform column-wise and multi-column data cleaning. 
 Each cleaning task, whether cleaning a single column or enforcing a functional dependency, is handled by a sequence of specialized LLM agents. 
 While this section focuses on individual column cleaning for illustrative purposes, the methodology generalizes to multi-column operations such as functional dependency enforcement.
@@ -210,7 +212,7 @@ Finally, the Validator Agent ensures that all corrections align with the intende
 Overall, this multi-agent architecture forms a fully automated system that closely resembles a human-in-the-loop quality assurance process.
 
 \subsection{Recommender Agent}
-The Recommender Agent is the first agent in the pipeline and acts as the semantic reasoning component of the framework. 
+The Recommender Agent is the first agent in the pipeline and serves as the semantic reasoning module of the framework. 
 It receives a prompt containing the column profile and instructions and examples to help it better understand the data. 
 Based on this information, the Recommender Agent analyzes the column, generalizes across observed patterns, and produces structured cleaning instructions. 
 Importantly, the agent is explicitly allowed to conclude that a column is already clean. 

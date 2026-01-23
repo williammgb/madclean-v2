@@ -1,15 +1,15 @@
 \chapter{Introduction}
-Data is used to represent knowledge, solve problems, improve systems and support decision-making. 
-With the growth of data science, we can now extract insights and knowledge from large amounts of data. 
-This knowledge helps us understand how the world works, discover patterns in complex systems and make predictions that guide actions in various fields \cite{PAPER1}.
+Data plays a central role in modern information systems, supporting analysis, automation and decision-making across a wide range of domains.
+With the growth of data science, large volumes of data can now be systematically analyzed to extract insights and structured knowledge.
+This knowledge enables a deeper understanding of complex systems, the discovery of meaningful patterns, and the development of predictive models that guide actions in various fields \cite{PAPER1}.
 \newline\newline
 However, real-world data is rarely clean. 
 Raw datasets often contain a variety of errors, including missing values, incorrect entries, inconsistent formats and outliers. 
 These data quality issues can significantly affect the performance of machine learning models and analytical systems. 
 Poor data quality not only leads to inaccurate predictions and unreliable insights, but can also result in financial and operational losses. 
-For example, \cite{PAPER2} demonstrates that missing values and incorrect feature values are among the most harmful data quality issues, which can cause a large drop in performance in classification, regression and clustering tasks; a finding also supported by \cite{PAPER4}. 
+For example, Mohammed et al. \cite{PAPER2} demonstrate that missing values and incorrect feature values are among the most harmful data quality issues, which can cause a large drop in performance in classification, regression and clustering tasks; a finding also supported by Qi et al. \cite{PAPER4}. 
 Furthermore, it states that even minor data quality issues can have serious consequences in critical domains such as healthcare, where misclassifications of a tumor can lead to life-threatening outcomes. 
-Similarly, \cite{PAPER3} outlines the severe business impact of poor quality, from reduced profits due to incorrect forecasting to the need for additional resources required to correct dirty data. 
+Similarly, Laranjeiro et al. \cite{PAPER3} outline the severe business impact of poor quality, from reduced profits due to incorrect forecasting to the need for additional resources required to correct dirty data. 
 Given that data is now central to training AI models, powering decision-making pipelines and automating operations, ensuring high data quality is essential. 
 Clean data contributes to more reliable and trustworthy predictions, especially in high-stakes applications, and helps prevent both financial and human costs resulting from incorrect decisions. 
 \newline\newline
@@ -22,6 +22,7 @@ Many existing data cleaning methods suffer from important limitations.
 Some focus exclusively on specific types of errors (e.g., missing values, pattern violations) while ignoring others. 
 Others rely on expert-written logic or rules, making them difficult to use for non-expert users. 
 Furthermore, some traditional approaches require extensive manual labeling or are computationally infeasible for large-scale datasets. 
+Finally, most traditional cleaning methods do not explicitly incorperate semantic understanding and therefore fail to detect errors that depend on real-world meaning or contextual consistency.
 Together, these limitations restrict the development of flexible and scalable data cleaning solutions that can effectively handle the wide variety of errors found in real-world datasets.
 \newline\newline
 With the rise of large language models (LLMs), new opportunities have emerged. 
@@ -32,6 +33,7 @@ While they perform well on tasks involving natural language, they often struggle
 This is largely because they are trained primarily on textual data, which makes them effective at capturing linguistic patterns but less suited for understanding statistical distributions, detecting numerical inconsistencies or identifying complex numerical dependencies.
 Moreover, LLMs do not inherently know how to perform data cleaning. 
 To clean data effectively, they require detailed instructions, sufficient examples and other contextual information about the data they are dealing with. 
+Finally, many current LLM-based data cleaning approaches rely on a single-pass strategy, in which the LLM is prompted once to perform cleaning without iterative refinement or validation, often leading to inconsistent and unreliable results.
 By overlooking these limitations, current LLM-based data cleaning methods fail to leverage the full capabilities of LLMs in data cleaning tasks. 
 To achieve better results and more accurate data cleaning, these limitations must be addressed by designing hybrid systems in which supporting tools fill in the LLM's gaps, enabling it to operate more intelligently, accurately and reliably.
 \newline\newline
@@ -44,9 +46,9 @@ The goal of this thesis is to design a novel framework for detecting and correct
 This hybrid approach, augmented by a set of high-quality, user-defined instructions, enables automated and dataset-aware data cleaning that is both effective and adaptable. 
 To guide this process, the following main research question is formulated:
 \newline\newline
-\textbf{How can a reliable, automated LLM-based data cleaning framework be designed, and to what extent does it improve upon standard single-pass LLM approaches and traditional statistical cleaning methods?}
+\textbf{How can a reliable, automated LLM-based data cleaning framework be designed, and to what extent does it improve upon standard single-pass LLM approaches and traditional cleaning methods?}
 \newline\newline
-This question is supported by several sub-research questions: 
+To address this research question, we formulate the following sub-questions:
 \begin{enumerate}
     \item How can statistical profiling be used to construct a meaningful understanding of tabular datasets to support dataset-specific cleaning strategies?
     \item To what extent do high-quality, data type-aware prompt templates improve the accuracy and reliability of LLM-based data cleaning?

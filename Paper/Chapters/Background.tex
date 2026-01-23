@@ -20,8 +20,8 @@ These properties are essential for automated data cleaning methods.
 \subsection{Error Types in Tabular Datasets}
 Data quality problems in tabular datasets often appear as various types of errors. 
 In this thesis, we focus on the most common and important error types found in real-world data:
-\newline
-\textbf{(Disguised) Missing Values:} These include both standard missing entries (e.g., NULL, NaN) and values that act as placeholders (e.g., 'X', -999, 'Unknown'). 
+\newline\newline
+\textbf{(Disguised) Missing Values:} These include both standard missing entries (e.g., null, NaN) and values that act as placeholders (e.g., 'x', -999, 'unknown'). 
 Detecting standard missing values is trivial, while DMVs are more challenging due to their arbitrary formats and context dependence. 
 \newline
 \textbf{Outliers:} These are values that significantly deviate from the rest of the data. 
@@ -44,7 +44,7 @@ Incorporating semantic reasoning and contextual awareness helps distinguish true
 \subsection{Context for Data Cleaning}
 Effective error detection and repair depend heavily on contextual understanding. 
 Context in tabular datasets can be considered at multiple levels, each providing different signals for identifying and correcting errors:
-\newline
+\newline\newline
 \textbf{Value-level context:} Information about individual cell values, such as their datatype, format, or how unusual a value is relative to the expected column type. 
 For example, a string value in a numeric column or a negative value in a salary column may indicate an error.
 \newline
@@ -65,7 +65,7 @@ Relevant context can be provided to the LLM through clear prompts with instructi
 \subsection{Large Language Models}
 LLMs are transformer-based neural networks trained on large amounts of textual data to learn language representations and reasoning patterns. 
 They predict the next token in a sequence using techniques like self-attention to capture semantic, syntactic and contextual relationships \cite{COMPREHENSIVE}. 
-This allows them to function like a human-like chatbot, capable of interpreting text and generating appropriate responses. \newline
+This allows them to function like a human-like chatbot, capable of interpreting text and generating appropriate responses.
 LLMs are generalizable, meaning that they can be fine-tuned or prompted to perform a wide range of tasks. 
 They are not bound to schemas or manual rules, making them adaptable to diverse data cleaning operations. 
 Finally, LLMs can reason in a human-like manner and are particularly effective at identifying context-dependent errors, similar to how an expert would review a dataset.
@@ -84,7 +84,7 @@ These properties make code generation a strong foundation for building reliable 
 
 \subsection{Data Profiling}
 Data profiling is the process of analyzing the content and structure of a dataset to extract statistical summaries and metadata \cite{PRDS}. 
-It provides essential information such as column types, value distributions, frequency counts, uniqueness and null counts, as well as FDs and other inter-column relationships. 
+It provides essential information such as column types, value distributions, frequency counts, uniqueness and null counts, as well as functional dependencies and other inter-column relationships. 
 This information offers an accurate view of the dataset's characteristics and helps the LLM better understand where to focus, leading to more targeted and effective data cleaning.
 In addition, data profiling addresses several limitations of LLM-based cleaning.
 Statistical properties such as distributions, frequency patterns, correlations and dependencies are difficult for LLMs to infer reliably from raw data alone. 

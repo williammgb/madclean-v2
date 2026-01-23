@@ -1,7 +1,7 @@
 \chapter{Evaluation}
 In this chapter, we evaluate the effectiveness of the proposed framework.
 The evaluation focuses on analysing how well the framework detects errors, how accurately it repairs these errors and how its performance compares to existing state-of-the-art data cleaning approaches.
-In addition, we also analyze the impact of the individual framework components.
+In addition, we analyze the impact of the individual framework modules.
 \section{Experimental Setup}
 To evaluate the performance of the proposed framework, we designed an experimental setup in which its results are compared against a set of baseline methods discussed in the literature review. 
 These baselines were selected because they either use LLMs for data cleaning or demonstrate state-of-the-art performance on benchmark datasets.
@@ -16,7 +16,7 @@ The evaluation is divided into two main phases:
 \end{enumerate}
 
 In addition to accuracy metrics, we compare the runtime performance of all evaluated methods. 
-For the proposed framework, we further conduct a more detailed analysis that includes an analysis of LLM token usage per dataset and an ablation study to evaluate the contribution of individual framework components to the overall performance.
+For the proposed framework, we further conduct a more detailed analysis that includes an analysis of LLM token usage per dataset and an ablation study to evaluate the contribution of individual framework modules to the overall performance.
 \newline\newline
 Unless stated otherwise, all experiments use the \texttt{gemini-2.5-pro} model with default parameters (e.g., temperature = 1). 
 Since LLMs are non-deterministic and framework performance may vary between runs, results are reported as the mean of four independent executions to improve robustness. 
@@ -36,7 +36,7 @@ Dataset size and error rates are reported separately in table \ref{tab:datasets}
 The data consists primarily of short strings and numeric fields representing identifiers (e.g., zipcodes, phonenumber, ids). 
 Errors include typos caused by character replacement (e.g., replacing characters with 'x'), formatting inconsistencies (e.g., values stored with non-numeric characters instead of pure numerics), DMVs such as 'empty' and dependency violations.
 \newline
-\textbf{Beers} \cite{RAHA}- A real-world, structured and redundant dataset containing information about beers and their properties, such as alcohol by volume and brewery details. 
+\textbf{Beers} \cite{RAHA} - A real-world, structured and redundant dataset containing information about beers and their properties, such as alcohol by volume and brewery details. 
 The dataset includes numeric columns, short strings and identifiers. 
 Error types include missing values, formatting inconsistencies (e.g., '0.045\%' vs. 0.045, '12.0 oz' vs. '12.0 ounce'), dependency violations, schema violations where data from multiple columns is merged into a single column, and some outliers and typos.
 \newline
@@ -50,7 +50,7 @@ Error types include typos, missing values, DMVs (e.g., -1, {NULL}), outliers and
 \newline
 \begin{table}[h]
 \centering
-\resizebox{0.5\textwidth}{!}{
+\resizebox{0.4\textwidth}{!}{
   \begin{tabular}{|l|c|c|}
   \hline
   \textbf{Dataset}  & \textbf{Size} & \textbf{Error rate} \\
@@ -62,7 +62,7 @@ Error types include typos, missing values, DMVs (e.g., -1, {NULL}), outliers and
   \hline
   \end{tabular}
 }
-\caption{Overview of dataset properties}
+\caption{Summary of dataset characteristics.}
 \label{tab:datasets}
 \end{table}
 
@@ -147,7 +147,7 @@ Based on these definitions, we define:
 
 True Negatives (clean cells that remain unchanged) do not provide useful information in this context and are therefore excluded.
 
-Using these sets, precision, recall, and F1 score are computed as:
+Using these sets, precision, recall and F1 score are computed as:
 \[
 \textbf{Precision} = \frac{|\text{TP}|}{|\text{TP}| + |\text{FP}|}
 \]
@@ -180,7 +180,7 @@ We therefore redefine the cases as:
 \]
 \indent Erroneous cells that are not repaired correctly, either because they were not changed or because they were changed to an incorrect value.
 
-We use the same formulas for precision, recall, and F1-score as described above to maintain consistency. 
+We use the same formulas for precision, recall and F1-score as described above to maintain consistency. 
 In this context, precision reflects how many of the modified cells are repaired correctly, while recall reflects how many of the true errors in the dataset are repaired correctly.
 
 \section{Results}
@@ -221,11 +221,11 @@ Its performance is comparable to that of the proposed framework, highlighting th
   Cocoon & 0.72 & 0.93 & 0.81 & 1.00 & 0.91 & 0.95 & 0.24 & \textbf{1.00} & 0.38 & 0.19 & 0.33 & 0.24 \\
   SAGED & 0.52 & 0.91 & 0.66 & 0.52 & 0.91 & 0.66 & 0.44 & 0.94 & 0.60 & 0.09 & 0.46 & 0.15 \\
   \midrule[1pt]
-  my\_framework & 0.98 & \textbf{0.99} & \textbf{0.99} & 0.99 & \textbf{0.99} & \textbf{0.99} & \textbf{0.97} & \textbf{1.00} & \textbf{0.99} & 0.65 & \textbf{0.81} & 0.67 \\
+  MACS & 0.98 & \textbf{0.99} & \textbf{0.99} & 0.99 & \textbf{0.99} & \textbf{0.99} & \textbf{0.97} & \textbf{1.00} & \textbf{0.99} & 0.65 & \textbf{0.81} & 0.67 \\
   \bottomrule[1.5pt]
   \end{tabular}
 }
-\caption{Detection results}
+\caption{Detection results for the framework and baselines across datasets.}
 \label{tab:detection_results}
 \end{table}
 
@@ -252,8 +252,8 @@ While Cocoon and Raha+Baran also identify many of these issues, the proposed fra
 In addition, most outliers are detected by the framework, while all other baseline methods, except SAGED in some cases, largely fail to identify them.
 \newline\newline
 The framework is also effective at enforcing functional dependencies. 
-The majority of violations are correctly identified, and missing values that can be inferred using functional dependencies are flagged accordingly. 
-In contrast, Cocoon and SAGED fail to detect most of the violations, HoloClean only identifies imputable missing values, and Raha+Baran detects only a subset of the dependency pairs, missing many violations.
+The majority of violations are correctly identified and missing values that can be inferred using functional dependencies are flagged accordingly. 
+In contrast, Cocoon and SAGED fail to detect most of the violations, HoloClean only identifies imputable missing values and Raha+Baran detects only a subset of the dependency pairs, missing many violations.
 \newline\newline
 The framework introduces only minor misdetections. 
 Some false negatives occur for highly irregular errors, such as random character replacements (e.g., arbitrary 'x' substitutions). 
@@ -296,11 +296,11 @@ Since SAGED is designed only for error detection, it is excluded from this evalu
   RetClean & 0.05 & 0.04 & 0.04 & 0.29 & 0.50 & 0.37 & - & - & - & 0.02 & 0.20 & 0.04 \\
   Cocoon & 0.71 & 0.91 & 0.79 & \textbf{1.00} & 0.91 & 0.95 & 0.23 & 0.95 & 0.37 & 0.18 & 0.31 & 0.23 \\
   \midrule[1pt]
-  my\_framework & 0.96 & \textbf{0.97} & \textbf{0.96} & 0.99 & \textbf{0.99} & \textbf{0.99} & \textbf{0.97} & \textbf{1.00} & \textbf{0.98} & 0.59 & \textbf{0.75} & \textbf{0.61} \\
+  MACS & 0.96 & \textbf{0.97} & \textbf{0.96} & 0.99 & \textbf{0.99} & \textbf{0.99} & \textbf{0.97} & \textbf{1.00} & \textbf{0.98} & 0.59 & \textbf{0.75} & \textbf{0.61} \\
   \bottomrule[1.5pt]
   \end{tabular}
 }
-\caption{Correction results}
+\caption{Correction results for the framework and baselines across datasets.}
 \label{tab:correction_results}
 \end{table}
 
@@ -350,7 +350,7 @@ While Raha+Baran achieves similar cleaning quality to the proposed framework, it
 Interestingly, the Movies dataset, which is the largest in terms of rows, has the shortest runtime. 
 This is because the framework samples the dataset, making runtime largely independent of the number of rows. 
 Instead, runtime scales with the number of columns and the number of detected functional dependencies. 
-For example, the Hospital dataset has many columns and FDs, resulting in the longest runtime.
+For example, the Hospital dataset has many columns and functional dependencies, resulting in the longest runtime.
 The Rayyan dataset also exhibits a relatively high runtime. 
 As described earlier, difficulties in inferring consistent cleaning rules likely cause many operations to be rejected by the validator, requiring multiple retries and increasing overall runtime.
 
@@ -366,11 +366,11 @@ As described earlier, difficulties in inferring consistent cleaning rules likely
   RetClean & 8462 & 13506 & - & 5271 \\
   Cocoon & 763 & 148 & 585 & 426 \\
   \hline
-  my\_framework & 632 & 303 & 171 & 556 \\
+  MACS & 632 & 303 & 171 & 556 \\
   \hline
   \end{tabular}
 }
-\caption{Runtime in seconds}
+\caption{Runtime (s) across datasets.}
 \label{tab:runtimes}
 \end{table}
 
@@ -382,7 +382,7 @@ The input token size for Movies is nearly twice that of Beers, explaining the hi
 
 \begin{table}[h]
 \centering
-\resizebox{0.6\textwidth}{!}{
+\resizebox{0.5\textwidth}{!}{
   \begin{tabular}{|l|c|c|c|}
   \hline
   \textbf{Dataset} & \textbf{Input} & \textbf{Output} & \textbf{Total} \\
@@ -394,26 +394,33 @@ The input token size for Movies is nearly twice that of Beers, explaining the hi
   \hline
   \end{tabular}
 }
-\caption{Token usage for framework}
+\caption{Token usage of the framework across datasets.}
 \label{tab:token_usage}
 \end{table}
 
 
 \subsection{Ablation Study}
-To evaluate the contribution of the different components of the proposed framework, we conducted an ablation study, comparing the full framework with three variants: one without the functional dependency detection tool, one without the validator and one using a basic prompt instead of a detailed, type-specific prompt. 
-By analyzing changes in detection and correction performance across these variants, we can assess the relative importance of each component. 
-For consistency, all results are averaged over two independent runs. The results are presented in figure \ref{fig:ablation_study}.
+To evaluate the contribution of the different modules of the proposed framework, we conducted an ablation study, comparing the full framework with three variants: one without the functional dependency detection tool, one without the validator and one using a basic prompt instead of a detailed, type-specific prompt. 
+By analyzing changes in detection and correction performance across these variants, we can assess the relative importance of each module. 
+For consistency, all results are averaged over two independent runs. The results are presented in figures \ref{fig:ablation_study_det} and \ref{fig:ablation_study_cor}.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{Figures/combined_ablation_all.png}
-    \caption{OLD! Barplot of ablation study results}
-    \label{fig:ablation_study}
+    \includegraphics[width=0.8\textwidth]{Figures/ablation_detection.pdf}
+    \caption{Ablation study results for detection F1 scores across datasets.}
+    \label{fig:ablation_study_det}
 \end{figure}
 
-When the dependency detection tool is removed, we focus on the Hospital and Beers datasets, as the other datasets do not contain functional dependencies. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/ablation_correction.pdf}
+    \caption{Ablation study results for correction F1 scores across datasets.}
+    \label{fig:ablation_study_cor}
+\end{figure}
+
+When the functional dependency detection tool is removed, we focus on the Hospital and Beers datasets, as the other datasets do not contain functional dependencies and therefore their results remain unchanged. 
 For the Hospital dataset, the impact is relatively small: F1 score for detection decreases from 0.99 to 0.96 and for correction from 0.96 to 0.91. 
-Most FD violations in this dataset are simple typos, and the LLM can infer the correct values using column-level redundancy, minimizing the effect of removing the tool. 
+Most functional dependency violations in this dataset are simple typos, and the LLM can infer the correct values using column-level redundancy, minimizing the effect of removing the tool. 
 On the Beers dataset, the performance drop is more noticeable, with F1 score for both detection and correction falling from 0.99 to 0.89. 
 Missing values in the state column are no longer imputed and violations in the city column remain uncorrected, although most other cells are still cleaned correctly. 
 From table \ref{tab:ablation_study}, we see that skipping the dependency detection tool slightly reduces runtime, as fewer LLM API calls are required, while token usage is largely unaffected. 
@@ -429,37 +436,38 @@ Runtime and token usage are slightly reduced without the validator, since fewer 
 This highlights the validator's critical role in maintaining precision, especially in datasets with complex or variable formatting.
 \newline\newline
 The variant using a basic prompt shows the largest performance decline. 
-The prompts for both the recommender and validator are replaced with a basic prompt. 
-This prompt contains only simple instructions for the LLM (e.g., to clean the data or enforce functional dependencies) and the same data sample from the original prompt, but excludes all type-specific instructions and examples.
+The high-quality prompts for both the recommender and validator are replaced with basic prompts. 
+These prompts contains only simple instructions for the LLM (e.g., instructing to clean the data or enforce functional dependencies) and the same data sample from the original prompt, but excludes all type-specific instructions and examples.
 In the Beers dataset, detection F1 score remains relatively high at 0.86, but correction F1 score drops sharply to 0.30. 
 For Hospital, both detection and correction F1 score decrease by approximately 40 percentage points. 
 The Movies dataset experiences a decline of around 50 points, and Rayyan drops by 28 points. 
 The primary cause of this drop is that string values are often modified incorrectly: capitalization is changed inconsistently, abbreviations are expanded and metadata is removed, generating numerous false positives. 
-Formatting corrections are also incomplete; for instance, numeric columns such as score, sample, ounces, and abv are not consistently standardized to pure numeric columns. 
+Formatting corrections are also incomplete; for instance, numeric columns such as score, sample, ounces and abv are not consistently standardized to pure numeric columns. 
 Multi-value columns are frequently reformatted incorrectly (e.g., strings converted to lists or with added spaces after commas), further reducing precision. 
-Despite these challenges, basic error types such as typos, DMVs, and pattern violations are still detected. 
+These results highlight that detailed instructions and contextual examples are essential for guiding the LLM toward consistent and reliable cleaning behavior, and that removing this guidance leads to unstable transformations and a substantial increase in false positives.
+Despite these challenges, basic error types such as typos, DMVs and pattern violations are still detected. 
 Runtime is slightly longer for this variant due to additional retries needed for outputs to satisfy the validator, while token usage remains similar.
-\newline\newline
-Overall, the ablation study demonstrates that each component contributes meaningfully to the framework's performance, with prompt engineering having the largest impact. 
-High-quality, type-specific prompts provide explicit instructions and examples, ensuring that the LLM applies cleaning operations consistently and according to the dataset's structure, rather than relying on generalized heuristics from its training data. 
-Functional dependency reasoning and the validator further improve reliability by enabling context-aware corrections and preventing unwanted modifications, especially in complex or heterogeneous datasets.
 
 \begin{table}[h]
 \centering
 \resizebox{\textwidth}{!}{
   \begin{tabular}{l|ccc|ccc|ccc|ccc}
   \toprule[1pt]
-  \textbf{Ablation} & \multicolumn{3}{c|}{\textbf{Beers}} & \multicolumn{3}{c|}{\textbf{Hospital}} & \multicolumn{3}{c|}{\textbf{Movies}} & \multicolumn{3}{c}{\textbf{Rayyan}} \\
+  \textbf{Ablation} & \multicolumn{3}{c|}{\textbf{Hospital}} & \multicolumn{3}{c|}{\textbf{Beers}} & \multicolumn{3}{c|}{\textbf{Movies}} & \multicolumn{3}{c}{\textbf{Rayyan}} \\
   \midrule[1pt]
     & \textbf{Runtime} & \textbf{Input} & \textbf{Output} & \textbf{Runtime} & \textbf{Input} & \textbf{Output} & \textbf{Runtime} & \textbf{Input} & \textbf{Output} & \textbf{Runtime} & \textbf{Input} & \textbf{Output} \\
   \midrule[1pt]
-  Full & 303 & 127,876 & 69,876 & 632 & 366,907 & 231,973 & 171 & 239,393 & 90,325 & 556 & 306,225 & 194,494 \\
-  No FD & 245 & 133,777 & 73,116 & 598 & 330,474 & 212,937 & - & - & - & - & - & - \\
-  No Validator & 163 & 50,140 & 42,995 & 397 & 121,605 & 164,230 & 96 & 109,448 & 61,282 & 186 & 60,582 & 77,875 \\
-  Basic Prompt & 351 & 88,730 & 82,582 & 636 & 352,567 & 304,201 & 334 & 257,075 & 145,766 & 718 & 383,384 & 274,720 \\
+  Full & 632 & 366,907 & 231,973 & 303 & 127,876 & 69,876 & 171 & 239,393 & 90,325 & 556 & 306,225 & 194,494 \\
+  No FD & 598 & 330,474 & 212,937 & 245 & 133,777 & 73,116 & 171 & 239,393 & 90,325 & 556 & 306,225 & 194,494 \\
+  No Validator & 397 & 121,605 & 164,230 & 163 & 50,140 & 42,995 & 96 & 109,448 & 61,282 & 186 & 60,582 & 77,875 \\
+  Basic Prompt & 636 & 352,567 & 304,201 & 351 & 88,730 & 82,582 & 334 & 257,075 & 145,766 & 718 & 383,384 & 274,720 \\
   \bottomrule[1pt]
   \end{tabular}
 }
-\caption{Runtime and Token Usage}
+\caption{Runtime (s) and token usage across datasets.}
 \label{tab:ablation_study}
 \end{table}
+
+Overall, the ablation study demonstrates that each module contributes meaningfully to the framework's performance, with prompt engineering having the largest impact. 
+High-quality, type-specific prompts provide explicit instructions and examples, ensuring that the LLM applies cleaning operations consistently and according to the dataset's structure, rather than relying on generalized heuristics from its training data. 
+Functional dependency reasoning and the validator further improve reliability by enabling context-aware corrections and preventing unwanted modifications, especially in complex or heterogeneous datasets.

@@ -1,24 +1,12 @@
-# [name] - Multi-Agent Data Cleaning System
-High-quality data is essential for effective decision-making, data analytics and the
-training of machine learning models. However, real-world tabular datasets frequently
-contain errors, inconsistencies and missing values that degrade data quality and hinder
-downstream tasks. This thesis proposed an automated tabular data cleaning framework
-that integrates statistical data profiling with the semantic reasoning and code generation capabilities of LLMs. 
-The framework first analyzes datasets using statistical
-profiling techniques to identify column characteristics, error patterns and inter-column
-relationships. Based on this analysis, dataset-specific cleaning instructions and examples are selected to guide the LLM in choosing appropriate cleaning operations. To ensure reliability and generalizability across diverse datasets, the
-framework employs a multi-agent LLM architecture with validation mechanisms that
-verify the correctness and consistency of generated transformations.
-This enables automated, adaptive and scalable data cleaning,
-producing high-quality tabular datasets that are well suited for downstream analytical
-and machine learning tasks.
+# MADClean - Multi-Agent Data Cleaning
+High-quality data is essential for effective decision-making, data analytics and the training of machine learning models. However, real-world tabular datasets frequently contain errors, inconsistencies and missing values that degrade data quality and hinder downstream tasks. This thesis presents an automated tabular data cleaning framework that integrates statistical data profiling with the semantic reasoning and code generation capabilities of LLMs. Statistical profiling is used to extract dataset characteristics and relationships that guide the LLM in selecting appropriate cleaning operations. A multi-agent LLM architecture generates executable cleaning logic to ensure scalable and consistent data cleaning, while validation mechanisms are employed to verify correctness and improve reliability. Experimental results demonstrate that the framework achieves strong cleaning performance with competitive runtime, enabling automated and adaptive data cleaning and producing high-quality tabular data suitable for downstream analytical and machine learning tasks.
 
 ## Installation
 This framework was tested on Python version 3.11.
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/qahtanaa/COSC-Thesis-William.git thesis-repo
-cd thesis-repo/code
+git clone https://github.com/qahtanaa/COSC-Thesis-William.git 
+cd COSC-Thesis-William/code
 ```
 ### 2. (Optional but recommended) Create a virtual environment
 Example using Python 3.11 (Windows):
@@ -43,7 +31,6 @@ From the project root directory, run:
 pip install .
 ```
 
-
 ## LLM configuration
 You must configure an LLM provider to use the framework's features.
 
@@ -65,7 +52,7 @@ To add support for a new LLM provider:
 ## Usage
 After installation, the framework can be run using the CLI command:
 ```bash
-macs path/to/file.csv [OPTIONS]
+madclean path/to/file.csv [OPTIONS]
 ```
 #### Available options
 `-v`, `--verbose`: Enable verbose output.  
@@ -74,7 +61,7 @@ macs path/to/file.csv [OPTIONS]
 
 ### Example
 ```bash
-macs data\benchmark_datasets\beers_dirty.csv --verbose --save-cleaned
+madclean data\benchmark_datasets\beers_dirty.csv --verbose --save-cleaned
 ```
 
 ## Security Note
@@ -82,7 +69,6 @@ This framework does **not** provide strong sandboxing guarantees for LLM-generat
 Executing LLM-generated code should only be done with **trusted models and environments**.
 
 ## Adding Additional Cleaning Components
-
 This section describes how to extend the framework with additional cleaning components.  
 Two types of operations are supported: **single-column** and **multi-column** operations.
 
@@ -107,9 +93,3 @@ These prompts should:
     - include the relevant data and explanations
     - convert structured data into textual cleaning instructions for the LLM
 7. Register the new prompts in `prompt_generation.py`.
-
-
-
-
-
-

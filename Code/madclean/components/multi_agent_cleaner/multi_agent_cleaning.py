@@ -1,11 +1,11 @@
 import pandas as pd
 import asyncio
 # Local imports
-from macs.llm.llm_clients import BaseLLMClient
-from macs.components.multi_agent_cleaner.llm_coding import LLMCodingAgent
-from macs.components.multi_agent_cleaner.llm_validation import LLMValidationAgent
-from macs.components.multi_agent_cleaner.llm_recommending import LLMRecommendationAgent
-from macs.components.domain.schema import ColumnProfile, MultiColumnTask
+from madclean.llm.llm_clients import BaseLLMClient
+from madclean.components.multi_agent_cleaner.llm_coding import LLMCodingAgent
+from madclean.components.multi_agent_cleaner.llm_validation import LLMValidationAgent
+from madclean.components.multi_agent_cleaner.llm_recommending import LLMRecommendationAgent
+from madclean.components.domain.schema import ColumnProfile, MultiColumnTask
 
 class MultiAgentCleaning:
     MAX_CLEANING_ATTEMPTS = 5

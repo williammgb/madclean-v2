@@ -3,7 +3,7 @@ import itertools
 from collections import defaultdict
 from typing import cast
 # Local imports
-from macs.components.domain.schema import MultiColumnTask, FDResult
+from madclean.components.domain.schema import MultiColumnTask, FDResult
 
 class FunctionalDependencies:
     """
@@ -226,7 +226,7 @@ class FunctionalDependencies:
 if __name__ == "__main__":
     import time
     from pathlib import Path
-    from macs.utils.helpers import load_dataset
+    from madclean.utils.helpers import load_dataset
     BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
     file_path = BASE_DIR / "data" / "benchmark_datasets" / "beers_dirty.csv"
     df = load_dataset(file_path)
@@ -261,4 +261,4 @@ if __name__ == "__main__":
     for fd in fds:
         fd_data = fd_manager.get_data(df, fd)
 
-    # python -m macs.components.dataprofiler.functional_dependencies
+    # python -m madclean.components.dataprofiler.functional_dependencies

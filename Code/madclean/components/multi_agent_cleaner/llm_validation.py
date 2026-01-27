@@ -3,9 +3,9 @@ import pandas as pd
 from pydantic import BaseModel
 from typing import Literal
 # Local imports
-from macs.llm.llm_clients import BaseLLMClient
-from macs.components.coordinator.prompt_generation import PromptGeneration
-from macs.components.domain.schema import MultiColumnTask
+from madclean.llm.llm_clients import BaseLLMClient
+from madclean.components.coordinator.prompt_generation import PromptGeneration
+from madclean.components.domain.schema import MultiColumnTask
 
 class CodeOutputValidation(BaseModel):
     """Defines the required JSON output strcuture for verification of Gemini API."""
@@ -109,8 +109,8 @@ if __name__ == "__main__":
 #     import os
 #     from dotenv import load_dotenv
 #     load_dotenv()
-#     from macs.llm.llm_settings import LLM_CLIENT_NAME
-#     from macs.llm.llm_registry import LLM_CLIENT_MAP
+#     from madclean.llm.llm_settings import LLM_CLIENT_NAME
+#     from madclean.llm.llm_registry import LLM_CLIENT_MAP
 
 #     llm_client_name: str = LLM_CLIENT_NAME
 #     llm_clients: dict = LLM_CLIENT_MAP
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     import asyncio
     import json
     import pandas as pd
-    from macs.components.domain.schema import FDResult   
+    from madclean.components.domain.schema import FDResult   
 
     class MockLLMClient:
         async def call_llm_async(self, messages, response_schema):
@@ -224,4 +224,4 @@ if __name__ == "__main__":
 
     asyncio.run(main())
 
-    # python -m macs.components.multi_agent_cleaner.llm_validation
+    # python -m madclean.components.multi_agent_cleaner.llm_validation

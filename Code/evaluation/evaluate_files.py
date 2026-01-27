@@ -7,10 +7,10 @@ from typing import Callable
 from pathlib import Path
 import pandas as pd
 # local imports
-from macs.config.settings import VERBOSE
-from macs.llm.llm_registry import LLM_CLIENT_MAP
-from macs.llm.llm_settings import LLM_CLIENT_NAME
-from macs.pipeline import Pipeline
+from madclean.config.settings import VERBOSE
+from madclean.llm.llm_registry import LLM_CLIENT_MAP
+from madclean.llm.llm_settings import LLM_CLIENT_NAME
+from madclean.pipeline import Pipeline
 from .evaluation import CleaningEvaluation
 
 class EvaluationPipeline:

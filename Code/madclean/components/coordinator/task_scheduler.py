@@ -1,7 +1,7 @@
 from collections import defaultdict, deque
 from typing import cast
 # Local imports
-from macs.components.domain.schema import MultiColumnTask, FDResult
+from madclean.components.domain.schema import MultiColumnTask, FDResult
 
 class TaskScheduler:
     """Determines the correct execution order of functional dependencies based on their dependency relationships."""

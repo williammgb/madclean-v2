@@ -4,7 +4,7 @@ import numpy as np
 from typing import Callable
 from dateutil.parser import parse
 # Local imports
-from macs.utils.helpers import format_list_for_prompt
+from madclean.utils.helpers import format_list_for_prompt
 
 class DataSampler:
     """
@@ -224,5 +224,5 @@ if __name__ == "__main__":
     print()
     print(prompt3)
 
-    # python -m macs.components.dataprofiler.data_selection
+    # python -m madclean.components.dataprofiler.data_selection
 

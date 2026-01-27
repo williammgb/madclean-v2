@@ -2,9 +2,9 @@ import random
 import pandas as pd
 from typing import Callable, cast
 # Local imports
-from macs.components.coordinator.prompts import *
-from macs.utils.helpers import format_list_for_prompt
-from macs.components.domain.schema import ColumnProfile, OutlierResult, MultiColumnTask, FDResult
+from madclean.components.coordinator.prompts import *
+from madclean.utils.helpers import format_list_for_prompt
+from madclean.components.domain.schema import ColumnProfile, OutlierResult, MultiColumnTask, FDResult
 
 class PromptGeneration:
     "Instantiates all prompt templates with the provided data for downstream LLM use."""

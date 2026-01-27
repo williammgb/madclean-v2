@@ -1,4 +1,4 @@
-from macs.llm.llm_clients import OpenAIClient, GeminiClient
+from madclean.llm.llm_clients import OpenAIClient, GeminiClient
 
 LLM_CLIENT_MAP = {
     "OpenAI": {"class": OpenAIClient, 

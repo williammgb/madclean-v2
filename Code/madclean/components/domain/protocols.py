@@ -1,7 +1,7 @@
 from typing import Protocol
 import pandas as pd
 # local imports
-from macs.components.domain.schema import MultiColumnTask
+from madclean.components.domain.schema import MultiColumnTask
 
 class SingleColumnCleaner(Protocol):
     """Demonstrates how a single column cleaning component should look like."""

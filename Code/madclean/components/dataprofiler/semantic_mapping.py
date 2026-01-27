@@ -6,7 +6,7 @@ import numpy as np
 from collections import Counter 
 from dateutil.parser import parse 
 # Local imports 
-from macs.utils.helpers import subsample_dataframe
+from madclean.utils.helpers import subsample_dataframe
 
 
 class SemanticTypeDetection:
@@ -238,4 +238,4 @@ if __name__ == "__main__":
     })
     detector = SemanticTypeDetection(verbose=True)
     column_types = detector.detect_types(df)
-    # python -m macs.components.dataprofiler.semantic_mapping
+    # python -m madclean.components.dataprofiler.semantic_mapping

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 # local imports
-from macs.utils.helpers import load_dataset
+from madclean.utils.helpers import load_dataset
 
 class CleaningEvaluation:
     def __init__(self, 

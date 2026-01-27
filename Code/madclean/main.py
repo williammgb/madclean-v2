@@ -2,9 +2,9 @@ import os
 import argparse
 from dotenv import load_dotenv
 ### Local imports
-from macs.pipeline import Pipeline
-from macs.llm.llm_settings import LLM_CLIENT_NAME
-from macs.llm.llm_registry import LLM_CLIENT_MAP
+from madclean.pipeline import Pipeline
+from madclean.llm.llm_settings import LLM_CLIENT_NAME
+from madclean.llm.llm_registry import LLM_CLIENT_MAP
 
 def main(file_path, 
          save_cleaned: bool = False,
@@ -38,7 +38,7 @@ def setup_llm(llm_client_name: str, llm_clients: dict):
 def cli(argv=None) -> int:
     """CLI wrapper. Returns a process exit code."""
     parser = argparse.ArgumentParser(
-        prog="python -m macs.main",
+        prog="python -m madclean.main",
         description="Run the data cleaning pipeline"
     )
     # 1. Enter filepath

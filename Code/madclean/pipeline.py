@@ -4,12 +4,12 @@ import time
 from dotenv import load_dotenv
 load_dotenv()
 # Local imports
-from macs.components.dataprofiler.dataprofiler import DataProfiler
-from macs.components.dataprofiler.outlier_detection import OutlierDetection
-from macs.components.dataprofiler.functional_dependencies import FunctionalDependencies
-from macs.components.multi_agent_cleaner.multi_agent_cleaning import MultiAgentCleaning
-from macs.components.coordinator.cleaning_coordinator import CleaningCoordinator
-from macs.utils.helpers import load_dataset, save_dataset
+from madclean.components.dataprofiler.dataprofiler import DataProfiler
+from madclean.components.dataprofiler.outlier_detection import OutlierDetection
+from madclean.components.dataprofiler.functional_dependencies import FunctionalDependencies
+from madclean.components.multi_agent_cleaner.multi_agent_cleaning import MultiAgentCleaning
+from madclean.components.coordinator.cleaning_coordinator import CleaningCoordinator
+from madclean.utils.helpers import load_dataset, save_dataset
 
 class Pipeline:
     def __init__(self, llm_client: dict, verbose: bool = False):

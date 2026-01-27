@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 # Local imports
-from macs.components.domain.schema import OutlierResult
+from madclean.components.domain.schema import OutlierResult
 
 class OutlierDetection:
     def __init__(self, verbose: bool = False):
@@ -73,11 +73,11 @@ if __name__ == "__main__":
     print()
     ## TEST 2
     from pathlib import Path
-    from macs.utils.helpers import load_dataset
+    from madclean.utils.helpers import load_dataset
     BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
     file_path = BASE_DIR / "data" / "benchmark_datasets" / "beers_dirty.csv"
     df = load_dataset(file_path)
     result = detector.analyse(df, "ibu", "INTEGER")
     print(result)
 
-    # python -m macs.components.dataprofiler.outlier_detection
+    # python -m madclean.components.dataprofiler.outlier_detection

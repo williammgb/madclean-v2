@@ -2,9 +2,9 @@ import json
 from pydantic import BaseModel
 import pandas as pd
 # Local imports
-from macs.llm.llm_clients import BaseLLMClient
-from macs.components.coordinator.prompt_generation import PromptGeneration
-from macs.components.domain.schema import ColumnProfile, MultiColumnTask
+from madclean.llm.llm_clients import BaseLLMClient
+from madclean.components.coordinator.prompt_generation import PromptGeneration
+from madclean.components.domain.schema import ColumnProfile, MultiColumnTask
 
 class CodeOutputRecommendation(BaseModel):
     """Defines the required JSON output structure for cleaning instructions."""
@@ -123,8 +123,8 @@ if __name__ == "__main__":
 #     import os
 #     from dotenv import load_dotenv
 #     load_dotenv()
-#     from macs.llm.llm_settings import LLM_CLIENT_NAME
-#     from macs.llm.llm_registry import LLM_CLIENT_MAP
+#     from madclean.llm.llm_settings import LLM_CLIENT_NAME
+#     from madclean.llm.llm_registry import LLM_CLIENT_MAP
 
 #     llm_client_name = LLM_CLIENT_NAME
 #     llm_clients = LLM_CLIENT_MAP
@@ -138,7 +138,7 @@ if __name__ == "__main__":
 #         print(f"Input: {input_tokens} | Output: {output_tokens}")
 #     recommender_agent = LLMRecommendationAgent(client, llm_role, mock_update_token_count, verbose=True)
     import asyncio
-    from macs.components.domain.schema import OutlierResult, FDResult
+    from madclean.components.domain.schema import OutlierResult, FDResult
     class MockLLMClient:
         async def call_llm_async(self, messages, response_schema):
             # Mock response based on schema type
@@ -226,4 +226,4 @@ if __name__ == "__main__":
         await run_test2()
      
     asyncio.run(main())
-    # python -m macs.components.multi_agent_cleaner.llm_recommending
+    # python -m madclean.components.multi_agent_cleaner.llm_recommending

@@ -1,10 +1,10 @@
 import asyncio
 import pandas as pd
 # Local imports
-from macs.components.multi_agent_cleaner.multi_agent_cleaning import MultiAgentCleaning
-from macs.components.dataprofiler.dataprofiler import MultiColumnCleaner
-from macs.components.domain.schema import MultiColumnTask, ColumnProfile
-from macs.components.coordinator.task_scheduler import TaskScheduler
+from madclean.components.multi_agent_cleaner.multi_agent_cleaning import MultiAgentCleaning
+from madclean.components.dataprofiler.dataprofiler import MultiColumnCleaner
+from madclean.components.domain.schema import MultiColumnTask, ColumnProfile
+from madclean.components.coordinator.task_scheduler import TaskScheduler
 
 class CleaningCoordinator:
     """Coordinates the Multi-Agent Cleaning Loop: determines order of asynchronous operations based on dependencies, runs all loop operations. """

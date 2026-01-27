@@ -1,9 +1,9 @@
 import pandas as pd
 # Local imports
-from macs.components.dataprofiler.semantic_mapping import SemanticTypeDetection
-from macs.components.dataprofiler.data_selection import DataSampler
-from macs.components.domain.schema import ColumnProfile, MultiColumnTask
-from macs.components.domain.protocols import SingleColumnCleaner, MultiColumnCleaner
+from madclean.components.dataprofiler.semantic_mapping import SemanticTypeDetection
+from madclean.components.dataprofiler.data_selection import DataSampler
+from madclean.components.domain.schema import ColumnProfile, MultiColumnTask
+from madclean.components.domain.protocols import SingleColumnCleaner, MultiColumnCleaner
 
 class DataProfiler:
     """Class that combines all dataset profiling components"""
@@ -62,9 +62,9 @@ class DataProfiler:
 ####### TEST CODE #######       
 if __name__ == "__main__":
     from pathlib import Path
-    from macs.utils.helpers import load_dataset
-    from macs.components.dataprofiler.outlier_detection import OutlierDetection
-    from macs.components.dataprofiler.functional_dependencies import FunctionalDependencies
+    from madclean.utils.helpers import load_dataset
+    from madclean.components.dataprofiler.outlier_detection import OutlierDetection
+    from madclean.components.dataprofiler.functional_dependencies import FunctionalDependencies
     BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
     file_path = BASE_DIR / "data" / "benchmark_datasets" / "beers_dirty.csv"
     df = load_dataset(file_path)
@@ -78,6 +78,6 @@ if __name__ == "__main__":
     print()
     print(multi_col_tasks[0])
 
-    # python -m macs.components.dataprofiler.dataprofiler
+    # python -m madclean.components.dataprofiler.dataprofiler
 
 

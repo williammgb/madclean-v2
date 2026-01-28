@@ -1,32 +1,33 @@
 \chapter{Related Work}
-Before defining the proposed approach, it is important to first examine existing data cleaning techniques. 
+Before introducing the proposed approach, it is important to review existing data cleaning techniques. 
 Over the years, a wide range of methods has been developed to address the challenges of data errors, each relying on different assumptions, signals and strategies. 
-This literature review provides a structured overview of the main approaches to data error detection and repair. 
-By examining this work, we aim not only to understand the signals or features these methods rely on (e.g., statistical patterns, domain knowledge and integrity constraints), but also to analyze why and when these methods perform effectively or fail, and how well they generalize across datasets with different characteristics. 
-Some cleaning methods focus on error detection, others on data repair, and some provide end-to-end cleaning solutions. 
-To provide clarity, the methods are categorized based on their underlying techniques (e.g., LLM-based, machine learning-based, rule-based), with a summary of each approach and its strengths and limitations. 
-Before discussing specific cleaning methods, we begin by reviewing foundational work on data quality and data errors.
+This literature review provides a structured overview of the main approaches to data error detection and correction. 
+By examining this work, we aim not only to understand the signals and features these methods rely on (e.g., statistical patterns, domain knowledge, and integrity constraints), but also to analyze the conditions under which they perform effectively or fail, as well as the extent to which they generalize across datasets with different characteristics.
+Some cleaning methods focus on error detection, others on error correction, and some provide end-to-end cleaning solutions. 
+To provide clarity, the review methods are categorized based on their underlying techniques (e.g., LLM-based, machine learning-based).
+For each method, we provide a brief description of the underlying approach, along with a discussion of its key strengths and potential limitations.
+Before discussing specific cleaning methods, this section begins with a review of foundational work on data quality and data errors.
 
 \section{Data Quality}
 The growing reliance on data to drive business operations, decision-making and advanced analytics has made data quality a central concern. 
 As Olson \cite{OLSON} notes, data is fundamental to effective information systems and its accuracy directly influences the quality of decisions derived from it. 
 However, despite its critical role, data quality is often poor across many domains. 
 This is largely due to the rapid evolution of information systems, where new platforms and technologies are adopted quickly, while methods for managing data quality have not kept up \cite{OLSON}. 
-With the rise of big data, machine learning (ML) and artificial intelligence (AI), the stakes of high-quality data have grown even higher. 
+With the rise of big data, machine learning and artificial intelligence, the stakes of high-quality data have grown even higher. 
 The accuracy and trustworthiness of AI outputs, including LLMs, can be seriously affected by inconsistencies or inaccuracies in the underlying training data \cite{DQA}. 
 Therefore, scalable and adaptive quality measures are essential to prevent the spread of errors (such as hallucinations or biased predictions) through automated systems.
 \newline\newline
 A definition of data quality is “fitness for use” \cite{DQSDQD} or “the extent to which data is suitable for a specific task” \cite{DQA}, emphasizing that data should be appropriate for the task it supports. 
 In practice, this implies that the same dataset might be sufficient for one application but unsuitable for another, depending on the quality requirements \cite{DEDQ}. 
 As a result, it is hard to define a universal standard for data quality. 
-Olson \cite{OLSON} emphasizes the consequences of poor data quality. 
+Nevertheless, Olson \cite{OLSON} emphasizes the consequences of poor data quality. 
 These include increased operational costs, delays in data delivery, loss of customer trust and inefficiencies in supply chains. 
 In line with this, Nikiforova \cite{DEDQ} has measured the financial impact, showing that poor-quality data can lead to losses ranging from millions to billions of dollars annually across different industries. 
 Given that cleaning all dirty data is resource-intensive, some researchers suggest a selective approach, prioritizing the data that most affects the results. 
-Understanding how bad data affects accuracy allows us to clean just what is needed for our specific goals \cite{PAPER4}.\newline\newline
+Accordingly, understanding how bad data affects accuracy allows us to clean just what is needed for our specific goals \cite{PAPER4}.\newline\newline
 The assessment of data quality is typically divided into multiple dimensions, each representing a measurable characteristic of the data \cite{DQSDQD, SDQCPD}. 
 Common dimensions include accuracy, which refers to how closely the data reflects the true value; completeness, indicating the extent to which all required data is present; consistency, describing whether the data is in a uniform format across different sources; and duplication, which concerns the presence of redundant data entries. 
-These dimensions help organizations check and improve the quality of their data.
+These dimensions provide organizations with a structured basis for systematically assessing, monitoring and improving data quality in practice.
 
 \subsection{Data Errors}
 Data errors are a fundamental problem when working with data, as they directly impact the reliability and usefulness of any analysis or decision. 
@@ -37,18 +38,18 @@ Rule violations occur when data entries break certain rules, such as an employee
 Pattern violations involve entries that fail to follow the expected pattern, such as phone numbers missing area codes or inconsistent date formats. 
 Adding to this, Chu and Ilyas \cite{QDC} highlight additional common errors such as typos and missing values. 
 Typos are simple spelling mistakes, like 'Londn' instead of 'London', whereas missing values represent the absence of data in fields where information is expected. 
-These errors often result from collecting data from many different sources \cite{DDPCA}.
+Overall, these errors often result from the integration of data collected from many different sources \cite{DDPCA}.
 \newline\newline  
-Focusing on single datasets, Rahm et al. \cite{DDPCA} categorize data errors into three levels. 
+Focusing on individual datasets, Rahm et al. \cite{DDPCA} categorize data errors into three levels. 
 Attribute-level errors affect individual fields or cells within a dataset. 
-Common examples include invalid dates such as 30.13.70, missing values, misspellings and the use of abbreviations. 
+Common examples include invalid dates such as 30.13.70, missing values, misspellings and the inconsistent use of abbreviations. 
 Row-level errors arise from inconsistencies within a single row of data, such as an age recorded as 22 when the birthdate indicates that the person should be older. 
 At the dataset level, row type errors relate to inconsistencies or duplications across multiple related rows. For example, two rows might have different names but share the same social security number, indicating duplication or conflicting data. 
-When integrating data from multiple sources, additional challenges arise due to the structural differences, naming conflicts and the use of different units (e.g., dollars vs. euros), among other issues.
+When integrating data from multiple sources, additional challenges arise due to the structural differences, naming conflicts and the use of different units (e.g., dollars vs. euros), as well as other schema- and representation-level inconsistencies.
 \newline\newline
 Addressing these diverse data errors is the core of data cleaning, a process typically divided into two main phases as outlined by Ilyas and Chu \cite{DC}. 
 The first phase, error detection, involves identifying errors and violations within the dataset. 
-Once detected, the second phase, error repair, applies corrections to the data, aiming to restore its accuracy so that it is ready for use. 
+Once detected, the second phase, error correction, applies repair values to the data, aiming to restore its accuracy so that it is ready for use. 
 The impact of data errors varies significantly depending on the error type, error rate, dataset size and the methods involved \cite{PAPER4}. 
 For instance, a few missing values in a large dataset might have minimal effect on a robust ML model, whereas systematic duplication of rows could bias outcomes. 
 Understanding this variability is crucial for prioritizing cleaning efforts effectively. 
@@ -56,24 +57,11 @@ The volume of data today makes cleaning errors increasingly important and challe
 The speed at which data moves, along with the complex relationships and large number of columns in modern datasets, demands scalable and efficient cleaning methods to ensure data remains reliable and maintains high quality for downstream applications. 
 
 \section{LLM-based Data Cleaning}
-This section provides an overview of existing tools that leverage LLMs for data cleaning. 
-Some of these methods employ LLMs as the core component, relying primarily on their capabilities to detect and repair data errors. 
+This section provides an overview of existing tools that leverage large language models for data cleaning. 
+Some approaches employ LLMs as the core component, relying primarily on their capabilities to detect and repair data errors. 
 Others integrate LLMs as a part of a broader data cleaning pipeline, where they are responsible for specific subtasks.
-
-Ni et al. \cite{ITERCLEAN} present IterClean, an iterative data cleaning framework that leverages LLMs in combination with minimal user-provided labels to detect and correct diverse data errors. 
-Unlike traditional systems, IterClean introduces a cycle in which an error detector, verifier and repairer work until the data is clean or a stopping criterion is met. 
-The process begins with manual labeling, where a small number of representative tuples are annotated by the user. 
-These labeled examples help the LLM understand the dataset's structure and common error patterns. 
-To select the most informative rows for labeling, IterClean applies an Isolation Forest to pick outlier rows that are likely to contain errors. 
-During the iterative cleaning phase, the system uses batch prompting, grouping similar rows and inputting them to the LLM together. 
-This gives the model more useful context, allowing it to detect patterns more reliably and reduce hallucinations. 
-The detector flags potential errors and explains why each value might be incorrect. 
-The verifier then checks these entries using surrounding data and the LLM's explanation. 
-Confirmed errors are passed to the repairer, which suggests correction values. 
-IterClean demonstrates an average F1 score of approximately 0.54 across four standard benchmarks, with recall increasing after multiple iterations. 
-Overall, IterClean presents a flexible and efficient approach to LLM-based data cleaning through minimal supervision and iterative improvement.
-
-LLMClean \cite{LLMCLEAN} is a data cleaning framework designed to improve error detection in tabular datasets by automatically generating context-aware rules using LLMs. 
+\newline\newline
+LLMClean \cite{LLMCLEAN} is a data cleaning approach designed to improve error detection in tabular datasets by automatically generating context-aware rules using LLMs. 
 Unlike traditional methods that require manual writing of functional dependencies (FDs) or domain knowledge to construct semantic rules, LLMClean automates this process by leveraging the reasoning capabilities of LLMs. 
 At the core of LLMClean is its capability to generate Ontology-based Functional Dependencies (OFDs). 
 These improve upon standard FDs by capturing both structural relationships and semantic relationships, such as equivalence between synonyms and abbreviations (e.g., 'New York'  $\approx$ 'NY'). 
@@ -85,17 +73,30 @@ To improve robustness, LLMClean introduces a prompt ensembling strategy, where m
 The best performing prompt is selected to be used for the error detection process. 
 This helps minimize LLM hallucinations and improves consistency across datasets. 
 Overall, LLMClean offers a novel and intelligent approach to error detection by automating context modeling, reducing the need for manual rule creation and domain expertise.
-
-Li et al. \cite{AUTODCWORKFLOW} present a novel LLM-based framework, AutoDCWorkflow, that automates the generation and execution of data cleaning workflows designed to meet the user-defined analytical purposes. 
+\newline\newline
+Li et al. \cite{AUTODCWORKFLOW} present a novel LLM-based pipeline, AutoDCWorkflow, that automates the generation and execution of data cleaning workflows designed to meet the user-defined analytical purposes. 
 Rather than requiring users to manually write cleaning steps, the system accepts the raw table and a natural language purpose, then produces a step-by-step workflow and the cleaned dataset. 
-The framework consists of three iterative components: Target column selection to identify relevant columns based on the user's goals; column quality inspection to evaluate each target for issues like duplicates, missing values or inconsistent patterns; and the generation of cleaning operations and parameters. 
+The pipeline consists of three iterative components: Target column selection to identify relevant columns based on the user's goals; column quality inspection to evaluate each target for issues like duplicates, missing values or inconsistent patterns; and the generation of cleaning operations and parameters. 
 Each cleaning step includes an explanation to help users understand the reasoning. 
 The steps are executed in OpenRefine, a data cleaning tool, after each step, the system reviews the updated table to determine the next action. 
 This approach makes the  process adaptive and context-aware, allowing for more effective and flexible cleaning. 
 Experiments with LLMs such as LLaMA 3.1, Mistral and Gemma 2 show promising results, with LLaMA 3.1 performing the best. 
-Although current implementations don't model inter-column relationships, the framework establishes a strong foundation for purpose-driven, explainable and automated data cleaning.
-
-RetClean \cite{RETCLEAN} is a retrieval-based data cleaning framework designed to improve the accuracy of imputing missing or erroneous values in structured datasets. 
+Although current implementations don't model inter-column relationships, the pipeline establishes a strong foundation for purpose-driven, explainable and automated data cleaning.
+\newline\newline
+Ni et al. \cite{ITERCLEAN} present IterClean, an iterative data cleaning framework that leverages LLMs in combination with minimal user-provided labels to detect and correct diverse data errors. 
+Unlike most LLM-based systems, IterClean introduces a cycle in which an error detector, verifier and repairer work until the data is clean or a stopping criterion is met. 
+The process begins with manual labeling, where a small number of representative tuples are annotated by the user. 
+These labeled examples help the LLM understand the dataset's structure and common error patterns. 
+To select the most informative rows for labeling, IterClean applies an Isolation Forest to pick outlier rows that are likely to contain errors. 
+During the iterative cleaning phase, the system uses batch prompting, grouping similar rows and providing them to the LLM together. 
+This gives the model more useful context, allowing it to detect patterns more reliably and reduce hallucinations. 
+The detector flags potential errors and explains why each value might be incorrect. 
+The verifier then checks these entries using surrounding data and the LLM's explanation. 
+Confirmed errors are passed to the repairer, which suggests correction values. 
+IterClean demonstrates a low-to-average F1 score of approximately 0.54 across four standard benchmarks, with recall increasing after multiple iterations. 
+Overall, IterClean presents a flexible and efficient approach to LLM-based data cleaning through minimal supervision and iterative improvement.
+\newline\newline
+RetClean \cite{RETCLEAN} is a retrieval-based data cleaning system designed to improve the accuracy of imputing missing or erroneous values in structured datasets. 
 While LLMs are effective at general data cleaning, they often struggle with domain-specific or unfamiliar datasets. 
 RetClean addresses this problem by integrating relevant domain context from a user-provided data lake (a repository containing past records, reference data or supporting domain information). 
 When the system encounters an erroneous cell, it retrieves the top-k most similar rows from the data lake using syntactic (via Elasticsearch) and semantic (via Qdrant) search techniques. 
@@ -105,17 +106,17 @@ The system also improves explainability by showing the specific retrieved tuples
 RetClean demonstrates high accuracy across the benchmark datasets, particularly when domain-specific data lakes are available. 
 However, as noted in Zhang et al. \cite{COCOON}, its effectiveness drops in the absence of such external context, limiting its capabilities to mostly fixing typos. 
 Still, by combining LLM reasoning with contextual retrieval, RetClean improves cleaning performance, especially for specialized domains where LLMs alone may struggle.
-
+\newline\newline
 Cocoon \cite{COCOON} is an end-to-end data cleaning system that combines the semantic reasoning of LLMs with statistical profiling techniques to detect and repair diverse types of data errors. 
 Traditional data cleaning methods often rely on statistical rules, which often miss semantic issues such as typos, disguised missing values (DMVs) or subtle functional dependency violations. 
 Cocoon addresses these limitations by leveraging LLMs to understand the meaning of data and identify more subtle errors. 
-Given the token limitations of LLMs and the large size of real-world datasets, Cocoon first summarizes large datasets using statistical profiling (e.g., frequent values and numeric range) to generate compact representations of large datasets. 
+Given the token limitations of LLMs and the large size of real-world datasets, Cocoon first summarizes large datasets using statistical profiling (e.g., frequent values, numeric range) to generate compact representations of large datasets. 
 These summaries give the LLM context to help it detect and fix errors more intelligently. 
 Cocoon breaks the cleaning process into smaller tasks that are easier to manage. 
 It handles common issues like duplicates, missing values, outliers and rule violations. 
 Each column is processed individually by the LLM, which receives a task-specific prompt asking it to identify unusual values and suggest appropriate corrections. 
 The system is implemented using SQL-based pipelines, which ensures scalability, transparency and ease of integration with existing data workflows. 
-Experimental evaluations demonstrate that Cocoon achieves state-of-the-art performance with an average F1 score of approximately 0.83 on standard benchmarks.
+Experimental evaluations demonstrate that Cocoon achieves strong cleaning performance with an average F1 score of approximately 0.83 on standard benchmarks.
 
 \subsection{Research into LLMs for Data Cleaning}
 Various papers have evaluated the use of LLMs for data cleaning and formulated their conclusions. 
@@ -140,18 +141,18 @@ Narayan et al. \cite{FMDATACLEANING} investigate the use of Foundation Models (F
 The authors state that FMs can successfully generalize to structured data tasks without any task-specific fine-tuning. 
 By analyzing five core data tasks (entity matching, error detection, schema matching, data transformation and imputation), the study demonstrates that FMs can often match or outperform traditional ML and deep learning models, especially when given some well-defined examples (few-shot prompting). 
 One of the key strengths of FMs is that the same model can be applied to multiple tasks via prompt engineering alone, which removes the need for costly retraining. 
-FMs work well with few-shot prompting, making them adaptable and significantly reducing the labeling effort usually required in ML-based cleaning methods. 
+Foundational models work well with few-shot prompting, making them adaptable and significantly reducing the labeling effort usually required in ML-based cleaning methods. 
 The paper highlights strong performance in error detection (with F1 scores near 1.0), data imputation (F1 larger than 0.85) and entity matching. 
 The study also highlights several limitations. 
-FMs are highly sensitive to prompt design: small variations in the definition of prompts leads to large differences in outcomes. 
+Foundational models are highly sensitive to prompt design: small variations in the definition of prompts leads to large differences in outcomes. 
 As a result, effective prompt engineering requires domain expertise. 
 Additionally, the models struggle with domain-specific or symbolic data (e.g., codes and timestamps) and results can be inconsistent because of the non-deterministic nature of FMs. 
 Other challenges include limited debuggability, privacy concerns with API-based models and poor performance on niche domains. 
 The authors suggest tools like confidence estimation, decomposing complex tasks into interpretable steps and developing open-source models that can be adapted to specific domains. 
 \newline\newline
 The potential of LLMs to autonomously clean training datasets in order to improve downstream ML performance, is studied in Bendinelli et al. \cite{EXPLORINGLLMS}. 
-The framework allows the LLM to iteratively detect and correct data errors, using the model performance on a clean test set as feedback to update its cleaning strategy. 
-The main idea is to evaluate how much data quality (and consequently model accuracy) can be improved through LLM-driven cleaning. 
+Their approach allows the LLM to iteratively detect and correct data errors, using the model performance on a clean test set as feedback to update its cleaning strategy. 
+The main objective is to evaluate how much data quality (and consequently model accuracy) can be improved through LLM-driven cleaning. 
 Results show that LLMs are effective at identifying and correcting simple, row-level errors such as illogical values, inconsistencies and outliers by looking at the context within each row. 
 Their performance improves when provided with hints or strong examples, making them capable of learning from feedback. 
 On two of the three benchmark datasets tested, this method led to gains in model accuracy. 
@@ -171,8 +172,8 @@ These approaches may help LLMs to better adapt to enterprise needs.
 
 \section{Machine Learning-based Data Cleaning}
 In this section, we provide an overview of methods that apply machine learning to data cleaning tasks. 
-ML approaches primarily focus on training models to predict whether a given cell is correct or erroneous. 
-These models learn patterns from labeled data, enabling them to flag potential errors based on statistical or contextual inconsistencies.
+These approaches primarily focus on training models either to predict whether a given cell is correct or erroneous, or to predict appropriate repair values.
+These models learn patterns from labeled data and apply these learned patterns to the full dataset, enabling the identification and correction of errors based on statistical or contextual relationships.
 \newline\newline
 Abdelaal et al. \cite{SAGED} present SAGED, a data cleaning method that uses meta-learning and semi-supervised learning to detect errors in tabular datasets. 
 Unlike traditional error detection systems that rely heavily on manual labeling or domain-specific rules, SAGED leverages knowledge from previously cleaned (and labeled) datasets to identify erroneous rows in new data with minimal user intervention. 
@@ -180,7 +181,7 @@ The approach consists of two stages: knowledge extraction and error detection.
 In the first stage, base models are trained on historical datasets to distinguish between clean and erroneous data. 
 These datasets are profiled using features such as statistics, structure and semantics, which allow the system to match new datasets to similar historical examples. 
 In the second stage, a small labeled subset of the new dataset is used to fine-tune predictions. 
-The pre-trained models generate high-level feature vectors (which are essentially their predictions on the new data), which are then passed into a meta-classifier that detects errors across the entire dataset. 
+The pre-trained models generate high-level feature vectors based on their predictions for new data instances, which are then passed into a meta-classifier that detects errors across the entire dataset. 
 To reduce the number of required manual labels, SAGED employs intelligent strategies such as active learning and clustering. 
 This makes the system both scalable and efficient. It also supports a variety of error types and can adapt to datasets that differ significantly from its training examples. 
 Evaluations across real-world datasets demonstrate that SAGED outperforms most baseline methods, achieving an average F1 score of 0.93. 
@@ -198,7 +199,7 @@ These vectors are then used to cluster similar cells together. To minimize label
 These labels are then propagated within the cluster to generate a larger set of (noisy) labeled data. 
 For each column, a classifier is trained using the labeled data, enabling it to detect errors across the entire dataset. 
 This clustering and propagation approach significantly reduces user involvement while still achieving high accuracy. 
-Raha achieves state-of-the-art performance across multiple datasets, achieving an average F1 score of 0.85 on seven diverse benchmarks, outperforming baseline methods. 
+Raha achieves strong detection performance across multiple datasets, achieving an average F1 score of 0.85 on seven diverse benchmarks, outperforming baseline methods. 
 Its strong performance is also confirmed in other evaluations \cite{SAGED, REIN}, where Raha is among the best performers. 
 However, its effectiveness may be sensitive to the specific examples selected for labeling. 
 Variations in labeled examples across studies likely account for differences in reported performance on the same datasets.
@@ -215,7 +216,7 @@ Baran operates in two stages: first, each model generates multiple candidate cor
 This allows Baran to achieve both high recall (through a rich set of candidates) and high precision (via careful selection). 
 To further reduce labeling effort, Baran leverages transfer learning by pretraining its models on Wikipedia revision histories. 
 This significantly improves performance, especially for syntactic or frequent value corrections, and allows it to achieve high accuracy with even fewer labeled tuples. 
-Baran achieves state-of-the-art F1 scores across seven benchmark datasets, including perfect results on redundant datasets (datasets containing duplicate or similar rows). 
+Baran achieves strong correction F1 scores across seven benchmark datasets, including perfect results on redundant datasets (datasets containing duplicate or similar rows). 
 However, it performs less effectively on sparse datasets, where errors are harder to contextualize. 
 Despite not being optimized for runtime, Baran demonstrates competitive performance in terms of execution time.
 \newline\newline
@@ -231,12 +232,13 @@ HoloDetect achieves high performance, with an average F1 score of 0.94 across fi
 It demonstrates high precision and recall even in the presence of different error distributions. 
 While HoloDetect significantly reduces the need for labeled data, it still requires 5-10\% labeled examples, which can be difficult to manage for large datasets.
 \newline\newline
-ED2 \cite{ED2} is an error detection framework designed to identify data errors with minimal manual labeling. 
-Instead of treating all data equally, ED2 selects the most informative cells to label through a intelligent two-stage active learning strategy. 
+ED2 \cite{ED2} is an error detection approach designed to identify data errors with minimal manual labeling. 
+Instead of treating all data equally, ED2 selects the most informative cells to label through an intelligent two-stage active learning strategy. 
 This significantly reduces the required amount of labeled data, particularly in large datasets. 
 The system works by transforming each cell into a feature vector with value-level, row-level and dataset-level context, and training a separate classifier for each column. 
 ED2 selects the most promising column to focus on, based on model uncertainty or performance gain, and then applies a query-by-committee approach to choose the cells with the highest model disagreement. 
-These selected cells are then labeled by the users iteratively to improve the classifier. ED2 achieves state-of-the-art performance, with F1 scores close to 1.0 across three benchmark datasets. 
+These selected cells are then labeled by the users iteratively to improve the classifier. 
+ED2 achieves strong detection performance, with F1 scores close to 1.0 across three benchmark datasets. 
 It is particularly effective on large datasets, requiring only 0.2-0.4\% of labeled cells (compared to 5\% in smaller datasets), improving upon methods like HoloDetect. 
 This efficiency gain is attributed to its smart sampling strategy, which focuses on the most impactful columns and cells. 
 For example, in the Adult dataset, 92\% of the errors are concentrated in a single column, which is identified and prioritized by ED2. 
@@ -251,18 +253,18 @@ Data tuples with consistently high reconstruction loss are assumed to be erroneo
 These tuples are then removed, resulting in a cleaner dataset. 
 At inference time, Picket flags inputs that are likely to produce incorrect predictions by analyzing the model's output and the reconstruction loss. 
 Picket captures both inter-column relationships and statistical relationships between cells. 
-This allows Picket to outperform state-of-the-art techniques in detecting various types of corruption, including random noise, systematic errors and adversarial manipulations.
+This allows Picket to outperform existing techniques in detecting various types of corruption, including random noise, systematic errors and adversarial manipulations.
 Evaluations show that Picket significantly improves data quality and downstream ML accuracy, achieving superior results across multiple datasets. 
 However, due to the complexity of self-supervised learning and memory demands, Abdelaal et al. \cite{REIN} find that Picket does not scale well to large datasets.
 \newline\newline
-BoostClean \cite{BOOSTCLEAN} is a data cleaning system designed to improve the accuracy of ML models by automatically detecting and repairing domain value violations (values that are missing, incorrect or outside their expected domain). 
+BoostClean \cite{BOOSTCLEAN} is a data cleaning system designed to improve the accuracy of ML models by automatically detecting and correcting domain value violations (values that are missing, incorrect or outside their expected domain). 
 Such errors make models vulnerable to inconsistencies at training and inference stages. 
 Rather than aiming to perfectly clean all the data, BoostClean focuses on cleaning operations that directly improve the model performance. 
 The system uses statistical boosting (a ML technique that combines many weaker models into a stronger model) to automatically select and combine the most effective error detection and repair strategies. 
-It relies on clean test labels as a guide to choose the repairs that actually help improve the model accuracy. 
+It relies on clean test labels as a guide to choose the corrections that actually help improve the model accuracy. 
 By evaluating how each potential fix affects downstream model accuracy, BoostClean builds an effective sequence of data cleaning operations that maximize gains in accuracy.
 \newline\newline
-ActiveClean \cite{ACTIVECLEAN} is an iterative data cleaning framework that improves the accuracy of ML models while reducing the amount of data that needs to be cleaned. 
+ActiveClean \cite{ACTIVECLEAN} is an iterative data cleaning system that improves the accuracy of ML models while reducing the amount of data that needs to be cleaned. 
 It is designed for convex loss models (e.g., linear regression, logistic regression and SVMs). 
 Rather than cleaning all data indiscriminately, ActiveClean prioritizes cleaning rows that are both likely to be dirty and have the most influence on the model's performance. 
 The process starts by training a model on the dirty dataset, treating it as an initial estimate. 
@@ -274,23 +276,23 @@ This process resembles stochastic gradient descent, where each cleaning iteratio
 Experimental results across five datasets demonstrate that ActiveClean can reach nearly the same accuracy as models trained on fully cleaned data, while cleaning as little as 10\% of the data. 
 
 \section{Traditional Data Cleaning}
-This section presents traditional data cleaning methods that do not rely on LLMs or machine learning models, but instead use explicit rules, statistical properties, structural patterns or external knowledge to detect and repair data errors.
+This section presents traditional data cleaning methods that do not rely on large language models or machine learning techniques, but instead use explicit rules, statistical properties, structural patterns or external knowledge to detect and correct data errors.
 Rule-based methods apply predefined constraints to identify and correct errors, often reflecting domain knowledge, such as "each product should have a price" or "IDs must be unique".
 Statistical-based methods analyze distributions and statistics to detect inconsistencies and anomalies in the data.
 Pattern-based cleaning methods rely on recognizing consistent structural patterns, such as phone numbers or date formats, to identify values that deviate from the expected pattern. 
 Finally, knowledge-based methods leverage external resources, such as dictionaries or reference databases, to validate and correct data entries.
 While these approaches can be effective in structured settings, they typically require manual specification or domain expertise, which can limit their scalability and generalization.
 \newline\newline
-NADEEF \cite{NADEEF} is a data cleaning framework designed to detect and repair data errors based on user-defined rules. 
+NADEEF \cite{NADEEF} is a data cleaning system designed to detect and correct data errors based on user-defined rules. 
 It provides a flexible programming interface where users can upload a wide range of data quality rules (e.g., functional dependencies, matching dependencies, ETL constraints). 
 These rules are then compiled into a single format that allows the system to process them in a holistic manner. 
 NADEEF's system is composed of three components: the rule collector, violation detector and data repairing module. 
 The rule collector gathers the user-specified rules. 
 The violation detector identifies which part of the data violates these rules and the repairing module suggests corrections while considering the interaction between rules rather than treating each rule in isolation. 
-NADEEF supports two main repair strategies. 
+NADEEF supports two main correction strategies. 
 The first one uses a MAX-SAT-based optimization algorithm that finds the smallest subset of changes that are needed to resolve all rule violations. 
 The other is a more efficient heuristic that groups related cells into equivalent classes and assigns a single correction value to each cell within a class. 
-While the heuristic offers faster performance, it can be less precise and lead to overgeneralized repairs. 
+While the heuristic offers faster performance, it can be less precise and lead to overgeneralized corrections. 
 NADEEF has several limitations. 
 As noted in Mahdavi et al. \cite{RAHA}, the system suffers from low recall since rules typically target only a specific type of errors (e.g., constraint violations) and thus fail to detect other error types. 
 Additionally, NADEEF also shows low precision, as it tends to flag groups of data cells as erroneous together, rather than pinpointing which individual cell is incorrect. 
@@ -302,7 +304,7 @@ It integrates multiple sources of information, such as integrity constraints (e.
 These signals are modeled as features in a factor graph, where each potentially erroneous cell is treated as a random variable. 
 Probabilistic inference, such as Gibbs sampling, is then used to predict the most likely correct value for each error cell. 
 HoloClean introduces optimizations such as domain pruning, tuple partitioning and relaxing hard constraints into soft ones to improve inference scalability without sacrificing much accuracy. 
-HoloClean looks at the signals holistically, which allows it to make more accurate repairs compared to methods that consider signals in isolation. 
+HoloClean looks at the signals holistically, which allows it to make more accurate corrections compared to methods that consider signals in isolation. 
 It achieves high performance in many cases, with reported average precision around 0.90 and average recall over 0.76 across diverse datasets. 
 It can also incorporate user feedback to iteratively improve repair quality. 
 HoloClean's effectiveness is strongly influenced by the quality of error detection, which is treated as a black-box component. 
@@ -321,7 +323,7 @@ Each module assigns a normalized score between 0 and 1, indicating how likely it
 The system uses the maximum score to decide whether to flag a value. 
 Thresholds are dynamically adjusted to improve precision and minimize false positives. 
 Experimental results show that FAHES achieves high recall, meaning it catches most of the DMVs. 
-However, this comes at the cost of lower precision, as the system tends to produce a significant number of false positives; a limitation also noted in Abdelaal et al. \cite{REIN}. 
+However, this comes at the cost of lower precision, as the system tends to produce a significant number of false positives, a limitation also noted in Abdelaal et al. \cite{REIN}. 
 Additionally, FAHES may overlook infrequent or isolated DMVs, as it relies on the assumption that such values appear repeatedly within a dataset. 
 This drawback is highlighted in Zylinski and Qahtan \cite{SYNODC}, who observe that rare errors are often missed by the system.
 \newline\newline
@@ -329,8 +331,8 @@ dBoost \cite{DBOOST} is a statistical outlier detection framework for heterogene
 dBoost uses an approach called tuple expansion. 
 This process enriches each row with metadata, capturing features like string length, data format and parity that give more semantic meaning. 
 By adding extra information to the data, dBoost enables the detection of subtle errors and patterns that might be missed otherwise. 
-For example, if most values in a column use title case, a lowercase one can be flagged. 
-Or if numeric fields like timestamps usually match a certain weekday, any fields that don't can be marked as suspicious. 
+For example, if most values in a column follow title case, a lowercase value can be flagged as suspicious. 
+Similarly, if numeric fields such as timestamps typically correspond to a specific weekday, values that deviate from this pattern can be marked as anomalous.
 dBoost uses three types of statistical models, histograms, Gaussian distributions and mixture models, to model the expanded data. 
 It also incorporates a correlation analysis to identify context-dependent errors across different columns. 
 This makes the system effective at catching more complex errors in both numerical and non-numerical data. 
@@ -351,7 +353,7 @@ Furthermore, SynODC preserves the original data structure by avoiding overly gen
 Experimental results show that SynODC performs well on structured datasets, achieving an F1 score of 0.68 on benchmark datasets and 0.74 on a synthetic dataset. 
 However, it may miss errors that have the same syntactic structure as correct values or when error rates are unusually high, as the system assumes outliers are rare.
 \newline\newline
-SURAGH \cite{SURAGH} is a data cleaning method designed to automatically detect ill-formed rows in tabular data files (such as CSVs), by analyzing the syntactic structure of both columns and rows. 
+SURAGH \cite{SURAGH} is a data cleaning method designed to automatically detect ill-formed rows in tabular data files (e.g., CSV files), by analyzing the syntactic structure of both columns and rows. 
 Instead of relying on predefined schemas, SURAGH infers structural patterns directly from the data. 
 This makes it particularly useful for preprocessing files before loading them into databases or analytical tools, where ill-formed rows often cause critical failures. 
 For each column, SURAGH generates syntactic patterns based on the structure and format of values. 
@@ -363,14 +365,14 @@ Experimental results on real-world datasets show that SURAGH achieves an average
 False positives may occur when rare but valid patterns are mistakenly marked as errors. 
 Additionally, Zylinski and Qahtan \cite{SYNODC} note that SURAGH may generalize patterns too soon, which can cause it to miss subtle but invalid structures. 
 \newline\newline
-Katara \cite{KATARA} is an end-to-end data cleaning framework that detects and corrects errors in tabular data by combining knowledge-bases and crowdsourcing. 
-KATARA leverages rich external knowledge and human expertise to provide additional context to the data, helping in detecting and repairing errors even when the dataset lacks redundancy.  
-Given a dirty table and a relevant knowledge base, KATARA first discovers semantic patterns that map each column to a type (e.g., person, country, capital) and identify relationships between columns (e.g., nationality, hasCapital) based on the knowledge base content.  
+Katara \cite{KATARA} is an end-to-end data cleaning system that detects and corrects errors in tabular data by combining knowledge bases and crowdsourcing. 
+KATARA leverages rich external knowledge and human expertise to provide additional context to the data, helping in detecting and correcting errors even when the dataset lacks redundancy.  
+Given a dirty table and a relevant knowledge base, KATARA first discovers semantic patterns that map each column to a type (e.g., person, country, capital) and identify relationships between columns (e.g., hasNationality, hasCapital) based on the knowledge base content.  
 Once patterns are discovered, KATARA uses crowdsourcing to validate them, asking expert workers to help select the most accurate patterns. 
 After pattern validation, the system checks each row against the knowledge base and crowd's responses. 
 Rows that do not match are flagged as errors. 
 For these rows, KATARA suggests the top \textit{k} candidate repairs by finding similar values from the knowledge base. 
-If no suitable repairs are found, crowdsourcing is used again to identify corrections. 
+If no suitable repair values are found, crowdsourcing is used again to identify corrections. 
 Verified new facts from the crowd can be added back to enrich the knowledge base. 
 The authors of KATARA mention that it performs well across various datasets, achieving high precision, especially in scenarios with low data redundancy, where other methods struggle. 
 However, its effectiveness depends largely on the knowledge base coverage and quality of crowdsourcing. 
@@ -396,7 +398,7 @@ The errors detected by the most accurate tool are then fully validated, after wh
 Tools whose precision falls below a threshold are discarded. 
 This iterative process continues until no sufficiently precise tools remain.
 \newline\newline
-AutoCure \cite{AUTOCURE} is a fully automated data cleaning framework that improves ML model accuracy by detecting and removing errors and then augmenting the dataset with synthetically generated clean rows. 
+AutoCure \cite{AUTOCURE} is a fully automated data cleaning pipeline that improves ML model accuracy by detecting and removing errors and then augmenting the dataset with synthetically generated clean rows. 
 Rather than attempting to repair dirty data, AutoCure focuses on isolating clean data and amplifies its impact by generating additional clean examples.
 AutoCure consists of two main modules: an ensemble-based error detector and a clean data augmentation module. 
 The error detection module uses a collection of base detectors (e.g., for missing values, outliers, duplicates, rule violations) and flags a value as erroneous if at least \textit{k} detectors agree. 
@@ -406,75 +408,70 @@ Experimental results show that AutoCure often matches or outperforms clean datas
 It is particularly effective on large datasets, where adding just a small amount of synthetic clean data (as little as 1\%) is sufficient to improve model accuracy. 
 In contrast, smaller datasets, which are typically more affected by noise, require significantly more clean data (up to 375\%) to achieve comparable results.
 \newline\newline
-Visengeriyeva and Abedjan \cite{METADRIVEN} present an ensemble-based framework for error detection that combines multiple detection strategies into a learning-based system to capture a wide range of data error types. 
-It leverages the strengths of several existing frameworks: Trifacta (for pattern violations), NADEEF (for rule and duplicate violations) and dBoost (for outlier detection). 
+Visengeriyeva and Abedjan \cite{METADRIVEN} present an ensemble-based approach for error detection that combines multiple detection strategies into a learning-based system to capture a wide range of data error types. 
+It leverages the strengths of several existing systems: Trifacta (for pattern violations), NADEEF (for rule and duplicate violations) and dBoost (for outlier detection). 
 Each tool analyzes the dataset independently and flags potential errors, producing binary outputs per cell. 
 To improve the system's understanding of the data structure and semantics, a metadata profiler generates additional contextual features (such as data types, null counts, frequent values and functional dependencies), which are used for the model's decision-making process. 
 The system also includes a result aggregator, which uses either bagging (training multiple models on different data subsets) or stacking (training a model on the combined output of multiple error detectors) to intelligently combine the predictions of the individual detectors with the metadata. 
-This approach allows the framework to adapt to the characteristics of each dataset and determine the most effective combination of methods.
-Experiments on four real-world datasets demonstrate that this framework outperforms baseline ensemble methods, achieving an average 0.15 improvement in F1 scores. 
+This enables the approach to adapt to the characteristics of each dataset and determine the most effective combination of methods.
+Experiments on four real-world datasets demonstrate that this approach outperforms baseline ensemble methods, achieving an average 0.15 improvement in F1 scores. 
 Additionally, adding metadata significantly improves the system performance. 
 According to Abdelaal et al. \cite{REIN}, the system produces relatively few false positives and detects up to 50\% of errors across datasets, but incurs longer runtimes compared to some alternative methods.
 
 \section{Discussion}
-Data quality is a fundamental requirement for reliable data analysis, decision-making and operational performance. 
-To ensure high data quality, data cleaning is essential. 
+High data quality is a fundamental requirement for reliable data analysis, decision-making and operational performance. 
+To achieve this, effective data cleaning is essential. 
 Despite extensive research, data cleaning remains a challenging task due to the diversity and complexity of errors encountered in real-world datasets. 
 Existing data cleaning methods often focus on specific types of errors such as standardization issues, outliers or pattern violations. 
 While these targeted approaches can achieve high precision for the error they address, their recall is often limited because they fail to capture a wide range of errors. 
 Consequently, many cleaning methods only partially clean datasets, leaving a significant number of errors undetected. 
-\newline\newline
-End-to-end data cleaning systems that integrate both error detection and repair are still relatively uncommon. 
+End-to-end data cleaning systems that integrate both error detection and correction are still relatively uncommon. 
 In practice, users combine multiple specialized tools, but these tools typically do not share information about the types of errors that they detect, information that is critical for selecting an appropriate repair strategy and for evaluating the impact of the corrections. 
-Furthermore, most evaluation studies focus on publicly available datasets that are relatively simple, typically containing mostly categorical columns and basic functional dependencies. 
-These datasets rarely reflect the complexity of private or enterprise datasets, which contain a wider range of data types, more complex inter-column relationships and a larger volume. 
-This gap makes it difficult to assess the real-world effectiveness of many cleaning methods. 
 \newline\newline
 The performance of detection and cleaning methods varies widely across datasets. 
 This variation is driven by dataset-specific characteristics including error rates, error types, column types and the presence of redundancy or contextual information that can support effective cleaning. 
 Some tools generalize well across multiple datasets and error types, yet still underperform on certain datasets compared to specialized methods. 
 This shows that an effective data cleaning pipeline should start with analyzing the dataset to help choose the most appropriate methods based on its characteristics. 
+In addition, many existing evaluation studies rely on publicly available benchmark datasets that do not fully reflect the complexity of real-world enterprise data.
+Such benchmarks often contain limited data types and relatively simple relationships, making it difficult to assess how well cleaning methods scale to larger, more heterogeneous datasets with complex dependencies and operational constraints.
 \newline\newline
 Evaluating data cleaning methods is challenging due to variations in datasets, error types introduced and method configurations. 
-ML-based methods, for instance, rely heavily on labeled examples and their performance is sensitive to which examples are labeled and how the labeling is propagated. 
+Traditional data cleaning methods, including rule-based, statistical and pattern-based approaches, excel at detecting specific error types but lack generality and across diverse datasets and error patterns.
 Rule-based methods achieve high precision on rule violations but suffer from low recall and scalability challenges, as defining comprehensive rules is time-consuming and often not generalizable. 
 Statistical and pattern-based methods perform well on certain error types but cannot detect the full range of errors alone. 
-Methods leveraging knowledge bases can improve cleaning on domain-specific datasets; however, their effectiveness is constrained by the coverage and accuracy of the knowledge bases they rely on. 
+Methods leveraging knowledge bases can improve cleaning on domain-specific datasets. 
+However, their effectiveness is constrained by the coverage and accuracy of the knowledge bases they rely on. 
+ML-based methods rely heavily on labeled data, making their performance sensitive to labeling choices and propagation strategies. 
+This requirement is costly, often impractical for datasets with low error rates or complex error types, and typically demands substantial expert knowledge.
 Ensemble methods improve coverage by combining signals from multiple tools but tend to introduce many false positives, especially without dataset-specific tool selection. 
-Most traditional methods primarily detect syntactic or statistical errors (values that violate dominant patterns or appear as outliers) while missing many semantic errors that require understanding domain-specific knowledge. 
-Providing metadata can help, but more promising are LLMs that leverage semantic understanding to detect subtle errors such as typos, unrealistic dates or synonyms. 
+Furthermore, traditional methods often fail to capture subtle semantic errors that require domain-specific understanding.
+While providing metadata can offer some support, more promising are recent LLM-based approaches that leverage semantic understanding to detect subtle errors such as typos, unrealistic entries or synonyms. 
 \newline\newline
-Recent advances in LLM-based cleaning show promise by understanding semantic context and flexible error types. 
+Recent advances in LLM-based cleaning show promise by leveraging semantic understanding and supporting a broader range of error types.
 However, their performance is highly dependent on how well their tasks are formulated and how examples are provided during inference. 
-In addition, LLMs are computationally expensive, suffer from context limitations and tend to struggle with numerical relationships. 
+In addition, large language models are computationally expensive, suffer from context limitations, produce inconsistent output and tend to struggle with numerical relationships. 
 These weaknesses highlight the need for hybrid approaches that combine LLMs' semantic capabilities with statistical tools to fully address the complexity of data cleaning.
 
-\section{Research Gap}
-Despite advances in traditional, ML-based and LLM-based data cleaning methods, critical gaps remain that limit the development of comprehensive, scalable and generalizable data cleaning solutions. 
-Traditional methods excel in detecting specific error types but lack generality and fail to capture subtle semantic errors. 
-ML-based methods require extensive labeled data, which is costly, often impractical for datasets with low error rates or complex error types, and requires expert knowledge. 
-Rule-based methods are precise but not scalable or adaptable to new domains. 
-Statistical and pattern-based approaches primarily target specific error types and overlook many others.
-\newline\newline
+\subsection{Research Gap}
 While recent LLM-based data cleaning methods such as RetClean, Cocoon and IterClean have made promising steps toward flexible and semantic-aware data cleaning, they still fall short of addressing several critical challenges. 
-RetClean utilizes a retrieval-augmented generation strategy by providing the LLM with similar rows from a data lake to repair erroneous values. 
-However, its application is mainly focused on imputing missing data rather than detecting or repairing a wider range of errors. 
-It relies solely on external context without explicit instruction or examples guiding the LLM on how to identify and fix diverse error types. 
-Moreover, RetClean processes data row-by-row, which means it can miss global errors that require understanding patterns across multiple rows or the entire dataset. 
-Lastly, it does not consider inter-column relationships crucial for cleaning more complex data. 
-Cocoon approaches cleaning on a column-by-column basis, limiting its ability to detect errors that emerge from multi-column or multi-row interactions. 
-It relies solely on LLMs to detect functional dependencies, which leads to many incorrect FDs being enforced, as can be seen from analyzing the source code. 
-Additionally, Cocoon fails to provide the LLM with sufficient content, examples or guidance on error detection strategies, forcing the model to 'figure out' error types on its own, resulting in inaccurate or incomplete data cleaning. 
-Consequently, it leaves empty cells unfilled and overlooks more complex error patterns that occur at the row or dataset level. 
-IterClean improves upon prior methods by using user-labeled examples to guide the LLM in detecting and repairing various error types. 
-However, this supervised approach relies heavily on expert knowledge and the availability of ground truth data. 
+RetClean's' application is primarily focused on imputing missing data rather than detecting or correcting a wider range of errors. 
+It relies solely on external context without explicit instruction or examples to guide the LLM in identifying and correcting fix diverse errors. 
+Moreover, RetClean processes data on a row-by-row basis, which limits its ability to detect global errors that require understanding patterns across multiple rows or the entire dataset, and does not scale well to large datasets. 
+It also does not consider inter-column relationships crucial for cleaning more complex data. 
+In addition, RetClean does not incorporate mechanisms to model or reason about numerical relationships.
+Cocoon relies heavily on single-pass LLMs to perform cleaning without incorporating refinement, validation or consistency checks. 
+In addition, it provides limited guidance, examples or structured strategies for data cleaning, requiring the LLM to largely infer both error types and appropriate cleaning operations on its own. 
+As a result, this can lead to inaccurate or incomplete corrections, including undesired modifications of clean cells, incorrect correction of errors and missed complex error patterns, particularly those requiring broader contextual or relational understanding.
+Unlike the other methods discussed here, Cocoon incorporates statistical data summarization to support initial error filtering.
+IterClean improves upon prior methods by using user-labeled examples to guide the LLM in detecting and correcting various error types, and by employing multiple LLM components for more structured refinement and validation of cleaning decisions
+However, this supervised approach relies on expert knowledge and the availability of ground truth data. 
+Similar to RetClean, IterClean does not explicitly incorporate mechanisms for modeling or reasoning about numerical relationships.
 Its scalability is also limited, with evaluations performed on datasets up to only 2,600 rows. 
 Moreover, its source code is unavailable, restricting transparency and further testing. 
-Additionally, a shared limitation across the above models is their inadequate handling of numerical data. 
-As previously mentioned, LLMs struggle with understanding and reasoning about numerical values, ranges and distributions, yet numerical columns are common in enterprise datasets and critical for accurate error detection and repair.
 \newline\newline
-In summary, these LLM-based methods often provide incomplete cleaning solutions: they do not teach the LLM how to systematically detect and repair a wide range of errors, they lack comprehensive multi-level context (value, row, dataset), and they do not effectively leverage statistical summaries or metadata to assist in understanding numerical columns. 
+In summary, these LLM-based methods often provide incomplete cleaning solutions: they either do not teach the LLM how to systematically detect and correct a wide range of errors, lack comprehensive multi-level context, fail to incorporate structured refinement or validation mechanisms, or do not effectively leverage statistical summaries or metadata to assist in understanding numerical relationships. 
 A more effective data cleaning approach should therefore explicitly guide the LLM with rich context, including column types, dataset relationships and potential error types, along with detailed instructions on detection and repair strategies. 
-It must integrate value-, row- and dataset-level statistics to capture complex, subtle errors and handle numerical reasoning robustly. 
+It should also incorporate structured refinement and validation to verify and correct LLM outputs.
+It must integrate value-, row- and column-level statistics to capture complex, subtle errors and handle numerical reasoning robustly. 
 Furthermore, it should minimize user interaction and scale effectively to larger and more complex datasets. 
-Addressing these gaps will enable the development of a more generalizable and accurate data cleaning system.
+Addressing these gaps will enable the development of a more generalizable, reliable and accurate data cleaning system.

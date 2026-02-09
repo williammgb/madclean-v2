@@ -6,7 +6,7 @@ Errors in datasets significantly degrade data quality and undermine downstream t
 This thesis focuses on the problem of automated data cleaning in tabular datasets by detecting and repairing erroneous cells.\newline
 \indent Let a tabular dataset be defined as \( D = \{r_1, r_2, \dots, r_M\} \), where each \( r_i \) represents a row consisting of \( N \) attributes \( [a_1, a_2, \dots, a_N] \). 
 Each cell in the dataset can be denoted as \( D_{ij} \), corresponding to row \( i \) and column \( j \).\newline
-\indent Given a dirty dataset \( D^{d} \), containing errors and an unknown ground truth \( D^{gt} \), an error is formally defined as any cell \( D^{d}_{ij} \) for which \( D^{d}_{ij} \ne D^{t}_{ij} \). 
+\fixme{\indent Given a dirty dataset \( D^{d} \), containing errors and an unknown ground truth \( D^{gt} \), an error is formally defined as any cell \( D^{d}_{ij} \) for which \( D^{d}_{ij} \ne D^{t}_{ij} \). }
 The objective of this thesis is to develop a framework that automatically detects such errors and repairs them with corrected values \( D^{*}_{ij} \) such that \( D^{*}_{ij} \approx D^{gt}_{ij} \), with the ideal case being \( D^{*}_{ij} = D^{gt}_{ij} \).
 \section{Preliminaries}
 \subsection{Relational Datasets}
@@ -93,7 +93,7 @@ Moreover, statistical profiling is computationally efficient and scalable, makin
 
 \section{Assumptions}
 We assume that tabular datasets exhibit a sufficient degree of structure and redundancy at the column level, which can be leveraged to infer the intended data format. 
-To reduce computational costs, we rely on sampling rather than processing entire datasets, assuming that sampled values are representative of the overall column content. 
+To reduce computational costs, we rely on sampling rather than processing the entire datasets, assuming that sampled values are representative of the overall column content. 
 As a result, rare or highly irregular errors may remain undetected.
 Finally, we assume that most data quality issues can be effectively addressed using column-level transformations. 
 While row-level context is incorporated in specific cases, the overall design prioritizes column-wise standardization over individual value-level repairs.

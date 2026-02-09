@@ -16,7 +16,7 @@ A major challenge when using large language models for data cleaning is that the
 While one could batch smaller parts of a dataset and process them sequentially, this approach does not scale well for large datasets, as it leads to increased runtime and token usage. 
 In addition, as discussed before, LLMs generally struggle to identify statistical patterns in numerical data, especially when handling large, noisy or repetitive numeric datasets.
 \newline\newline
-Instead of directly passing raw tabular data to the LLM, MADClean first applies statistical profiling and deterministic validation and parsing rules to summarize the data and extract statistics and signals that may not be reliably inferred by the LLM from raw values alone. 
+Instead of directly passing raw tabular data to the LLM, \fixme{MADClean first applies statistical profiling and deterministic validation and parsing rules to summarize the data and extract statistics and signals that may not be reliably inferred by the LLM from raw values alone}. 
 This process reduces noise, highlights relevant patterns and errors, and provides the LLM with compact but informative representations of the data, enabling the LLM to better understand the dataset's structure and quality and to apply more accurate and effective cleaning operations.
 Furthermore, each column is assigned a predefined semantic type (i.e., the type of data the column contains), which allows the cleaning strategy to be adapted to the characteristics of the data.
 \newline\newline

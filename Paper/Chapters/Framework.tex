@@ -117,7 +117,7 @@ Detecting and enforcing these dependencies can improve data consistency, but in 
 Following the same design principle used for outlier detection, MADClean combines deterministic functional dependency detection with LLM-based semantic reasoning to distinguish true violations from exceptions.
 \newline\newline
 First, candidate FDs are identified algorithmically. 
-To reduce runtime and irrelevant checks, only columns with high uniqueness or frequent duplicates are considered. 
+To reduce runtime and irrelevant checks, \fixme{only columns with high uniqueness or frequent duplicates are considered. }
 Columns with exclusively unique values are excluded, as they provide limited usefulness for detecting violations. 
 Once FDs are identified, the LLM handles each dependency individually, receiving all detected violations associated with that dependency along with full row-level context. 
 This includes the violating tuples, which correspond to the complete rows involved in each violation, as well as imputable values, referring to missing cells that can be filled using the functional dependency (i.e., RHS cells with missing values whose corresponding LHS values appear elsewhere with a non-null RHS value). 
@@ -156,7 +156,7 @@ The Cleaning Coordinator is responsible for determining the correct order of exe
 
 \subsection{Resolving Execution Dependencies}
 To optimize runtime, especially when LLM API calls are involved, tasks are executed asynchronously wherever possible. 
-While isolated single-column operations can run independently, multi-column operations often involve interdependencies that must be respected to maintain data consistency, requiring careful coordination, such as when enforcing functional dependencies. 
+\fixme{While isolated single-column operations can run independently, multi-column operations often involve interdependencies that must be respected to maintain data consistency, requiring careful coordination, such as when enforcing functional dependencies. }
 For example, consider a chain of dependencies:
 \[
 A \longrightarrow B \longrightarrow C
@@ -176,7 +176,7 @@ Each semantic type has its own specialized prompt template, which includes:
 \newline
 \textbf{Type definition} - A description of the column's semantic type, including examples of typical values for this type.
 \newline
-\textbf{Instructions} - Step-by-step guidance for how to analyze and cleang the column, specifying the main cleaning objective (e.g., "identify and enforce the dominant format" or "return a string value").
+\textbf{Instructions} - Step-by-step guidance for how to analyze and clean the column, specifying the main cleaning objective (e.g., "identify and enforce the dominant format" or "return a string value").
 \newline
 \textbf{Rules} - Type-specific constraints that the LLM must follow to ensure consistent and accurate cleaning.
 \newline

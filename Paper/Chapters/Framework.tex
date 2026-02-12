@@ -16,7 +16,7 @@ A major challenge when using large language models for data cleaning is that the
 While one could batch smaller parts of a dataset and process them sequentially, this approach does not scale well for large datasets, as it leads to increased runtime and token usage. 
 In addition, as discussed before, LLMs generally struggle to identify statistical patterns in numerical data, especially when handling large, noisy or repetitive numeric datasets.
 \newline\newline
-Instead of directly passing raw tabular data to the LLM, \fixme{MADClean first applies statistical profiling and deterministic validation and parsing rules to summarize the data and extract statistics and signals that may not be reliably inferred by the LLM from raw values alone}. 
+Instead of directly passing raw tabular data to the LLM, MADClean first applies statistical profiling to summarize the data and extract key statistics and signals that the LLM may not reliably infer from raw values alone. 
 This process reduces noise, highlights relevant patterns and errors, and provides the LLM with compact but informative representations of the data, enabling the LLM to better understand the dataset's structure and quality and to apply more accurate and effective cleaning operations.
 Furthermore, each column is assigned a predefined semantic type (i.e., the type of data the column contains), which allows the cleaning strategy to be adapted to the characteristics of the data.
 \newline\newline
@@ -117,7 +117,7 @@ Detecting and enforcing these dependencies can improve data consistency, but in 
 Following the same design principle used for outlier detection, MADClean combines deterministic functional dependency detection with LLM-based semantic reasoning to distinguish true violations from exceptions.
 \newline\newline
 First, candidate FDs are identified algorithmically. 
-To reduce runtime and irrelevant checks, \fixme{only columns with high uniqueness or frequent duplicates are considered. }
+To reduce runtime and irrelevant checks, only columns that exhibit high redundancy (e.g., most values occur more than once) are considered.
 Columns with exclusively unique values are excluded, as they provide limited usefulness for detecting violations. 
 Once FDs are identified, the LLM handles each dependency individually, receiving all detected violations associated with that dependency along with full row-level context. 
 This includes the violating tuples, which correspond to the complete rows involved in each violation, as well as imputable values, referring to missing cells that can be filled using the functional dependency (i.e., RHS cells with missing values whose corresponding LHS values appear elsewhere with a non-null RHS value). 
@@ -156,7 +156,8 @@ The Cleaning Coordinator is responsible for determining the correct order of exe
 
 \subsection{Resolving Execution Dependencies}
 To optimize runtime, especially when LLM API calls are involved, tasks are executed asynchronously wherever possible. 
-\fixme{While isolated single-column operations can run independently, multi-column operations often involve interdependencies that must be respected to maintain data consistency, requiring careful coordination, such as when enforcing functional dependencies. }
+While isolated single-column operations can run independently, multi-column operations may introduce dependencies between columns (e.g., functional dependencies) where changes in one column effect another.
+These dependencies must be handled in the correct order to preserve data consistency, requiring careful coordination.
 For example, consider a chain of dependencies:
 \[
 A \longrightarrow B \longrightarrow C

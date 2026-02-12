@@ -12,7 +12,7 @@ Since MADClean is designed for general-purpose data cleaning, these methods were
 The evaluation is divided into two main phases:
 \begin{enumerate}
   \item \textbf{Error Detection:} measuring whether the system correctly identifies erroneous cells in the dataset.
-  \item \textbf{Error Correction:} measuring whether the system provides the \fixme{correct repaired value} for the detected errors.
+  \item \textbf{Error Correction:} measuring whether the system provides the correct values for the detected errors.
 \end{enumerate}
 
 In addition to accuracy metrics, we compare the runtime performance of all evaluated methods. 
@@ -96,7 +96,7 @@ We distinguish between error detection and error correction, while using a singl
 The term mask is commonly used in data cleaning literature to denote a boolean matrix that indicates specific properties of cells (e.g., whether a cell is erroneous, modified or correctly repaired). 
 We therefore use this terminology throughout the evaluation.
 \newline\newline
-Let $D_d$ denote the dirty dataset and $D_{gt}$ the corresponding ground truth dataset\hakim{Be consistent, before you used $D^{gt}$ and here, you used $D_{gt}$. 
+Let $D_d$ denote the dirty dataset and $D_{gt}$ the corresponding ground truth dataset. 
 By comparing these two datasets, we construct the \emph{error mask}, which indicates the cells that are erroneous in the dirty dataset:
 \[
 E_{ij} =
@@ -319,6 +319,8 @@ These corrections leverage the LLM's semantic understanding, which is largely ab
 Formatting inconsistencies in textual columns are corrected using column-level patterns or functional dependencies where possible, and otherwise set to NaN. 
 This ensures a single, consistent representation within each column. 
 Date values are standardized to the dominant format observed in the column, avoiding the many false positives introduced by baselines such as Cocoon, which convert date entries into alternative datetime formats.
+For example, in the Release Date column of the Movies dataset, which follows the dominant format '3 June 1988 (USA)', alternative representations such as 'May 10, 1973 France' are standardized to '10 May 1973 (France)'. 
+Similarly, in the Language column of the Rayyan dataset, variants such as 'eng', 'English' and 'ENG' are normalized to a single consistent representation.
 \newline\newline
 The framework performs particularly well on numeric columns. 
 Formatting inconsistencies such as percentages, units or mixed textual representations (e.g., '55 min' and '1 hr. 23 min.') are removed, converting values into pure numeric types. 
@@ -326,15 +328,18 @@ These conversions improve consistency and downstream usability for analytical an
 While Cocoon applies similar transformations in some cases, it does so inconsistently across columns and datasets.
 Other baselines either ignore these inconsistencies or apply partial, inconsistent corrections, leaving noisy non-numeric values in the data. 
 MADClean is the only method that applies these corrections consistently across all numeric columns. 
+For example, in the Beers dataset, the ounces column contains various formats such as '12.0 oz', '12.0 oz.', '12.0 ounce' and '12.0 OZ.', all of which are converted to the pure numeric value 12.0. 
+Likewise, in the Movies dataset, mixed duration formats including '85 min', '140 min' and '1 hr. 39 min.' are standardized to numeric minute values.
 \newline\newline
 Outliers are handled effectively by the framework. 
 It distinguishes between true outliers, placeholder values and legitimate extreme values. 
 True outliers are usually corrected by replacing them with the median, while placeholder values indicating missing data are converted to NaN. 
+For example, in the ibu column of the Beers dataset, extreme values such as 2500 are treated as true outliers and replaced with the median, whereas placeholder values such as 9999 are interpreted as missing value placeholders and converted to NaN.
 In some cases, when uncertainty is high, values are conservatively set to NaN rather than applying an incorrect repair.
 \newline\newline
 Functional dependency reasoning further enhances correction quality. 
 Errors that cannot be corrected from cell-level context alone are repaired using functional dependency information. 
-Invalid identifier values (e.g., '100x8') are corrected based on redundancy in related columns, and missing values are imputed when dependencies allow reliable inference. 
+Invalid identifier values (e.g., '100x8' instead of '10018') are corrected based on redundancy in related columns, and missing values are imputed when dependencies allow reliable inference. 
 A notable example illustrating the effectiveness of using an LLM as a semantic decision-maker involves the functional dependency between columns brewery\_name and brewery\_id. 
 Multiple rows corresponding to 'Oskar Blues Brewery' have different IDs and cities because the brewery operates in multiple locations. 
 This triggers a statistical dependency violation, and a naive repair strategy based on majority voting would incorrectly overwrite these valid differences (i.e., standardizing all rows to a single ID). 

@@ -75,7 +75,7 @@ This helps minimize LLM hallucinations and improves consistency across datasets.
 Overall, LLMClean offers a novel and intelligent approach to error detection by automating context modeling, reducing the need for manual rule creation and domain expertise.
 \newline\newline
 Li et al. \cite{AUTODCWORKFLOW} present a novel LLM-based pipeline, AutoDCWorkflow, that automates the generation and execution of data cleaning workflows designed to meet the user-defined analytical purposes. 
-Rather than requiring users to manually write cleaning steps, the system accepts the raw table and a natural language purpose, then produces a step-by-step workflow \fixme{and the cleaned dataset}. 
+Rather than requiring users to manually write cleaning steps, the system accepts the raw table and a natural language purpose, then generates a step-by-step workflow to clean the dataset.
 The pipeline consists of three iterative components: Target column selection to identify relevant columns based on the user's goals; column quality inspection to evaluate each target for issues like duplicates, missing values or inconsistent patterns; and the generation of cleaning operations and parameters. 
 Each cleaning step includes an explanation to help users understand the reasoning. 
 The steps are executed in OpenRefine, a data cleaning tool, after each step, the system reviews the updated table to determine the next action. 
@@ -455,7 +455,7 @@ These weaknesses highlight the need for hybrid approaches that combine LLMs' sem
 \subsection{Research Gap}
 While recent LLM-based data cleaning methods such as RetClean, Cocoon and IterClean have made promising steps toward flexible and semantic-aware data cleaning, they still fall short of addressing several critical challenges. 
 RetClean's' application is primarily focused on imputing missing data rather than detecting or correcting a wider range of errors. 
-It relies solely on external context without explicit instruction or examples to guide the LLM in identifying and \fixme{correcting fix diverse errors. }
+It relies solely on external context without explicit instruction or examples to guide the LLM in identifying and correcting diverse error types.
 Moreover, RetClean processes data on a row-by-row basis, which limits its ability to detect global errors that require understanding patterns across multiple rows or the entire dataset, and does not scale well to large datasets. 
 It also does not consider inter-column relationships crucial for cleaning more complex data. 
 In addition, RetClean does not incorporate mechanisms to model or reason about numerical relationships.

@@ -25,6 +25,29 @@ Furthermore, some traditional approaches require extensive manual labeling or ar
 Finally, most traditional cleaning methods do not explicitly incorporate semantic understanding and therefore fail to detect errors that depend on real-world meaning or contextual consistency.
 Together, these limitations restrict the development of flexible and scalable data cleaning solutions that can effectively handle the wide variety of errors found in real-world datasets.
 \newline\newline
+To illustrate these challenges, consider the example dataset shown in Table \ref{tab:example}. 
+The table contains multiple types of data quality issues, including pattern violations (e.g., in the id and date columns), outliers (e.g., in age and sum), inconsistent formats in the duration column, a semantic error in the city column, and a functional dependency violation between the city and country columns.
+While several of these errors can be detected using traditional tools or machine learning-based methods, repairing issues such as a country value appearing in the city column or standardizing all entries in the duration column to a consistent unit (e.g., minutes) requires an explicit understanding of the semantic meaning and intended use of these columns.
+Identifying that a value is semantically misplaced or determining the correct representation for normalization cannot be achieved through statistical patterns or syntactic rules alone.
+Such corrections require contextual knowledge about the role of the column and the intended cleaning objective, which current approaches typically do not capture.
+
+\begin{table}[h]
+\centering
+\resizebox{0.8\textwidth}{!}{
+    \begin{tabular}{|c|c|c|c|c|c|c|}
+    \hline
+    id & date & age & duration & city & country & sum \\ \hline
+    C001 & 15-09-2022 & 29 & 45 min & Berlin & Germany & 120.50 \\ \hline
+    C002 & \textcolor{red}{16/03/2025} & 34 & \textcolor{red}{1 hr. 15 min.} & \textcolor{red}{France} & France & 98.00 \\ \hline
+    C003 & 04-05-2023 & 41 & 30 min & Rome & Italy & 110.l75 \\ \hline
+    \textcolor{red}{c004} & 03-10-2024 & \textcolor{red}{999} & \textcolor{red}{2 hr. 5 min.} & Madrid & Spain & \textcolor{red}{123456.78} \\ \hline
+    C005 & 29-11-2022 & 101 & 50 min & Berlin & \textcolor{red}{Spain} & 210.30 \\ \hline
+    \end{tabular}
+}
+\caption{Example of dataset with diverse error types}
+\label{tab:example}
+\end{table}
+
 With the rise of Large Language Models (LLMs), new opportunities have emerged. 
 LLMs demonstrate strong capabilities in understanding natural language and identifying inconsistencies, and can simulate expert-like reasoning in a flexible and intelligent way. 
 Their ability to interpret context and perform text-based tasks has inspired researchers to use them for data cleaning tasks. 

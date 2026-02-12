@@ -5,9 +5,9 @@ It covers the problem formulation, definitions of relational data and data error
 Errors in datasets significantly degrade data quality and undermine downstream tasks such as machine learning, statistical analysis and decision-making processes. 
 This thesis focuses on the problem of automated data cleaning in tabular datasets by detecting and repairing erroneous cells.\newline
 \indent Let a tabular dataset be defined as \( D = \{r_1, r_2, \dots, r_M\} \), where each \( r_i \) represents a row consisting of \( N \) attributes \( [a_1, a_2, \dots, a_N] \). 
-Each cell in the dataset can be denoted as \( D_{ij} \), corresponding to row \( i \) and column \( j \).\newline
-\fixme{\indent Given a dirty dataset \( D^{d} \), containing errors and an unknown ground truth \( D^{gt} \), an error is formally defined as any cell \( D^{d}_{ij} \) for which \( D^{d}_{ij} \ne D^{t}_{ij} \). }
-The objective of this thesis is to develop a framework that automatically detects such errors and repairs them with corrected values \( D^{*}_{ij} \) such that \( D^{*}_{ij} \approx D^{gt}_{ij} \), with the ideal case being \( D^{*}_{ij} = D^{gt}_{ij} \).
+Each cell in the dataset can be denoted as \( D[i,j] \), corresponding to row \( i \) and column \( j \).\newline
+\indent Given a dirty dataset \( D_{d} \), containing errors and an unknown ground truth \( D_{gt} \), an error is formally defined as any cell \( D_{d}[i,j] \) for which \( D_{d}[i,j] \ne D_{gt}[i,j] \).
+The objective of this thesis is to develop a framework that automatically detects such errors and repairs them with corrected values \( D_{*}[i,j] \) such that \( D_{*}[i,j] \approx D_{gt}[i,j] \), with the ideal case being \( D_{*}[i,j] = D_{gt}[i,j] \).
 \section{Preliminaries}
 \subsection{Relational Datasets}
 A relational or tabular dataset is a structured collection of records, where each record is represented as a row in a table. 

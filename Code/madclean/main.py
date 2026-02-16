@@ -38,7 +38,7 @@ def setup_llm(llm_client_name: str, llm_clients: dict):
 def cli(argv=None) -> int:
     """CLI wrapper. Returns a process exit code."""
     parser = argparse.ArgumentParser(
-        prog="python -m madclean.main",
+        prog="madclean",
         description="Run the data cleaning pipeline"
     )
     # 1. Enter filepath

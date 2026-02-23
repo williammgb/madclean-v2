@@ -965,7 +965,7 @@ Violations
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys:
  - "summary": Provide a concise explanation of both column and the functional dependency.
- - "violation_fix_instructions": Provide a single string of actionable rules to fix conflicting RHS values for each LHS. For each rule, specify the LHS key, the incorrect RHS value(s), and the single correct RHS to use. If there is an exception, state the LHS key and explain why it should be skipped. If there are no violations, leave the string empty.
+ - "violation_instructions": Provide a single string of actionable rules to fix conflicting RHS values for each LHS. For each rule, specify the LHS key, the incorrect RHS value(s), and the single correct RHS to use. If there is an exception, state the LHS key and explain why it should be skipped. If there are no violations, leave the string empty.
  - "imputation_instructions": If there are imputable missing values, provide a single string of instructions to fill missing RHS values using the established LHS → RHS mappings. If there are no imputable values, leave the string empty.
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """

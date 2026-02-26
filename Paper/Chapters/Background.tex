@@ -15,7 +15,7 @@ Each row is a tuple of attribute values aligned with a fixed schema.
 For example, a customer dataset may have the schema [CustomerID, Name, Age, Country], with a data instance such as \{'12345', 'Jane Doe', 55, 'USA'\}.
 Relational datasets are a preferred data format in enterprise systems due to their structured nature, ease of access, and support for query languages such as SQL \cite{SCRD}. 
 Unlike non-relational datasets, which are more flexible in structure but often less semantically rich, relational datasets enable clear definitions of schema, constraints and inter-column relationships. 
-These properties are essential for automated data cleaning methods.
+These properties are essential for automated data cleaning methods, as they provide the structural foundation required to systematically identify inconsistencies, constraint violations and anomalous patterns.
 
 \subsection{Error Types in Tabular Datasets}
 Data quality problems in tabular datasets often appear as various types of errors. 
@@ -78,8 +78,8 @@ Instead, effective use of LLMs in data cleaning requires a structured framework 
 Recent generations of LLMs are particularly well suited for code generation \cite{LLMCODE}, which enables a different approach to data cleaning. 
 Rather than generating individual repaired values, LLMs can generate executable code that applies cleaning operations to entire columns. 
 This approach offers two key advantages. 
-First, it improves consistency, as the same transformation logic is applied uniformly across all values in a column. 
-Second, it enhances scalability, since column-level transformations can be executed efficiently by avoiding repetitive cell-level inference. 
+First, it improves consistency, as the same transformation logic is applied uniformly across all values in a column, making the cleaned data more suitable for downstream tasks. 
+Second, it enhances scalability, since column-level transformations can be executed efficiently by avoiding repetitive cell-level inference, even for large and complex datasets. 
 These properties make code generation a strong foundation for building reliable and scalable LLM-based data cleaning systems.
 
 \subsection{Data Profiling}

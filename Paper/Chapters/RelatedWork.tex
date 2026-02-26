@@ -60,6 +60,7 @@ The speed at which data moves, along with the complex relationships and large nu
 This section provides an overview of existing tools that leverage large language models for data cleaning. 
 Some approaches employ LLMs as the core component, relying primarily on their capabilities to detect and repair data errors. 
 Others integrate LLMs as a part of a broader data cleaning pipeline, where they are responsible for specific subtasks.
+Together, these approaches provide insight into the evolving landscape of LLM-driven data cleaning methodologies.
 \newline\newline
 LLMClean \cite{LLMCLEAN} is a data cleaning approach designed to improve error detection in tabular datasets by automatically generating context-aware rules using LLMs. 
 Unlike traditional methods that require manual writing of functional dependencies (FDs) or domain knowledge to construct semantic rules, LLMClean automates this process by leveraging the reasoning capabilities of LLMs. 
@@ -174,6 +175,7 @@ These approaches may help LLMs to better adapt to enterprise needs.
 In this section, we provide an overview of methods that apply machine learning to data cleaning tasks. 
 These approaches primarily focus on training models either to predict whether a given cell is correct or erroneous, or to predict appropriate repair values.
 These models learn patterns from labeled data and apply these learned patterns to the full dataset, enabling the identification and correction of errors based on statistical or contextual relationships.
+By learning directly from the data, these approaches are generally more flexible and adaptable to different datasets and varying data characteristics.
 \newline\newline
 Abdelaal et al. \cite{SAGED} present SAGED, a data cleaning method that uses meta-learning and semi-supervised learning to detect errors in tabular datasets. 
 Unlike traditional error detection systems that rely heavily on manual labeling or domain-specific rules, SAGED leverages knowledge from previously cleaned (and labeled) datasets to identify erroneous rows in new data with minimal user intervention. 

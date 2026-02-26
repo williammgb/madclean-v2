@@ -76,8 +76,8 @@ The informative sample is designed to highlight the most relevant errors or patt
 For numeric columns, the informative sample consists of all values that cannot be converted to valid numeric types. 
 These values expose noise patterns and invalid formats, allowing the LLM to infer appropriate cleaning rules. 
 For datetime columns, a similar strategy is applied. 
-For dirty numeric columns, distinct noise patterns (e.g., '\{N\} kg', '\{N\} cm') are sampled, enabling the LLM to recognize and generalize unit-removal strategies. 
-For other column types, the informative sample consists of unique values, ordered by frequency, which is particularly effective for highly redundant columns.
+For dirty numeric columns, distinct noise patterns (e.g., '\{N\} kg', '\{N\} cm') are sampled, enabling the LLM to recognize and generalize unit-removal strategies, converting the values to pure numerics. 
+For other column types, the informative sample consists of unique values, ordered by frequency, which is particularly effective for highly redundant columns, where many repeated values can be safely omitted.
 \newline\newline
 By using statistical techniques to summarize the data and highlight problematic values, we significantly reduces the number of input tokens required. 
 At the same time, it provides the LLM with a clearer and more structured view of the data, which improves its ability to generalize cleaning operations across the entire column.
@@ -136,7 +136,7 @@ The score of a candidate FD is computed as:
 \]
 
 This formulation weights each LHS value by its frequency, such that LHS values occurring in many rows contribute more to the score than rare values (e.g., an LHS occurring twice is weighted less than one occurring 100 times).
-This prioritizes dependencies supported by many rows, as dependencies holding for only a small fraction of the data would otherwise lead to many flagged violations and potentially many false positives (which may be more harmful), which is particularly relevant in skewed or imbalanced real-world datasets.
+This prioritizes dependencies supported by many rows, as dependencies holding for only a small fraction of the data would lead to many flagged violations and potentially many false positives (which may be more harmful), which is particularly relevant in skewed or imbalanced datasets.
 A candidate FD is accepted if its score is above a set threshold (e.g., 0.925). 
 \newline\newline
 Given the set of detected FD violations and their associated context, the LLM can determine whether the violations reflect true errors in the RHS, whether the LHS itself contains incorrect values that contribute to the violations, and how to resolve inconsistencies without overwriting valid exceptions. 

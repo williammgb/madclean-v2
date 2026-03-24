@@ -5,8 +5,8 @@ from madclean.components.domain.schema import MultiColumnTask, FDResult
 
 class TaskScheduler:
     """Determines the correct execution order of functional dependencies based on their dependency relationships."""
-    def __init__(self, verbose: bool = False):
-        self.verbose = verbose
+    def __init__(self):
+        pass
 
     def get_execution_order(self, multi_col_tasks: list[MultiColumnTask]) -> list[list[MultiColumnTask]]:
         """
@@ -122,53 +122,3 @@ class TaskScheduler:
             if level_ids:
                 ordered_levels_ids.append(level_ids)
         return ordered_levels_ids
-            
-####### TEST CODE #######
-if __name__ == "__main__":
-    hospital_fds = [
-        {'lhs': 'Address1' , 'rhs': 'HospitalName' , 'score': 0.9770}, 
-        {'lhs': 'PhoneNumber' , 'rhs': 'State', 'score': 0.9760 },
-        {'lhs': 'PhoneNumber' , 'rhs': 'HospitalOwner', 'score': 0.9750  },
-        {'lhs': 'Address1' , 'rhs': 'EmergencyService', 'score': 0.9740  },
-        {'lhs': 'Address1' , 'rhs': 'ProviderNumber', 'score': 0.9720  },
-        {'lhs': 'Stateavg' , 'rhs': 'MeasureCode', 'score': 0.9720  },
-        {'lhs': 'PhoneNumber' , 'rhs': 'City', 'score': 0.9690  }, 
-        {'lhs': 'Stateavg' , 'rhs': 'Condition', 'score': 0.9690  },   
-        {'lhs': 'Stateavg' , 'rhs': 'MeasureName', 'score': 0.9660  },  
-        {'lhs': 'PhoneNumber' , 'rhs': 'Address1', 'score': 0.9700 }, 
-        {'lhs': 'City' , 'rhs': 'CountyName', 'score': 0.9640  },
-        {'lhs': 'MeasureName' , 'rhs': 'Stateavg', 'score': 0.9550  }, 
-        {'lhs': 'HospitalName' , 'rhs': 'ZipCode', 'score': 0.9710  },
-        {'lhs': 'Address1' , 'rhs': 'PhoneNumber', 'score': 0.9680 }
-    ]
-
-    multi_col_tasks = [
-        MultiColumnTask(
-            task_type="FD",
-            target_columns=[item['lhs'], item['rhs']],
-            verbose_key=f"{item['lhs']} -> {item['rhs']}",
-            data=FDResult(
-                lhs=item['lhs'],
-                rhs=item['rhs'],
-                score=item['score']
-            ))
-        for item in hospital_fds
-    ]
-    multi_col_tasks.append(MultiColumnTask(
-        task_type="A",
-        target_columns=['B', 'C'],
-        verbose_key="B <= C",
-        data=5
-    ))
-    task_scheduler = TaskScheduler(verbose=True)
-    fd_groups = task_scheduler.get_execution_order(multi_col_tasks)
-    print(fd_groups[0])
-    print()
-    print(fd_groups[-1])
-
-    # python -m src.components.coordinator.task_scheduler
-
-
-
-
-

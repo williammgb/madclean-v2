@@ -11,31 +11,9 @@ class DataSampler:
     Class to sample data in more intelligent manner to improve LLM cleaning performance 
     by providing more informative dataset sample to the LLM.
     """
-    SAMPLE_SIZES = {
-        "NUMERIC": {
-            "clean_sample_size": 50,
-            "dirty_sample_size": 500
-        },
-        "DATETIME": {
-            "clean_sample_size": 100,
-            "dirty_sample_size": 500
-        },
-        "DIRTY_NUMERIC": { 
-            "random_sample_size": 50,
-            "unique_sample_size": 500
-        },
-        "STRING": { 
-            "random_sample_size": 150,
-            "unique_sample_size": 600
-        },
-        "NLT": {
-            "short_sample_size": 100,
-            "long_sample_size": 20
-        }
-    }
     
-    def __init__(self, verbose: bool = False):
-        self.verbose = verbose
+    def __init__(self, sample_sizes: dict):
+        self.sample_sizes = sample_sizes
 
     def sample_column(self, column: pd.Series, col: str, column_type: str) -> str:
         """Creates an intelligent string sample of a column based on its semantic type."""       
@@ -56,7 +34,6 @@ class DataSampler:
         # 1. Select sample configurations based on semantic type
         sample_sizes_cfg, sampling_func = TYPE_MAP.get(column_type) 
         sample1, sample2, full_sample = sampling_func(column, sample_sizes_cfg)
-        # if self.verbose: print(f"[{col}]  Sample sizes=({len(sample1)}, {len(sample2)}) -- Full sample={full_sample}")
         # 2. Generate column sample as a string
         header = f"Column '{col}':"
         if column_type in ['INTEGER', 'FLOAT']:
@@ -99,7 +76,7 @@ class DataSampler:
     # ====================== type-specific sampling ========================== 
     def _sample_column_numeric(self, series: pd.Series, sample_sizes_cfg: str) -> tuple[list, list, bool]:
         """Separate numeric values from non-numeric (dirty) values for INTEGER and FLOAT columns."""
-        cfg = self.SAMPLE_SIZES[sample_sizes_cfg]
+        cfg = self.sample_sizes[sample_sizes_cfg]
         coerced_series = pd.to_numeric(series, errors='coerce')
         # 1. Gather 'clean' sample: values that can be converted to numeric
         clean_mask = coerced_series.notna()
@@ -117,7 +94,7 @@ class DataSampler:
     
     def _sample_column_dirty_numeric(self, series: pd.Series, sample_sizes_cfg: str) -> tuple[list, list, bool]:
         """ Provides random sample and list of all unique dirty patterns for DIRTY_FLOAT and DIRTY_INTEGER columns."""
-        cfg = self.SAMPLE_SIZES[sample_sizes_cfg]
+        cfg = self.sample_sizes[sample_sizes_cfg]
         # 1. Take random sample
         random_sample = series.sample(n=min(cfg['random_sample_size'], len(series)), replace=False).tolist()
         # 2. Sample all unique noise patterns as dirty values
@@ -151,7 +128,7 @@ class DataSampler:
                 return (parse(str(value)))
             except (ValueError, TypeError):
                 return pd.NaT
-        cfg = self.SAMPLE_SIZES[sample_sizes_cfg]
+        cfg = self.sample_sizes[sample_sizes_cfg]
         coerced_series = series.apply(_robust_date_parser)
         # 1. Gather 'clean' sample: values that can be converted to datetime 
         clean_mask = coerced_series.notna()
@@ -166,7 +143,7 @@ class DataSampler:
 
     def _sample_column_boolean(self, series: pd.Series, sample_sizes_cfg: str) -> tuple[list, list, bool]:
         """ Provides random sample and list of all unique values for BOOLEAN columns."""
-        cfg = self.SAMPLE_SIZES[sample_sizes_cfg]
+        cfg = self.sample_sizes[sample_sizes_cfg]
         # Gather random sample and uniuqe sample
         random_sample = series.sample(n=min(cfg['random_sample_size'], len(series)), replace=False).tolist()
         unique_sample = series.unique().tolist()
@@ -177,7 +154,7 @@ class DataSampler:
 
     def _sample_column_string(self, series: pd.Series, sample_sizes_cfg: str) -> tuple[list, list, bool]:
         """ Provides random sample and list of all unique values for NAMED_ENTITY and DISCRETE_STRING columns."""
-        cfg = self.SAMPLE_SIZES[sample_sizes_cfg]
+        cfg = self.sample_sizes[sample_sizes_cfg]
         # Gather random sample and uniuqe sample
         random_sample = series.sample(n=min(cfg['random_sample_size'], len(series)), replace=False).tolist()
         unique_sample = series.unique().tolist()
@@ -188,7 +165,7 @@ class DataSampler:
 
     def _sample_column_nlt(self, series: pd.Series, sample_sizes_cfg: str)-> tuple[list, list, bool]:
         """Samples short and long text values for NATURAL_LANGUAGE_TEXT columns."""
-        cfg = self.SAMPLE_SIZES[sample_sizes_cfg]
+        cfg = self.sample_sizes[sample_sizes_cfg]
         # 1. Split column into short_sample and long_sample
         unique_series = pd.Series(series.unique())
         if len(unique_series) < (cfg['short_sample_size'] + cfg['long_sample_size']):

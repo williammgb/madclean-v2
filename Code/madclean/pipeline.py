@@ -10,37 +10,58 @@ from madclean.components.dataprofiler.functional_dependencies import FunctionalD
 from madclean.components.multi_agent_cleaner.multi_agent_cleaning import MultiAgentCleaning
 from madclean.components.coordinator.cleaning_coordinator import CleaningCoordinator
 from madclean.utils.helpers import load_dataset, save_dataset
+from madclean.llm.llm_clients import OpenAIClient
+from madclean.config.settings import CleaningConfig
 
 class Pipeline:
-    def __init__(self, llm_client: dict, verbose: bool = False):
-        self.verbose = verbose
-        self.client = llm_client["class"](model_name=llm_client["default_model"])
-        # 1. Initialise single column cleaning components
+    def __init__(self, llm_config: dict, config: CleaningConfig = None):
+        self.config = config or CleaningConfig() # use default if none is provided
+        self.verbose = self.config.verbose
+        # 1. Initialise LLM client
+        client_class = llm_config["class"]
+        if client_class == OpenAIClient:
+            self.client = OpenAIClient(
+                model_name=llm_config["default_model"],
+                base_url=llm_config.get("base_url")
+            )
+        else:
+            self.client = client_class(model_name=llm_config["default_model"])
+        # 2. Initialise single column cleaning components
         self.single_col_cleaners = [
             OutlierDetection()
         ]
         self.multi_col_cleaners = [
             FunctionalDependencies()
         ]
-        # 2. Initialise DataProfiler
+        # 3. Initialise DataProfiler
         self.data_profiler = DataProfiler(
             single_col_cleaners=self.single_col_cleaners,
-            multi_col_cleaners=self.multi_col_cleaners
+            multi_col_cleaners=self.multi_col_cleaners,
+            config=self.config 
         )
-        # 3. Initialise LLM Agents
+        # 4. Initialise LLM Agents
         self.multi_agent_loop = MultiAgentCleaning(
             llm_client=self.client,
-            llm_role=llm_client["role"],
-            verbose=verbose
+            llm_role=llm_config["role"],
+            config=self.config
         )
-        # 4. Initialise Coordinator
+        # 5. Initialise Coordinator
         self.cleaning_coordinator = CleaningCoordinator(
             self.multi_agent_loop, 
-            multi_column_cleaners=self.multi_col_cleaners
+            multi_column_cleaners=self.multi_col_cleaners,
+            config=self.config
         )
         if self.verbose: 
             print("=" * 35)
-            print(f"Pipeline initialized with LLM: {llm_client['default_model']}")
+            print(f"Pipeline initialized with LLM: {llm_config['default_model']}")
+    
+    @staticmethod
+    def get_total_usage(token_usage):
+        return {
+            "input_tokens": sum(a["input_tokens"] for a in token_usage.values()),
+            "output_tokens": sum(a["output_tokens"] for a in token_usage.values()),
+            "total_tokens": sum(a["total_tokens"] for a in token_usage.values()),
+        }
     
     def run(self, file_path: str, save_cleaned: bool = False) -> tuple[pd.DataFrame | None, dict | None]:
         if self.verbose: 
@@ -70,21 +91,29 @@ class Pipeline:
             return None, None
         # 3. Clean DataFrame
         if self.verbose: print("Starting asynchronous LLM cleaning...")
-        cleaned_df, token_usage = self.cleaning_coordinator.clean_dataset(
+        cleaned_df, cleaning_report = self.cleaning_coordinator.clean_dataset(
             dirty_df,
             column_profiles=profiles,
             multi_col_tasks=multi_col_tasks
         )
         end_time = time.perf_counter()
         runtime = (end_time - start_time)
-        # 4. Print runtime and token usage
+        # 4. Print runtime and token usage --> UPDATE WITH AGENTS
         if self.verbose:
+            token_usage = cleaning_report["token_usage"]
             print("-" * 35)
             print(f"Runtime: {runtime}s")
             print(f"Token usage for {file_path}:")
-            print(f"    Input tokens:   {token_usage['input_tokens']:>10,}")
-            print(f"    Output tokens:  {token_usage['output_tokens']:>10,}")
-            print(f"    Total tokens:   {token_usage['total_tokens']:>10,}")
+            for agent, usage in token_usage.items():
+                print(f"\n  {agent.capitalize()} agent:")
+                print(f"      Input tokens:   {usage['input_tokens']:>10,}")
+                print(f"      Output tokens:  {usage['output_tokens']:>10,}")
+                print(f"      Total tokens:   {usage['total_tokens']:>10,}")
+            total_usage = self.get_total_usage(token_usage)
+            print("\n  TOTAL:")
+            print(f"      Input tokens:   {total_usage['input_tokens']:>10,}")
+            print(f"      Output tokens:  {total_usage['output_tokens']:>10,}")
+            print(f"      Total tokens:   {total_usage['total_tokens']:>10,}")
             print("-" * 35)
         # 5. Save cleaned DataFrame
         if save_cleaned:
@@ -94,7 +123,7 @@ class Pipeline:
         if self.verbose:
             print(f"Pipeline finished for file: {file_path}")
             print("=" * 35)
-        return cleaned_df, token_usage
+        return cleaned_df, cleaning_report
 
 
     

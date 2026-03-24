@@ -36,11 +36,11 @@ RULES
 
 CLEANING operations
 - Standardize Different Valid Formats: If a value is a valid date/time but is not in the dominant format, convert it. Ensure components like month and day have leading zeros if the dominant format uses them.
-    - Example (if dominant format is “mm-dd-yyyy”)
+    - Example (if dominant format is "mm-dd-yyyy")
         - "2025-10-25" should become "10-25-2025"
         - "8/14/2025" should become "08-14-2025"
         - "Feb 14, 2022" should become "02-14-2022"
-    - Example (if dominant format is “hh:mm”)
+    - Example (if dominant format is "hh:mm")
         - "2:30 PM" should become "14:30"
         - "14.30" should become "14:30"
         - "09:15:33" should become "09:15"
@@ -78,13 +78,13 @@ The dirty sample contains all values that cannot be parsed as datetimes in their
 {column_sample}
 {additional_context}
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
- - “summary”: Provide a concise explanation of the column's purpose and its general data type, specifying the desired output format (e.g., YYYY-MM-DD, HH:MM:SS, or MM/DD/YYYY). Include any observed patterns.
+ - "summary": Provide a concise explanation of the column's purpose and its general data type, specifying the desired output format (e.g., YYYY-MM-DD, HH:MM:SS, or MM/DD/YYYY). Include any observed patterns.
  - "error_types": List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Inconsistent date formats: Dates are present as DD/MM/YY, MM/DD/YYYY, and UNIX timestamps, preventing uniform parsing." None if "is_clean" is True
- - “examples_clean”: List exactly 10 examples of clean, correctly formatted values that strictly adhere to the desired unified format (the dominant format in the sample). None if "is_clean" is True
- - “examples_dirty”: List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "2023/01/01 → 2023-01-01", "10:30PM → 22:30", "25-Feb-2024 → 25/02/2024", "N/A → NULL". None if "is_clean" is True
- - “cleaning_instructions”: List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "The data should conform to DD-MM-YYYY. Convert all other formats to this standard format.", "Remove timezone indicators (e.g., 'PST', '+0000') as the dominant format does not have this." None if "is_clean" is True
+ - "examples_clean": List exactly 10 examples of clean, correctly formatted values that strictly adhere to the desired unified format (the dominant format in the sample). None if "is_clean" is True
+ - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "2023/01/01 → 2023-01-01", "10:30PM → 22:30", "25-Feb-2024 → 25/02/2024", "N/A → NULL". None if "is_clean" is True
+ - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "The data should conform to DD-MM-YYYY. Convert all other formats to this standard format.", "Remove timezone indicators (e.g., 'PST', '+0000') as the dominant format does not have this." None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """,
 
@@ -147,13 +147,13 @@ Use the unique sample to get a complete overview of the distinct values in the c
 {column_sample}
 {additional_context}
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
- - “summary”: Provide a concise explanation of the column's purpose and its general data type, specifying the desired unified output format for both states based on the dominant representation in the sample (e.g., 'YES'/'NO' , 'True'/'False', 1/0).
- - “error_types”: List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Inconsistent boolean indicators: The 'Yes' state is represented by a mix of 'Y', 'True', and '1', along with various casing (e.g., 'yes', 'YES'), violating the chosen uniform format (e.g., 'Yes')." None if "is_clean" is True
- - “examples_clean”: List the two standardized output values that the cleaned column should contain (e.g., “Yes”/“No”, “True”/“False”). None if "is_clean" is True
- - “examples_dirty”: List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column, including all case variations of common synonyms. Example (if target is Yes/No): "y → Yes", "0 → No", "TRUE → Yes", "false → No", "1 → Yes". None if "is_clean" is True
- - “cleaning_instructions”: List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "The data should be uniform string values: 'Yes' or 'No'. Convert all positive indicators (including all casing variations of 'Y', 'Yes', '1', and 'True') to the string 'Yes'.", "Convert all negative indicators (including all casing variations of 'N', 'No', '0', and 'False'), and common missing value representations (e.g., empty string, 'N/A') to the string 'No'." None if "is_clean" is True
+ - "summary": Provide a concise explanation of the column's purpose and its general data type, specifying the desired unified output format for both states based on the dominant representation in the sample (e.g., 'YES'/'NO' , 'True'/'False', 1/0).
+ - "error_types": List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Inconsistent boolean indicators: The 'Yes' state is represented by a mix of 'Y', 'True', and '1', along with various casing (e.g., 'yes', 'YES'), violating the chosen uniform format (e.g., 'Yes')." None if "is_clean" is True
+ - "examples_clean": List the two standardized output values that the cleaned column should contain (e.g., "Yes"/"No", "True"/"False"). None if "is_clean" is True
+ - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column, including all case variations of common synonyms. Example (if target is Yes/No): "y → Yes", "0 → No", "TRUE → Yes", "false → No", "1 → Yes". None if "is_clean" is True
+ - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "The data should be uniform string values: 'Yes' or 'No'. Convert all positive indicators (including all casing variations of 'Y', 'Yes', '1', and 'True') to the string 'Yes'.", "Convert all negative indicators (including all casing variations of 'N', 'No', '0', and 'False'), and common missing value representations (e.g., empty string, 'N/A') to the string 'No'." None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """,
 
@@ -211,13 +211,13 @@ The dirty sample contains all values that cannot be parsed as numeric in their c
 {column_sample}
 {additional_context}
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
- - “summary”: Provide a concise explanation of the column's purpose and its general data type, specifying the desired unified output format. Note any observed patterns like consistent thousands separators or value range.
- - “error_types”: List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Non-numeric characters present: Values contain currency symbols ('$', '€'), text suffixes ('units'), or thousands separators (commas), preventing direct integer conversion.", "Incorrect data type: Values include floating-point numbers (decimals) that must be rounded or truncated to the nearest whole integer." None if "is_clean" is True
- - “examples_clean”: List exactly 10 examples of clean, correctly formatted integer values that strictly adhere to the desired numerical precision and range. Ensure diversity across the valid range. None if "is_clean" is True
- - “examples_dirty”: List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "$1,500.00 → 1500", "42.8 → 43", "twenty → 20", "1,000 units → 1000", "7.01 → 7", "200% → 200". None if "is_clean" is True
- - “cleaning_instructions”: List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove all non-numeric characters, including currency symbols ('$', '€'), commas (thousands separators), and trailing text/units.", “Convert all string representations of integers into numeric integer values. This includes both numeric strings (e.g., "42" → 42) and textual representations of numbers (e.g., "eighty" → 80).” None if "is_clean" is True
+ - "summary": Provide a concise explanation of the column's purpose and its general data type, specifying the desired unified output format. Note any observed patterns like consistent thousands separators or value range.
+ - "error_types": List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Non-numeric characters present: Values contain currency symbols ('$', '€'), text suffixes ('units'), or thousands separators (commas), preventing direct integer conversion.", "Incorrect data type: Values include floating-point numbers (decimals) that must be rounded or truncated to the nearest whole integer." None if "is_clean" is True
+ - "examples_clean": List exactly 10 examples of clean, correctly formatted integer values that strictly adhere to the desired numerical precision and range. Ensure diversity across the valid range. None if "is_clean" is True
+ - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "$1,500.00 → 1500", "42.8 → 43", "twenty → 20", "1,000 units → 1000", "7.01 → 7", "200% → 200". None if "is_clean" is True
+ - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove all non-numeric characters, including currency symbols ('$', '€'), commas (thousands separators), and trailing text/units.", "Convert all string representations of integers into numeric integer values. This includes both numeric strings (e.g., "42" → 42) and textual representations of numbers (e.g., "eighty" → 80)." None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """,
 
@@ -264,13 +264,13 @@ Use the unique sample to get a complete overview of all distinct values in the c
 {column_sample}
 {additional_context}
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
- - “summary”: Provide a concise explanation of the column's purpose and its general data type, specifying the desired unified output format. Note any observed patterns like consistent thousands separators or value range.
- - “error_types”: List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Non-numeric characters present: Values contain currency symbols ('$', '€'), text suffixes ('units'), or thousands separators (commas), preventing direct integer conversion.", "Incorrect data type: Values include floating-point numbers (decimals) that must be rounded or truncated to the nearest whole integer." None if "is_clean" is True
- - “examples_clean”: List exactly 10 examples of clean, correctly formatted integer values that strictly adhere to the desired numerical precision and range. Ensure diversity across the valid range. None if "is_clean" is True
- - “examples_dirty”: List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "$1,500.00 → 1500", "42.8 → 43", "twenty → 20", "1,000 units → 1000", "7.01 → 7", "200% → 200". None if "is_clean" is True
- - “cleaning_instructions”: List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove all non-numeric characters, including currency symbols ('$', '€'), commas (thousands separators), and trailing text/units.", “Convert all string representations of integers into numeric integer values. This includes both numeric strings (e.g., "42" → 42) and textual representations of numbers (e.g., "eighty" → 80).” None if "is_clean" is True
+ - "summary": Provide a concise explanation of the column's purpose and its general data type, specifying the desired unified output format. Note any observed patterns like consistent thousands separators or value range.
+ - "error_types": List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Non-numeric characters present: Values contain currency symbols ('$', '€'), text suffixes ('units'), or thousands separators (commas), preventing direct integer conversion.", "Incorrect data type: Values include floating-point numbers (decimals) that must be rounded or truncated to the nearest whole integer." None if "is_clean" is True
+ - "examples_clean": List exactly 10 examples of clean, correctly formatted integer values that strictly adhere to the desired numerical precision and range. Ensure diversity across the valid range. None if "is_clean" is True
+ - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "$1,500.00 → 1500", "42.8 → 43", "twenty → 20", "1,000 units → 1000", "7.01 → 7", "200% → 200". None if "is_clean" is True
+ - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove all non-numeric characters, including currency symbols ('$', '€'), commas (thousands separators), and trailing text/units.", "Convert all string representations of integers into numeric integer values. This includes both numeric strings (e.g., "42" → 42) and textual representations of numbers (e.g., "eighty" → 80)." None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """,
 
@@ -335,13 +335,13 @@ The dirty sample contains all values that cannot be parsed as numeric in their c
 {column_sample}
 {additional_context}
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
- - “summary”: Provide a concise explanation of the column's purpose and its general data type, specifying the required precision (e.g., decimal to two places) and any observed patterns like value range, currency symbols, percentage signs, or scientific notation.
- - “error_types”: List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Non-numeric characters present: Values contain currency symbols ('$', '£'), percentage signs ('%'), or text suffixes ('kg'), preventing numerical conversion.", "Inconsistent formatting and precision: Values use commas as decimal separators or have excessive precision (more than two decimal places) that must be standardized." None if "is_clean" is True
- - “examples_clean”: List exactly 10 examples of clean, correctly formatted float values that strictly adhere to the desired decimal precision and numerical format. Ensure diversity across the valid range. None if "is_clean" is True
- - “examples_dirty”: List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "$1,500.25 → 1500.25", "42,8 → 42.80", "0.15% → 0.15", "1.23456 → 1.23", "200.0 → 200.00", "€3,456.78 → 3456.78". None if "is_clean" is True
- - “cleaning_instructions”: List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove all non-numeric characters, including currency symbols, thousands separators (commas in US format), and any trailing text.", "After all conversions, round or truncate the value to ensure it has exactly two decimal places." None if "is_clean" is True
+ - "summary": Provide a concise explanation of the column's purpose and its general data type, specifying the required precision (e.g., decimal to two places) and any observed patterns like value range, currency symbols, percentage signs, or scientific notation.
+ - "error_types": List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Non-numeric characters present: Values contain currency symbols ('$', '£'), percentage signs ('%'), or text suffixes ('kg'), preventing numerical conversion.", "Inconsistent formatting and precision: Values use commas as decimal separators or have excessive precision (more than two decimal places) that must be standardized." None if "is_clean" is True
+ - "examples_clean": List exactly 10 examples of clean, correctly formatted float values that strictly adhere to the desired decimal precision and numerical format. Ensure diversity across the valid range. None if "is_clean" is True
+ - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "$1,500.25 → 1500.25", "42,8 → 42.80", "0.15% → 0.15", "1.23456 → 1.23", "200.0 → 200.00", "€3,456.78 → 3456.78". None if "is_clean" is True
+ - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove all non-numeric characters, including currency symbols, thousands separators (commas in US format), and any trailing text.", "After all conversions, round or truncate the value to ensure it has exactly two decimal places." None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """,
 
@@ -388,13 +388,13 @@ Use the unique sample to get a complete overview of all distinct values in the c
 {column_sample}
 {additional_context}
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
- - “summary”: Provide a concise explanation of the column's purpose and its general data type, specifying the required precision (e.g., decimal to two places) and any observed patterns like value range, currency symbols, percentage signs, or scientific notation.
- - “error_types”: List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Non-numeric characters present: Values contain currency symbols ('$', '£'), percentage signs ('%'), or text suffixes ('kg'), preventing numerical conversion.", "Inconsistent formatting and precision: Values use commas as decimal separators or have excessive precision (more than two decimal places) that must be standardized." None if "is_clean" is True
- - “examples_clean”: List exactly 10 examples of clean, correctly formatted float values that strictly adhere to the desired decimal precision and numerical format. Ensure diversity across the valid range. None if "is_clean" is True
- - “examples_dirty”: List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "$1,500.25 → 1500.25", "42,8 → 42.80", "0.15% → 0.15", "1.23456 → 1.23", "200.0 → 200.00", "€3,456.78 → 3456.78". None if "is_clean" is True
- - “cleaning_instructions”: List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove all non-numeric characters, including currency symbols, thousands separators (commas in US format), and any trailing text.", "After all conversions, round or truncate the value to ensure it has exactly two decimal places." None if "is_clean" is True
+ - "summary": Provide a concise explanation of the column's purpose and its general data type, specifying the required precision (e.g., decimal to two places) and any observed patterns like value range, currency symbols, percentage signs, or scientific notation.
+ - "error_types": List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: "Non-numeric characters present: Values contain currency symbols ('$', '£'), percentage signs ('%'), or text suffixes ('kg'), preventing numerical conversion.", "Inconsistent formatting and precision: Values use commas as decimal separators or have excessive precision (more than two decimal places) that must be standardized." None if "is_clean" is True
+ - "examples_clean": List exactly 10 examples of clean, correctly formatted float values that strictly adhere to the desired decimal precision and numerical format. Ensure diversity across the valid range. None if "is_clean" is True
+ - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: "$1,500.25 → 1500.25", "42,8 → 42.80", "0.15% → 0.15", "1.23456 → 1.23", "200.0 → 200.00", "€3,456.78 → 3456.78". None if "is_clean" is True
+ - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove all non-numeric characters, including currency symbols, thousands separators (commas in US format), and any trailing text.", "After all conversions, round or truncate the value to ensure it has exactly two decimal places." None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """,
 
@@ -465,13 +465,13 @@ Use the unique sample to get a complete overview of all distinct values in the c
 {column_sample}
 {additional_context}
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
- - “summary”: Provide a concise explanation of the column's purpose, its general data type, and any observed structures or patterns. 
- - “error_types”: List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: Spelling inconsistencies: Multiple string variations exist for the same entity (e.g., 'NY', 'N.Y.', and 'New York') requiring consolidation.", “Presence of noise: Text includes corrupt characters that must be removed.” None if "is_clean" is True
- - “examples_clean”: List exactly 10 examples of clean, correctly formatted string values that strictly adhere to the desired casing and formatting standards. Ensure diversity across valid text patterns. None if "is_clean" is True
- - “examples_dirty”: List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: " john smith → John Smith", "ABCdE99 → ABCDE99", “empty → NaN”, "New-York → New York". None if "is_clean" is True
- - “cleaning_instructions”: List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove leading and trailing whitespace and replace any sequences of multiple internal spaces with a single space.", "Replace missing value placeholders ('N/A', 'Unknown', empty string) with NaN." None if "is_clean" is True
+ - "summary": Provide a concise explanation of the column's purpose, its general data type, and any observed structures or patterns. 
+ - "error_types": List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: Spelling inconsistencies: Multiple string variations exist for the same entity (e.g., 'NY', 'N.Y.', and 'New York') requiring consolidation.", "Presence of noise: Text includes corrupt characters that must be removed." None if "is_clean" is True
+ - "examples_clean": List exactly 10 examples of clean, correctly formatted string values that strictly adhere to the desired casing and formatting standards. Ensure diversity across valid text patterns. None if "is_clean" is True
+ - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: " john smith → John Smith", "ABCdE99 → ABCDE99", "empty → NaN", "New-York → New York". None if "is_clean" is True
+ - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove leading and trailing whitespace and replace any sequences of multiple internal spaces with a single space.", "Replace missing value placeholders ('N/A', 'Unknown', empty string) with NaN." None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """,
 
@@ -520,13 +520,13 @@ Here is a sample of the data. Use it to decide which cleaning operations to appl
 {column_sample}
 {additional_context}
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
- - “summary”: Provide a concise explanation of the column's purpose, its general data type, and any observed structures or patterns. 
- - “error_types”: List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: Spelling inconsistencies: Multiple string variations exist for the same entity (e.g., 'NY', 'N.Y.', and 'New York') requiring consolidation.", “Presence of noise: Text includes corrupt characters that must be removed.” None if "is_clean" is True
- - “examples_clean”: List exactly 10 examples of clean, correctly formatted string values that strictly adhere to the desired casing and formatting standards. Ensure diversity across valid text patterns. None if "is_clean" is True
- - “examples_dirty”: List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: " john smith → John Smith", "ABCdE99 → ABCDE99", “empty → NaN”, "New-York → New York". None if "is_clean" is True
- - “cleaning_instructions”: List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove leading and trailing whitespace and replace any sequences of multiple internal spaces with a single space.", "Replace missing value placeholders ('N/A', 'Unknown', empty string) with NaN." None if "is_clean" is True
+ - "summary": Provide a concise explanation of the column's purpose, its general data type, and any observed structures or patterns. 
+ - "error_types": List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: Spelling inconsistencies: Multiple string variations exist for the same entity (e.g., 'NY', 'N.Y.', and 'New York') requiring consolidation.", "Presence of noise: Text includes corrupt characters that must be removed." None if "is_clean" is True
+ - "examples_clean": List exactly 10 examples of clean, correctly formatted string values that strictly adhere to the desired casing and formatting standards. Ensure diversity across valid text patterns. None if "is_clean" is True
+ - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: " john smith → John Smith", "ABCdE99 → ABCDE99", "empty → NaN", "New-York → New York". None if "is_clean" is True
+ - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove leading and trailing whitespace and replace any sequences of multiple internal spaces with a single space.", "Replace missing value placeholders ('N/A', 'Unknown', empty string) with NaN." None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """,
 
@@ -603,13 +603,13 @@ Use the unique sample to get a complete overview of all distinct values in the c
 {column_sample}
 {additional_context}
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
- - “summary”: Provide a concise explanation of the column's purpose, its general data type, and any observed structures or patterns. 
- - “error_types”: List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: Spelling inconsistencies: Multiple string variations exist for the same entity (e.g., 'NY', 'N.Y.', and 'New York') requiring consolidation.", “Presence of noise: Text includes corrupt characters that must be removed.” None if "is_clean" is True
- - “examples_clean”: List exactly 10 examples of clean, correctly formatted string values that strictly adhere to the desired casing and formatting standards. Ensure diversity across valid text patterns. None if "is_clean" is True
- - “examples_dirty”: List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: " john smith → John Smith", "ABCdE99 → ABCDE99", “empty → NaN”, "New-York → New York". None if "is_clean" is True
- - “cleaning_instructions”: List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove leading and trailing whitespace and replace any sequences of multiple internal spaces with a single space.", "Replace missing value placeholders ('N/A', 'Unknown', empty string) with NaN." None if "is_clean" is True
+ - "summary": Provide a concise explanation of the column's purpose, its general data type, and any observed structures or patterns. 
+ - "error_types": List the distinct types of data quality issues (one string for each issue). Each error type MUST be a descriptive sentence explaining the nature and impact of the issue. Example: Spelling inconsistencies: Multiple string variations exist for the same entity (e.g., 'NY', 'N.Y.', and 'New York') requiring consolidation.", "Presence of noise: Text includes corrupt characters that must be removed." None if "is_clean" is True
+ - "examples_clean": List exactly 10 examples of clean, correctly formatted string values that strictly adhere to the desired casing and formatting standards. Ensure diversity across valid text patterns. None if "is_clean" is True
+ - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: " john smith → John Smith", "ABCdE99 → ABCDE99", "empty → NaN", "New-York → New York". None if "is_clean" is True
+ - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove leading and trailing whitespace and replace any sequences of multiple internal spaces with a single space.", "Replace missing value placeholders ('N/A', 'Unknown', empty string) with NaN." None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """
 }
@@ -681,7 +681,7 @@ Column Name: '{column_name}'
 {column_comparison_sample}
     
 OUTPUT FORMAT
-Return ONLY valid JSON with three keys:
+Return ONLY valid JSON with three keys (use the EXACT same key names):
 - "needs_correction": a boolean (True/False), depending on whether the cleaned dataset has undesired changes that need correction (True) or not (False).
 - "feedback_target": The LLM agent that needs to receive the feedback. Must be 'RECOMMENDER', 'CODER', or None if needs_correction is false.
 - "correction_instructions": a string with clear instructions for the LLM cleaning agent on how to modify the cleaning code to follow the format of the initial data. If needs_correction is False, this must be an empty string.
@@ -738,7 +738,7 @@ Column Name: '{column_name}'
 {column_comparison_sample}
 
 OUTPUT FORMAT
-Return ONLY valid JSON with three keys:
+Return ONLY valid JSON with three keys (use the EXACT same key names):
 - "needs_correction": a boolean (True/False), depending on whether the cleaned dataset has undesired changes that need correction (True) or not (False).
 - "feedback_target": The LLM agent that needs to receive the feedback. Must be 'RECOMMENDER', 'CODER', or None if needs_correction is false.
 - "correction_instructions": a string with clear instructions for the LLM cleaning agent on how to modify the cleaning code to follow the format of the initial data. If needs_correction is False, this must be an empty string.
@@ -808,7 +808,7 @@ Column Name: '{column_name}'
 {column_comparison_sample}
     
 OUTPUT FORMAT
-Return ONLY valid JSON with three keys:
+Return ONLY valid JSON with three keys (use the EXACT same key names):
 - "needs_correction": a boolean (True/False), depending on whether the cleaned dataset has undesired changes that need correction (True) or not (False).
 - "feedback_target": The LLM agent that needs to receive the feedback. Must be 'RECOMMENDER', 'CODER', or None if needs_correction is false.
 - "correction_instructions": a string with clear instructions for the LLM cleaning agent on how to modify the cleaning code to follow the format of the initial data. If needs_correction is False, this must be an empty string.
@@ -863,7 +863,7 @@ Column Name: '{column_name}'
 {column_comparison_sample}
 
 OUTPUT FORMAT
-Return ONLY valid JSON with three keys:
+Return ONLY valid JSON with three keys (use the EXACT same key names):
 - "needs_correction": a boolean (True/False), depending on whether the cleaned dataset has undesired changes that need correction (True) or not (False).
 - "feedback_target": The LLM agent that needs to receive the feedback. Must be 'RECOMMENDER', 'CODER', or None if needs_correction is false.
 - "correction_instructions": a string with clear instructions for the LLM cleaning agent on how to modify the cleaning code to follow the format of the initial data. If needs_correction is False, this must be an empty string.
@@ -910,10 +910,12 @@ Besides Python's standard library (e.g., re, json, datetime, etc.), only use pac
 {allowed_packages}
 
 OUTPUT FORMAT
-Return ONLY valid JSON with one key:
-- "code": a Python code string. 
-Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
-Your ONLY output must be: {{"code": "your_code"}}
+Return ONLY the executable Python code.
+- Wrap your code in a single markdown code block: ```python <your_code>```
+- Do NOT provide any introductory text, commentary, or explanations.
+- Do NOT output JSON
+- Ensure the code is self-contained and ready to execute.
+Your ONLY output must be the code block.
 """
 
 ########################################################## FDs
@@ -963,7 +965,7 @@ Violations
 {violations}
 
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys:
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "summary": Provide a concise explanation of both column and the functional dependency.
  - "violation_instructions": Provide a single string of actionable rules to fix conflicting RHS values for each LHS. For each rule, specify the LHS key, the incorrect RHS value(s), and the single correct RHS to use. If there is an exception, state the LHS key and explain why it should be skipped. If there are no violations, leave the string empty.
  - "imputation_instructions": If there are imputable missing values, provide a single string of instructions to fill missing RHS values using the established LHS → RHS mappings. If there are no imputable values, leave the string empty.
@@ -998,10 +1000,12 @@ Besides Python's standard library (e.g., re, json, datetime, etc.), only use pac
 {allowed_packages}
 
 OUTPUT FORMAT
-Return ONLY valid JSON with one key:
-- "code": a Python code string. 
-Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
-Your ONLY output must be: {{"code": "your_code"}}
+Return ONLY the executable Python code.
+- Wrap your code in a single markdown code block: ```python <your_code>```
+- Do NOT provide any introductory text, commentary, or explanations.
+- Do NOT output JSON
+- Ensure the code is self-contained and ready to execute.
+Your ONLY output must be the code block.
 """
 
 FD_VALIDATION_PROMPT_TEMPLATE = """
@@ -1043,7 +1047,7 @@ SAMPLE (style: {{LHS}}, {{RHS}} → {{cleaned_LHS}}, {{cleaned_RHS}})
 {fd_comparison_sample}
 
 OUTPUT FORMAT
-Return ONLY valid JSON with three keys:
+Return ONLY valid JSON with three keys (use the EXACT same key names):
 - "needs_correction": a boolean (True/False), depending on whether the cleaned dataset has undesired changes that need correction (True) or not (False).
 - "feedback_target": The LLM agent that needs to receive the feedback. Must be 'RECOMMENDER', 'CODER', or None if needs_correction is false.
 - "correction_instructions": a string with clear instructions for the LLM cleaning agent on how to modify the cleaning code to properly enforce the functional dependency without introducing new issues. If needs_correction is False, this must be an empty string.

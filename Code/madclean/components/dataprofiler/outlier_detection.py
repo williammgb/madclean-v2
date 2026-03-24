@@ -4,12 +4,12 @@ import pandas as pd
 from madclean.components.domain.schema import OutlierResult
 
 class OutlierDetection:
-    def __init__(self, verbose: bool = False):
-        """
-        Class for detecting outliers using MAD and gathering context rows to assist LLM in making better decisions.
-        This class implement the SingleColumnCleaner protocol.
-        """
-        self.verbose = verbose
+    """
+    Class for detecting outliers using MAD and gathering context rows to assist LLM in making better decisions.
+    This class implement the SingleColumnCleaner protocol.
+    """
+    def __init__(self):
+        pass
     
     def analyse(self, df: pd.DataFrame, col: str, column_type: str) -> dict | None:
         if column_type not in ['INTEGER', 'FLOAT']:
@@ -39,7 +39,6 @@ class OutlierDetection:
         outlier_values = numeric_series[is_outlier]
         if outlier_values.empty:
             return None
-        # if self.verbose: print(f"[{col}] (median {median}) has {len(outlier_values)} possible outliers: {outlier_values.values}")
         outlier_counts = outlier_values.value_counts()
         outliers_list = list(outlier_counts.items())
         # 3. Add full rows belonging to the outliers for additional context for LLM
@@ -58,26 +57,3 @@ class OutlierDetection:
             mad=mad,
             context=context_rows
         )
-
-####### TEST CODE #######
-if __name__ == "__main__":
-    ## TEST 1
-    data = {
-        "category": ["A", "A", "A", "B", "B", "B", "Error", "Typo", "C", "B", "A", "A"],
-        "values":   [1,   2,   2,   3,   3,   3,   100,     105,    110, 3,   2,   1]
-    }
-    df = pd.DataFrame(data)
-    detector = OutlierDetection(verbose=True)
-    result = detector.analyse(df, "values", "INTEGER")
-    print(result) 
-    print()
-    ## TEST 2
-    from pathlib import Path
-    from madclean.utils.helpers import load_dataset
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-    file_path = BASE_DIR / "data" / "benchmark_datasets" / "beers_dirty.csv"
-    df = load_dataset(file_path)
-    result = detector.analyse(df, "ibu", "INTEGER")
-    print(result)
-
-    # python -m madclean.components.dataprofiler.outlier_detection

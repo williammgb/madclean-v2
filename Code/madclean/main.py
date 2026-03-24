@@ -14,7 +14,7 @@ def main(file_path,
     except (ValueError, EnvironmentError) as e:
         print(f"Configuration Error: {e}")
         return
-    pipeline = Pipeline(llm_client=llm_config, verbose=verbose)
+    pipeline = Pipeline(llm_config=llm_config, verbose=verbose)
     pipeline.run(file_path=file_path, save_cleaned=save_cleaned)
 
 def setup_llm(llm_client_name: str, llm_clients: dict):
@@ -25,15 +25,20 @@ def setup_llm(llm_client_name: str, llm_clients: dict):
             f"Available options: {list(llm_clients.keys())} \n"
             f"Or view README to add LLM API."
         )
-    llm_client = llm_clients[llm_client_name]
-    api_key_name = llm_client["api_key_name"]
+    llm_config = llm_clients[llm_client_name]
+    api_key_name = llm_config.get("api_key_name")
+    if not api_key_name:
+        raise ValueError(
+            f"api_key_name not defined in registry for {llm_client_name}"
+            f"First add it before running the pipeline."
+        )
     api_key = os.getenv(api_key_name)
     if not api_key:
         raise EnvironmentError(
             f"Missing API Key: {api_key_name} not found in .env file. "
             f"First add it before running the pipeline."
         )
-    return llm_client
+    return llm_config
 
 def cli(argv=None) -> int:
     """CLI wrapper. Returns a process exit code."""
@@ -76,3 +81,7 @@ if __name__ == "__main__":
 
     raise SystemExit(cli())
 
+    # pip install -e .
+    # madclean data\benchmark_datasets\beers_dirty.csv --verbose --save-cleaned
+
+    # dc_env -> cd code/gui -> reflex run --> http://localhost:3000

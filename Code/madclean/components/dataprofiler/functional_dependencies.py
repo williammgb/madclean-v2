@@ -10,8 +10,8 @@ class FunctionalDependencies:
     Analyse DataFrame to detect functional dependencies, identify violations and find missing values that can be imputed.
     This class implements the MultiColumnCleaner protocol.
     """
-    def __init__(self, verbose: bool = False):
-        self.verbose = verbose
+    def __init__(self):
+        pass
 
     @property
     def task_type(self) -> str:
@@ -52,16 +52,10 @@ class FunctionalDependencies:
                     verbose_key=fd_key,
                     data=fd_obj
                 ))
-                # if self.verbose: print(f"[{fd_key}] {violations_count} VIOLATIONS & {imputables_count} IMPUTABLES. ")
         return fds_with_issues
 
     def get_data(self, df: pd.DataFrame, task_info: MultiColumnTask) -> MultiColumnTask | None:
         """Runs full analysis on FD to get data needed for enforcement. Finds violations and context rows, and imputation options."""
-        def truncate(val):
-            """Helper function to truncate cells with long string values to reduce token usage and minimize noise."""
-            if isinstance(val, str) and len(val) > 50:
-                return val[:50] + "..."
-            return val
         fd = cast(FDResult, task_info.data) # For safe attribute access
         lhs, rhs = fd.lhs, fd.rhs
         # 1. Find violations
@@ -79,7 +73,7 @@ class FunctionalDependencies:
                     sample_row = df[
                         (df[lhs] == lhs_val) & (df[rhs] == rhs_val)
                         ].iloc[0]
-                    sample_row = sample_row.apply(truncate)
+                    sample_row = sample_row.apply(self._truncate_cell)
                     context_rows.append(sample_row.tolist())
                 violations.append({
                     'lhs': lhs_val,
@@ -102,23 +96,16 @@ class FunctionalDependencies:
             fd.imputable_count = imputation_data['count']
             fd.violation_data = violation_data
             fd.imputation_data = imputation_data
-            # if self.verbose: print(f"[{task_info.verbose_key}] {violation_data['count']} VIOLATIONS & {imputation_data['count']} IMPUTABLES. ")
             task_info.data = fd
             return task_info
         return None
 
-    # def get_fd_counts(self, df: pd.DataFrame, lhs: str, rhs: str) -> tuple[int, int]: 
-    #     """For FD validator agent"""
-    #     grouped_lhs = df.dropna(subset=[lhs, rhs]).groupby(lhs, sort=False)
-    #     violation_count = sum(
-    #         (group[rhs].nunique() > 1)
-    #         for _, group in grouped_lhs)
-    #     lhs_with_non_null_rhs = set(df.dropna(subset=[rhs])[lhs].unique())
-    #     is_null_rhs = df[rhs].isnull()
-    #     is_lhs_imputable = df[lhs].isin(lhs_with_non_null_rhs)
-    #     imputation_mask = is_null_rhs & is_lhs_imputable
-    #     imputable_count = int(imputation_mask.sum())
-    #     return violation_count, imputable_count
+    @staticmethod
+    def _truncate_cell(val):
+            """Helper function to truncate cells with long string values to reduce token usage and minimize noise."""
+            if isinstance(val, str) and len(val) > 50:
+                return val[:50] + "..."
+            return val
 
     ################################# DETECTION #################################
     def _detect_final_fds(self, df: pd.DataFrame) -> list[dict] | None:
@@ -126,13 +113,9 @@ class FunctionalDependencies:
         # 1. Detect all FDs available in the DataFrame
         all_fds = self._detect_all_fds(df)
         if not all_fds:
-            if self.verbose: print('No functional dependencies found.')
             return None
         # 2. Merge FDs such that each column occurs at most one time as RHS
         final_fds = self._merge_fds(df, all_fds)
-        # if self.verbose:
-        #     for fd in final_fds:
-        #         print(f"LHS: {fd['lhs']}, RHS: {fd['rhs']}, Score: {fd['score']:.4f}") 
         return final_fds
     
     def _detect_all_fds(self,
@@ -178,7 +161,6 @@ class FunctionalDependencies:
             merged_fds.append(best_fd)
         # 3. Sort FDs by score
         merged_fds = sorted(merged_fds, key=lambda fd: fd['score'], reverse=True)
-        # if self.verbose: print(f"Pruning FDs: {len(fds)} reduced to {len(merged_fds)}.")
         return merged_fds
 
     def _get_candidate_columns(self, 
@@ -221,44 +203,3 @@ class FunctionalDependencies:
         max_rhs_counts_per_lhs = pair_counts.groupby(level=lhs).max()
         fd_score = max_rhs_counts_per_lhs.sum() / len(subset_df)
         return fd_score
-
-####### TEST CODE #######
-if __name__ == "__main__":
-    import time
-    from pathlib import Path
-    from madclean.utils.helpers import load_dataset
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-    file_path = BASE_DIR / "data" / "benchmark_datasets" / "beers_dirty.csv"
-    df = load_dataset(file_path)
-    beers_fds = [
-        {'lhs': 'brewery_id', 'rhs': 'brewery_name', 'score': 1.0000},    
-        {'lhs': 'brewery_id', 'rhs': 'state', 'score': 1.0000},
-        {'lhs': 'brewery_id', 'rhs': 'city', 'score': 0.9502},
-        {'lhs': 'brewery_name', 'rhs': 'brewery_id', 'score': 0.9896}
-        ]
-    hospital_fds = [
-        {'lhs': 'Address1' , 'rhs': 'HospitalName' , 'score': 0.9770}, 
-        {'lhs': 'PhoneNumber' , 'rhs': 'State', 'score': 0.9760 },
-        {'lhs': 'PhoneNumber' , 'rhs': 'HospitalOwner', 'score': 0.9750  },
-        {'lhs': 'Address1' , 'rhs': 'EmergencyService', 'score': 0.9740  },
-        {'lhs': 'Address1' , 'rhs': 'ProviderNumber', 'score': 0.9720  },
-        {'lhs': 'Stateavg' , 'rhs': 'MeasureCode', 'score': 0.9720  },
-        {'lhs': 'PhoneNumber' , 'rhs': 'City', 'score': 0.9690  }, 
-        {'lhs': 'Stateavg' , 'rhs': 'Condition', 'score': 0.9690  },   
-        {'lhs': 'Stateavg' , 'rhs': 'MeasureName', 'score': 0.9660  },  
-        {'lhs': 'PhoneNumber' , 'rhs': 'Address1', 'score': 0.9700 }, 
-        {'lhs': 'City' , 'rhs': 'CountyName', 'score': 0.9640  },
-        {'lhs': 'MeasureName' , 'rhs': 'Stateavg', 'score': 0.9550  }, 
-        {'lhs': 'HospitalName' , 'rhs': 'ZipCode', 'score': 0.9710  },
-        {'lhs': 'Address1' , 'rhs': 'PhoneNumber', 'score': 0.9680 }
-    ]
-    start_time = time.perf_counter()
-    fd_manager = FunctionalDependencies(verbose=True)
-    fds = fd_manager.detect(df)
-    end_time = time.perf_counter()
-    runtime = end_time - start_time
-    print(f"Runtime: {runtime}")
-    for fd in fds:
-        fd_data = fd_manager.get_data(df, fd)
-
-    # python -m madclean.components.dataprofiler.functional_dependencies

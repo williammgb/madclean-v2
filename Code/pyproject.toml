@@ -8,7 +8,18 @@ version = "0.1.0"
 description = "MADClean: Multi-Agent Data Cleaning"
 requires-python = ">=3.9"
 dependencies = [
-  "python-dotenv>=1.0.0"
+  "numpy==2.3.2",
+  "pandas==2.3.2",
+  "pydantic==2.11.7",
+  "python-dotenv==1.1.1",
+  "python-dateutil==2.9.0.post0",
+  "openai==1.102.0",
+  "google-genai==1.39.1",
+  "protobuf==5.29.5",
+  "spacy==3.8.7",
+  "fuzzywuzzy==0.18.0",
+  "RapidFuzz==3.14.3",
+  "reflex==0.8.28.post1"
 ]
 
 [tool.setuptools.packages.find]

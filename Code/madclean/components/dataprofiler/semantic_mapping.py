@@ -48,30 +48,25 @@ class SemanticTypeDetection:
             return spacy.load(self.nlp_model_name,
                             disable=["parser", "attribute_ruler", "lemmatizer"])
 
-    def detect_types(self, df: pd.DataFrame) -> dict[str, str]:
+    def detect_types(self, df: pd.DataFrame) -> dict:
         """Detects semantic types for each column in the DataFrame."""
         # 1. Sample dataframe
         df_sample = subsample_dataframe(df)
         if df_sample.empty:
-            return {}, {}
+            return {}
         # 2. Infer semantic type for each column
-        column_data = {}
+        column_types = {}
         for col in df_sample.columns:
-            col_series = df_sample[col].dropna() 
-            inferred_type_dict = self._infer_column_type(col_series)
-            # If confidence is too low, flag for later verification
-            needs_verification = (inferred_type_dict['inferred_type'] == 'UNKNOWN' or 
-                                  inferred_type_dict['confidence'] < self.type_threshold)
-            inferred_type_dict['needs_verification'] = needs_verification
-            column_data[col] = inferred_type_dict
-        column_types = {key: value['inferred_type'] for key, value in column_data.items()}
+            col_series = df_sample[col].dropna()
+            column_types[col] = self._infer_column_type(col_series)
         # if self.verbose: print(f"Column types: {column_types}"
         return column_types
 
     def _infer_column_type(self, col_series: pd.Series) -> dict:
         """Infer the semantic type of a column based on its values."""
         if col_series.empty:
-            return {'inferred_type': 'EMPTY', 'confidence': 1.0, 'non_null_count': 0, 'type_distribution': {}}
+            return 'EMPTY'
+        
         type_checkers = {
                 'boolean': self._is_bool,
                 'integer': self._is_integer,
@@ -81,7 +76,7 @@ class SemanticTypeDetection:
         # 1. Quick check for 0/1 booleans
         is_zero_one = col_series.apply(lambda x: str(x).strip() in ['0', '1', '0.0', '1.0'])
         if is_zero_one.mean() > 0.95:
-            return {'inferred_type': 'BOOLEAN', 'confidence': round(is_zero_one.mean(), 3), 'non_null_count': len(col_series), 'type_distribution': {}}     
+            return 'BOOLEAN'
         # 2. Batch-process unique strings with NLP model, speeds up significantly
         string_values = col_series[col_series.apply(lambda x: isinstance(x, str) and x.strip() != '')].unique()
         doc_dict = {}
@@ -92,12 +87,9 @@ class SemanticTypeDetection:
         # 3. Iterate through each individual value and identify type
         type_counts = Counter()
         for value in col_series.values:
-            if pd.isna(value):
-                continue
             found_type = False
             for type_name, checker in type_checkers.items():
                 if checker(value):
-                    type_counts['non_null'] += 1
                     type_counts[type_name] += 1
                     found_type = True
                     break
@@ -110,30 +102,21 @@ class SemanticTypeDetection:
                 else:
                     dirty_type = self._is_dirty_numeric(value)
                     if dirty_type:
-                        type_counts['non_null'] += 1
                         type_counts[dirty_type] +=1
                     else:
-                        type_counts['non_null'] += 1
                         type_counts[self._classify_str_value(value, doc_dict)] += 1
             else:
-                type_counts['non_null'] += 1
-                type_counts['complex_type'] += 1
+                type_counts['unknown'] += 1
         # 4. Assign type to each column based on most common occuring type
-        non_null_count = type_counts.get('non_null', 0)
         if not type_counts:
-            return {'inferred_type': 'EMPTY', 'confidence': 1.0, 'non_null_count': non_null_count, 'type_distribution': {}}
-        most_common_type, count = type_counts.most_common(2)[1]
-        confidence = round(count / non_null_count, 3)
-        if most_common_type == 'integer' and type_counts.get('float', 0) / non_null_count > 0.05:
-            inferred_type = 'FLOAT'
-        elif most_common_type == 'complex_type':
-            inferred_type = 'UNKNOWN'
-        else:
-            inferred_type = most_common_type.upper()
-        return {'inferred_type': inferred_type, 
-                'confidence': confidence, 
-                'non_null_count': non_null_count, 
-                'type_distribution': dict(type_counts)}   
+            return 'EMPTY'
+        most_common_type, count = type_counts.most_common(1)[0]
+        total = sum(type_counts.values())
+        if most_common_type == 'integer' and (type_counts.get('float', 0) / total > 0.05):
+            return 'FLOAT'
+
+        inferred_type =  most_common_type.upper()
+        return inferred_type 
 
     def _is_dirty_numeric(self, value: str) -> str | None:
         """Check if value is dirty numeric value (e.g., "$12.50" or "12 kg")."""
@@ -234,8 +217,10 @@ if __name__ == "__main__":
         "The algorithm performs well under heavy load",
         "New release includes multiple significant upgrades"
     ],
+    "unknown_col": [[], [], [], [], [], [], [], []],
     "empty_col": [None] * 8
     })
     detector = SemanticTypeDetection(verbose=True)
     column_types = detector.detect_types(df)
+    print(column_types)
     # python -m madclean.components.dataprofiler.semantic_mapping

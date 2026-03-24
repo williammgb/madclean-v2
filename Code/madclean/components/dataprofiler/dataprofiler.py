@@ -4,22 +4,22 @@ from madclean.components.dataprofiler.semantic_mapping import SemanticTypeDetect
 from madclean.components.dataprofiler.data_selection import DataSampler
 from madclean.components.domain.schema import ColumnProfile, MultiColumnTask
 from madclean.components.domain.protocols import SingleColumnCleaner, MultiColumnCleaner
+from madclean.config.settings import CleaningConfig
 
 class DataProfiler:
     """Class that combines all dataset profiling components"""
     def __init__(self, 
+                 config: CleaningConfig,
                  single_col_cleaners: list[SingleColumnCleaner] = None,
-                 multi_col_cleaners: list[MultiColumnCleaner] = None,
-                 verbose: bool = False):
-        self.verbose = verbose
+                 multi_col_cleaners: list[MultiColumnCleaner] = None):
+        self.config = config
         self.type_detector = SemanticTypeDetection()
-        self.data_sampler = DataSampler() 
+        self.data_sampler = DataSampler(sample_sizes=self.config.sample_sizes) 
         self.single_col_cleaners = single_col_cleaners if single_col_cleaners is not None else []
         self.multi_col_cleaners = multi_col_cleaners if multi_col_cleaners is not None else []
          
     def analyse(self, df: pd.DataFrame) -> tuple[dict[str, ColumnProfile], list[MultiColumnTask]]:
-        """Runs all data profiling components such as detecting semantic types, outlier detection, etc."""
-        # if self.verbose: print("Profiling data...")    
+        """Runs all data profiling components such as detecting semantic types, outlier detection, etc."""   
         if df.empty:
             return {}, []
         # 1. Detecting semantic types
@@ -56,28 +56,6 @@ class DataProfiler:
         multi_col_tasks: list[MultiColumnTask] = []
         for multi_col_cleaner in self.multi_col_cleaners:
             tasks = multi_col_cleaner.detect(df)
+            if self.config.verbose: print(f"{len(tasks)} {multi_col_cleaner.task_type}s detected.")
             multi_col_tasks.extend(tasks)
         return profiles, multi_col_tasks
-
-####### TEST CODE #######       
-if __name__ == "__main__":
-    from pathlib import Path
-    from madclean.utils.helpers import load_dataset
-    from madclean.components.dataprofiler.outlier_detection import OutlierDetection
-    from madclean.components.dataprofiler.functional_dependencies import FunctionalDependencies
-    BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-    file_path = BASE_DIR / "data" / "benchmark_datasets" / "beers_dirty.csv"
-    df = load_dataset(file_path)
-    profiler = DataProfiler(
-        single_col_cleaners=[OutlierDetection(verbose=False)],
-        multi_col_cleaners=[FunctionalDependencies(verbose=False)],
-        verbose=True,
-        )
-    profiles, multi_col_tasks = profiler.analyse(df)
-    print(profiles['ibu'])
-    print()
-    print(multi_col_tasks[0])
-
-    # python -m madclean.components.dataprofiler.dataprofiler
-
-

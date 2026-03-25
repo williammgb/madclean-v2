@@ -56,6 +56,6 @@ class DataProfiler:
         multi_col_tasks: list[MultiColumnTask] = []
         for multi_col_cleaner in self.multi_col_cleaners:
             tasks = multi_col_cleaner.detect(df)
-            if self.config.verbose: print(f"{len(tasks)} {multi_col_cleaner.task_type}s detected.")
+            # if self.config.verbose: print(f"{len(tasks)} {multi_col_cleaner.task_type}s detected.")
             multi_col_tasks.extend(tasks)
         return profiles, multi_col_tasks

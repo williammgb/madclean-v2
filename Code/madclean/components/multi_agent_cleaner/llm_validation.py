@@ -88,7 +88,7 @@ class LLMValidationAgent:
         messages.append({"role": "user", "content": prompt})
         # 3. Call Validation Agent to validate cleaning operations
         try:
-            parsed_response, raw_response = await self._call_llm_with_parsing(messages, response_schema=CodeOutputValidation)
+            parsed_response, raw_response = await self._call_llm_with_parsing(messages, schema=CodeOutputValidation)
             messages.append({"role": self.llm_role, "content": raw_response})
 
             # 4. If validation failed, send feedback. Otherwise accept cleaned column
@@ -115,10 +115,10 @@ class LLMValidationAgent:
         messages.append({"role": "user", "content": prompt})
         # 2. Call Validation Agent
         try:
-            parsed_response, raw_response = await self.llm_client.call_llm_async(messages, response_schema=CodeOutputValidation)
+            parsed_response, raw_response = await self._call_llm_with_parsing(messages, schema=CodeOutputValidation)
             messages.append({"role": self.llm_role, "content": raw_response})
-            if parsed_response['needs_correction']:
-                return True, parsed_response['feedback_target'], parsed_response['correction_instructions'], messages
+            if parsed_response["needs_correction"]:
+                return True, parsed_response["feedback_target"], parsed_response["correction_instructions"], messages
             return False, None, None, messages
         except Exception as e:
             return False, None, None, messages # SAME QUESTION AS ABOVE

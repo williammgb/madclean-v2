@@ -8,13 +8,30 @@ from madclean.llm.llm_registry import LLM_CLIENT_MAP
 
 def main(file_path, 
          save_cleaned: bool = False,
-         verbose: bool = False):
+         verbose: bool = False,
+         llm_client_name_recommender: str | None = None,
+         llm_client_name_coding: str | None = None,
+         llm_client_name_validation: str | None = None):
     try:
-        llm_config = setup_llm(LLM_CLIENT_NAME, LLM_CLIENT_MAP)
+        # Backwards compatible default: if no per-agent selection is provided,
+        # use the global/default LLM_CLIENT_NAME for all agents.
+        recommender_name = llm_client_name_recommender or LLM_CLIENT_NAME
+        coding_name = llm_client_name_coding or LLM_CLIENT_NAME
+        validation_name = llm_client_name_validation or LLM_CLIENT_NAME
+
+        llm_configs = {
+            "recommender": setup_llm(recommender_name, LLM_CLIENT_MAP),
+            "coding": setup_llm(coding_name, LLM_CLIENT_MAP),
+            "validation": setup_llm(validation_name, LLM_CLIENT_MAP),
+        }
     except (ValueError, EnvironmentError) as e:
         print(f"Configuration Error: {e}")
         return
-    pipeline = Pipeline(llm_config=llm_config, verbose=verbose)
+    pipeline = Pipeline(
+        llm_config=llm_configs["coding"],
+        agent_llm_configs=llm_configs,
+        verbose=verbose,
+    )
     pipeline.run(file_path=file_path, save_cleaned=save_cleaned)
 
 def setup_llm(llm_client_name: str, llm_clients: dict):
@@ -63,23 +80,42 @@ def cli(argv=None) -> int:
         action="store_true",
         help="Save the cleaned dataset output."
     )
+    # Optional per-agent LLM selection (falls back to LLM_CLIENT_NAME if omitted).
+    parser.add_argument(
+        "--llm-recommender",
+        default=None,
+        help=f"LLM client key for the recommender agent. Options: {list(LLM_CLIENT_MAP.keys())}",
+    )
+    parser.add_argument(
+        "--llm-coding",
+        default=None,
+        help=f"LLM client key for the coding agent. Options: {list(LLM_CLIENT_MAP.keys())}",
+    )
+    parser.add_argument(
+        "--llm-validation",
+        default=None,
+        help=f"LLM client key for the validation agent. Options: {list(LLM_CLIENT_MAP.keys())}",
+    )
     args = parser.parse_args(argv)
     # 4. Run main function
     main(
         file_path=args.file_path,
         save_cleaned=args.save_cleaned,
-        verbose=args.verbose
+        verbose=args.verbose,
+        llm_client_name_recommender=args.llm_recommender,
+        llm_client_name_coding=args.llm_coding,
+        llm_client_name_validation=args.llm_validation,
     )
     return 0
 
 if __name__ == "__main__":
-    # from pathlib import Path
-    # BASE_DIR = Path(__file__).resolve().parent.parent
-    # dataset = "beers"
-    # file_path = BASE_DIR / "data" / "benchmark_datasets" / f"{dataset}_dirty.csv"
-    # main(file_path=file_path, save_cleaned=True, verbose=True)
+    from pathlib import Path
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    dataset = "beers"
+    file_path = BASE_DIR / "data" / "benchmark_datasets" / f"{dataset}_dirty.csv"
+    main(file_path=file_path, save_cleaned=True, verbose=True)
 
-    raise SystemExit(cli())
+    # raise SystemExit(cli())
 
     # pip install -e .
     # madclean data\benchmark_datasets\beers_dirty.csv --verbose --save-cleaned

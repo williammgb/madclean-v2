@@ -64,6 +64,35 @@ madclean path/to/file.csv [OPTIONS]
 madclean data\benchmark_datasets\beers_dirty.csv --verbose --save-cleaned
 ```
 
+## Running the UI (Reflex)
+MADClean also includes an interactive web UI built with **Reflex**.
+
+### 1. Configure API keys
+Create a `.env` file in the project root (same as CLI) and add your API key(s), e.g.:
+
+```
+OPENAI_API_KEY="your_api_key_here"
+# OR
+GEMINI_API_KEY="your_api_key_here"
+```
+
+### 2. Start the UI
+From the repository root, activate your environment and run:
+
+```bash
+cd Code/gui
+reflex run
+```
+
+Reflex will print the URLs in the terminal (typically a frontend on `http://localhost:300x/` and a backend on `http://0.0.0.0:8000`).
+
+### 3. Use the UI
+- **Upload Data**: upload a CSV to preview the table.
+- **Model selection**: choose an LLM client **per agent** (Recommender / Coding / Validation).
+- **Advanced Configuration**: adjust cleaning/validation settings.
+- **Run Pipeline**: watch logs + progress; then review **Usage** and **Report** tabs.
+- **Edit + Download**: edit cells in the cleaned table and export the edited CSV.
+
 ## Security Note
 This framework does **not** provide strong sandboxing guarantees for LLM-generated code.
 Executing LLM-generated code should only be done with **trusted models and environments**.

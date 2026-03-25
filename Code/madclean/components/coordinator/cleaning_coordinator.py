@@ -12,12 +12,16 @@ class CleaningCoordinator:
     def __init__(self, 
                  multi_agent_loop: MultiAgentCleaning, 
                  multi_column_cleaners: list[MultiColumnCleaner],
-                 config: CleaningConfig):
+                 config: CleaningConfig,
+                 log_callback=None,
+                 cancel_check=None):
         self.config = config
         self.multi_agent_loop = multi_agent_loop
         self.semaphore = asyncio.Semaphore(self.config.semaphore_limit)
         self.task_scheduler = TaskScheduler()
         self.multi_column_cleaners: dict[str, MultiColumnCleaner] = {c.task_type: c for c in multi_column_cleaners}
+        self._log_callback = log_callback
+        self.cancel_check = cancel_check
         self.progress = {
             "total_tasks": 0,
             "completed_tasks": 0,
@@ -45,14 +49,25 @@ class CleaningCoordinator:
 
     def _update_progress(self, message: str = ""):
         if self.progress["total_tasks"] > 0:
+            if callable(self.cancel_check) and self.cancel_check():
+                raise asyncio.CancelledError()
             self.progress["completed_tasks"] += 1
             self.progress["current_percentage"] = (
                 self.progress["completed_tasks"] / self.progress["total_tasks"]
             ) * 100
 
             if self.config.verbose: 
-                prefix = f"[{self.progress['current_percentage']:>5.1f}%]"
-                print(f"{prefix} - {message}")
+                # prefix = f"[{self.progress['current_percentage']:>5.1f}%]"
+                # line = f"{prefix} - {message}"
+                line = message
+                if callable(self._log_callback):
+                    try:
+                        self._log_callback(line)
+                    except Exception:
+                        # Never crash cleaning due to UI logging.
+                        print(line)
+                else:
+                    print(line)
 
     def clean_dataset(self, 
                     df: pd.DataFrame, 
@@ -78,70 +93,82 @@ class CleaningCoordinator:
                                 column_profiles: dict[str, ColumnProfile],
                                 multi_col_tasks: list[MultiColumnTask]) -> tuple[pd.DataFrame, dict]:
         """Actual cleaning: makes sure all tasks are executed in correct order.""" 
-        self.multi_agent_loop.reset_token_usage()
         df_cleaned = df.copy()
-        
-        # 1. Calculate total tasks
-        col_count = len(column_profiles)
-        multi_col_count = len(multi_col_tasks) if self.config.enable_multi_col_cleaning else 0
-        self.progress.update({
-            "total_tasks": col_count + multi_col_count,
-            "completed_tasks": 0, "current_percentage": 0.0, "status": "running"
-        })
-        # 3. Run single-column operations
-        column_tasks_map = {}
-        isolated_col_tasks = []
-        successfully_applied_cols = set()
-        for col, profile in column_profiles.items():
-            if profile.semantic_type in ("EMPTY", "UNKNOWN"):
-                self.multi_agent_loop.cleaning_report[col] = {
-                        "datatype": profile.semantic_type,
-                        "already_clean": False,
-                        "cleaned": False,
-                        "attempts": 0,
-                        "cleaning_validated": False,
-                        "reason": "Empty column or unknown data type"
-                    }
-                msg = f"[{col}] Skipping empty column or unknown data type"
-                self._update_progress(message=msg) 
-                continue   
-            task = asyncio.create_task(
-                self._run_with_semaphore(self._tracked_col_task(col, profile, df_cleaned))
-            ) 
-            column_tasks_map[col] = task
-            isolated_col_tasks.append(task)
-        # 4. Run multi-column operations
-        task_levels = []
-        if self.config.enable_multi_col_cleaning and multi_col_tasks:
-            task_levels = self.task_scheduler.get_execution_order(multi_col_tasks)
+        try:
+            self.multi_agent_loop.reset_token_usage()
+            
+            # 1. Calculate total tasks
+            col_count = len(column_profiles)
+            multi_col_count = len(multi_col_tasks) if self.config.enable_multi_col_cleaning else 0
+            self.progress.update({
+                "total_tasks": col_count + multi_col_count,
+                "completed_tasks": 0, "current_percentage": 0.0, "status": "running"
+            })
+            # 3. Run single-column operations
+            column_tasks_map = {}
+            isolated_col_tasks = []
+            successfully_applied_cols = set()
+            for col, profile in column_profiles.items():
+                if callable(self.cancel_check) and self.cancel_check():
+                    raise asyncio.CancelledError()
+                if profile.semantic_type in ("EMPTY", "UNKNOWN"):
+                    self.multi_agent_loop.cleaning_report[col] = {
+                            "datatype": profile.semantic_type,
+                            "already_clean": False,
+                            "cleaned": False,
+                            "attempts": 0,
+                            "cleaning_validated": False,
+                            "reason": "Empty column or unknown data type"
+                        }
+                    msg = f"[{col}] Skipping empty column or unknown data type"
+                    self._update_progress(message=msg) 
+                    continue   
+                task = asyncio.create_task(
+                    self._run_with_semaphore(self._tracked_col_task(col, profile, df_cleaned))
+                ) 
+                column_tasks_map[col] = task
+                isolated_col_tasks.append(task)
+            # 4. Run multi-column operations
+            task_levels = []
+            if self.config.enable_multi_col_cleaning and multi_col_tasks:
+                task_levels = self.task_scheduler.get_execution_order(multi_col_tasks)
 
-        for level in task_levels:
-            current_tasks = []
-            for task_info in level:
-                task_coro = asyncio.create_task(
-                    self._tracked_multi_col_task(
-                        df_cleaned, task_info, column_tasks_map, successfully_applied_cols
+            for level in task_levels:
+                if callable(self.cancel_check) and self.cancel_check():
+                    raise asyncio.CancelledError()
+                current_tasks = []
+                for task_info in level:
+                    task_coro = asyncio.create_task(
+                        self._tracked_multi_col_task(
+                            df_cleaned, task_info, column_tasks_map, successfully_applied_cols
+                        )
                     )
-                )
-                current_tasks.append(task_coro)
-            # Wait for all level's tasks to finish before updating DataFrame
-            results = await asyncio.gather(*current_tasks)
-            for result in results:
-                _, final_cleaned_columns = result
-                if isinstance(final_cleaned_columns, pd.DataFrame):
-                    df_cleaned[final_cleaned_columns.columns] = final_cleaned_columns
-                # add else: when no 
-        # 5. Wait for remaining single-column operations and update columns
-        final_isolated_results = await asyncio.gather(*isolated_col_tasks)
-        for col, final_cleaned_column in final_isolated_results:
-            if final_cleaned_column is not None and col not in successfully_applied_cols:
-                df_cleaned[col] = final_cleaned_column
-                successfully_applied_cols.add(col)
+                    current_tasks.append(task_coro)
+                # Wait for all level's tasks to finish before updating DataFrame
+                results = await asyncio.gather(*current_tasks)
+                for result in results:
+                    _, final_cleaned_columns = result
+                    if isinstance(final_cleaned_columns, pd.DataFrame):
+                        df_cleaned[final_cleaned_columns.columns] = final_cleaned_columns
+                    # add else: when no 
+            # 5. Wait for remaining single-column operations and update columns
+            final_isolated_results = await asyncio.gather(*isolated_col_tasks)
+            for col, final_cleaned_column in final_isolated_results:
+                if final_cleaned_column is not None and col not in successfully_applied_cols:
+                    df_cleaned[col] = final_cleaned_column
+                    successfully_applied_cols.add(col)
 
-        cleaning_report = self.multi_agent_loop.cleaning_report
-        cleaning_report["token_usage"] = self.multi_agent_loop.token_usage
-        self.progress["status"] = "finished"
-        return df_cleaned, cleaning_report
+            cleaning_report = self.multi_agent_loop.cleaning_report
+            cleaning_report["token_usage"] = self.multi_agent_loop.token_usage
+            self.progress["status"] = "finished"
+            return df_cleaned, cleaning_report
+        except asyncio.CancelledError:
+            # Cooperative cancellation: return whatever progress we have so far.
+            cleaning_report = self.multi_agent_loop.cleaning_report
+            cleaning_report["token_usage"] = self.multi_agent_loop.token_usage
+            cleaning_report["cancelled"] = True
+            self.progress["status"] = "cancelled"
+            return df_cleaned, cleaning_report
 
     async def _multi_col_task_wrapper(self, 
                                       df: pd.DataFrame, 

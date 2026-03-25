@@ -10,21 +10,39 @@ from madclean.components.domain.schema import ColumnProfile, MultiColumnTask
 
 class MultiAgentCleaning:
     """Multi-Agent LLM Cleaning Coordinator that coordinates the workflow between the LLM agents."""
-    def __init__(self, llm_client: BaseLLMClient,  llm_role: str, config: dict):
+    def __init__(self, llm_client: BaseLLMClient = None, llm_role: str = None, config: dict = None, agent_specs: dict | None = None):
         self.config = config
         self.verbose = self.config.verbose
         self.llm_client = llm_client
-        self.llm_role = llm_role     
+        self.llm_role = llm_role
+        self.cancel_check = None
         self.token_usage = {
             "recommender": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
             "coding": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
             "validation": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         }
         self._token_lock = asyncio.Lock()
-        self.recommender_agent = LLMRecommendationAgent(llm_client, llm_role, partial(self._update_token_count, "recommender"), config=self.config)
-        self.coding_agent = LLMCodingAgent(llm_client, llm_role, partial(self._update_token_count, "coding"), config=self.config)
-        self.validation_agent = LLMValidationAgent(llm_client, llm_role, partial(self._update_token_count, "validation"), config=self.config)
+        if agent_specs:
+            recommender = agent_specs.get("recommender")
+            coding = agent_specs.get("coding")
+            validation = agent_specs.get("validation")
+            if not recommender or not coding or not validation:
+                raise ValueError("agent_specs must include recommender, coding, validation.")
+            self.recommender_agent = LLMRecommendationAgent(recommender["client"], recommender["role"], partial(self._update_token_count, "recommender"), config=self.config)
+            self.coding_agent = LLMCodingAgent(coding["client"], coding["role"], partial(self._update_token_count, "coding"), config=self.config)
+            self.validation_agent = LLMValidationAgent(validation["client"], validation["role"], partial(self._update_token_count, "validation"), config=self.config)
+        else:
+            self.recommender_agent = LLMRecommendationAgent(llm_client, llm_role, partial(self._update_token_count, "recommender"), config=self.config)
+            self.coding_agent = LLMCodingAgent(llm_client, llm_role, partial(self._update_token_count, "coding"), config=self.config)
+            self.validation_agent = LLMValidationAgent(llm_client, llm_role, partial(self._update_token_count, "validation"), config=self.config)
         self.cleaning_report = {}
+
+    def set_cancel_check(self, cancel_check):
+        self.cancel_check = cancel_check
+
+    def _check_cancelled(self):
+        if callable(self.cancel_check) and self.cancel_check():
+            raise asyncio.CancelledError()
 
     def reset_token_usage(self):
         self.token_usage = {
@@ -52,6 +70,7 @@ class MultiAgentCleaning:
         # 1. Run multi-agent cleaning loop. Start with Recommender Agent to generate instructions
         feedback_target = 'RECOMMENDER'
         for attempt in range(self.config.max_cleaning_attempts):
+            self._check_cancelled()
             if feedback_target == 'RECOMMENDER':
                 already_clean, recommender_data, new_recommender_history = await self.recommender_agent.generate_recommendations_async(
                     col, column_profile, messages=recommender_history)
@@ -109,6 +128,19 @@ class MultiAgentCleaning:
                     "cleaning_validated": False
                 }
                 return col, cleaned_column, msg
+
+            if column_type in ("INTEGER", "FLOAT", "BOOLEAN"):
+                msg = f"[{col}] Successfully cleaned."
+                self.cleaning_report[col] = {
+                    "datatype": column_type,
+                    "already_clean": False,
+                    "cleaned": True,
+                    "attempts": attempt + 1,
+                    "generated_code": final_code_str,
+                    "cleaning_validated": False,
+                }
+                return col, cleaned_column, msg
+
             last_attempt = attempt == (self.config.max_cleaning_attempts - 1)
             needs_correction, feedback_target, correction_instructions, new_validator_history = await self.validation_agent.validate_async(
                 col, df[col], cleaned_column, column_type, messages=validator_history, last_attempt=last_attempt) 
@@ -163,6 +195,7 @@ class MultiAgentCleaning:
         # 1. Run multi-agent cleaning loop. Start with RecommenderAgent
         feedback_target = 'RECOMMENDER'
         for attempt in range(self.config.max_multi_col_attempts):
+            self._check_cancelled()
             if feedback_target == 'RECOMMENDER':
                 recommender_data, new_recommender_history = await self.recommender_agent.generate_recommendations_multi_col_async( 
                     df, task_info, messages=recommender_history)
@@ -178,7 +211,7 @@ class MultiAgentCleaning:
                         break
                 coder_history = None
             # 2. Pass instructions of Recommender Agent to Coding Agent
-            cleaned_targets, new_coder_history = await self.coding_agent.clean_multi_col_async( 
+            cleaned_targets, _final_code_str, new_coder_history = await self.coding_agent.clean_multi_col_async( 
                 df, task_info, recommender_data, messages=coder_history)
             coder_history = new_coder_history
             # 3. If Coding Agent could not generate valid code, send feedback to Recommender to provide better instructions

@@ -64,7 +64,7 @@ madclean path/to/file.csv [OPTIONS]
 madclean data\benchmark_datasets\beers_dirty.csv --verbose --save-cleaned
 ```
 
-## Running the UI (Reflex)
+## Running the UI
 MADClean also includes an interactive web UI built with **Reflex**.
 
 ### 1. Configure API keys

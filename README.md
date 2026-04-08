@@ -34,12 +34,14 @@ pip install .
 ## LLM configuration
 You must configure an LLM provider to use the framework's features.
 
-#### Using OpenAI or Gemini
+#### Using OpenAI, Gemini or OpenRouter
 Create a `.env` file in the project root and add your API key:
 ```
 OPENAI_API_KEY="your_api_key_here"
 # OR
 GEMINI_API_KEY="your_api_key_here"
+# OR
+OPENROUTER_API_KEY="your_api_key_here"
 ```
 Update the `LLM_CLIENT` entry in settings.py to point to your LLM provider.
 
@@ -47,7 +49,7 @@ Update the `LLM_CLIENT` entry in settings.py to point to your LLM provider.
 To add support for a new LLM provider:
 1. Add a new LLM class to `llm_clients.py` following the existing abstract base class implementations.
 2. Add your new class to the dictionary in `llm_registry.py`.
-3. Update the `LLM_CLIENT` entry in `settings.py` to point to your new implementation.
+3. Update the `LLM_CLIENT_NAME` entry in `settings.py` to point to your new implementation.
 
 ## Usage
 After installation, the framework can be run using the CLI command:
@@ -88,6 +90,7 @@ Reflex will print the URLs in the terminal (typically a frontend on `http://loca
 
 ### 3. Use the UI
 - **Upload Data**: upload a CSV to preview the table.
+- **Analyze Data Profiling Dashboard**: view detected data types, FDs and patterns.
 - **Model selection**: choose an LLM client **per agent** (Recommender / Coding / Validation).
 - **Advanced Configuration**: adjust cleaning/validation settings.
 - **Run Pipeline**: watch logs + progress; then review **Usage** and **Report** tabs.

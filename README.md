@@ -50,7 +50,7 @@ Update the `LLM_CLIENT_NAME` entry in the llm_settings.py to point to your LLM p
 To add support for a new LLM provider:
 1. Add a new client class in `Code/madclean/llm/llm_clients.py` following `BaseLLMClient`.
 2. Register it in `Code/madclean/llm/llm_registry.py` (API keys via `.env` as documented there).
-3. Use the new key from the registry in the UI or update the `LLM_CLIENT_NAME` entry in `settings.py` to point to your new implementation.
+3. Use the new key from the registry in the UI or update the `LLM_CLIENT_NAME` entry in `llm/settings.py` to point to your new implementation.
 
 ## Usage
 After installation, the framework can be run using the CLI command:
@@ -60,13 +60,23 @@ madclean path/to/file.csv [OPTIONS]
 #### Available options
 `-v`, `--verbose`: Enable verbose output.  
 `--save-cleaned`: Save the resulting cleaned dataset in the `data/cleaned` folder.  
+`--llm-recommender`: Select LLM client for the Recommender agent (e.g., `OpenAI` or `Gemini`).  
+`--llm-coding`: Select LLM client for the Coding agent.  
+`--llm-validation`: Select LLM client for the Validation agent. 
 `--help`: View full usage instructions.
+
+If any of these `--llm-*` options are omitted, that agent falls back to `LLM_CLIENT_NAME` (`llm/settings.py`).
 
 ### Example
 ```bash
 madclean data\benchmark_datasets\beers_dirty.csv --verbose --save-cleaned
 ```
 
+Per-agent LLM selection example:
+
+```bash
+madclean data\benchmark_datasets\beers_dirty.csv --llm-recommender Gemini --llm-coding OpenAI --llm-validation Gemini
+```
 ## Running the UI
 MADClean also includes an interactive web UI.
 

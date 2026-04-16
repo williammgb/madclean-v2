@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from typing import Union, Optional, List, Any
+from typing import Union, Optional, List, Any, Tuple
 
 def load_dataset(file_path: Union[str, Path]) -> Optional[pd.DataFrame]:
     """Load a dataset from CSV, JSON or XLSX into a pandas DataFrame."""
@@ -83,4 +83,59 @@ def format_list_for_prompt(values: List[Any]) -> List[str]:
         else:
             formatted_values.append(str(v))
     return formatted_values
-        
+
+
+def align_dirty_cleaned_series(
+    dirty_series: pd.Series, cleaned_series: pd.Series
+) -> Tuple[pd.Series, pd.Series]:
+    """Pair dirty and cleaned columns on the same row index for comparisons.
+
+    Coder output often uses a default RangeIndex while the dataframe keeps the
+    original index; align by position when lengths match, else intersect indices.
+    """
+    if cleaned_series.index.equals(dirty_series.index):
+        return dirty_series, cleaned_series
+    if len(cleaned_series) == len(dirty_series):
+        cleaned_aligned = pd.Series(
+            cleaned_series.to_numpy(copy=True),
+            index=dirty_series.index,
+            name=cleaned_series.name,
+        )
+        return dirty_series, cleaned_aligned
+    common = dirty_series.index.intersection(cleaned_series.index)
+    return dirty_series.loc[common], cleaned_series.loc[common]
+
+
+def align_dirty_cleaned_dataframe(
+    dirty_df: pd.DataFrame, cleaned_df: pd.DataFrame
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Same as align_dirty_cleaned_series for multi-column validation samples."""
+    if cleaned_df.index.equals(dirty_df.index):
+        return dirty_df, cleaned_df
+    if len(cleaned_df) == len(dirty_df):
+        cleaned_aligned = pd.DataFrame(
+            cleaned_df.to_numpy(copy=True),
+            index=dirty_df.index,
+            columns=cleaned_df.columns,
+        )
+        return dirty_df, cleaned_aligned
+    common = dirty_df.index.intersection(cleaned_df.index)
+    return dirty_df.loc[common], cleaned_df.loc[common]
+
+
+def llm_sampling_kwargs_from_config(config: Any) -> dict[str, float]:
+    """Map CleaningConfig llm_temperature / llm_top_p to kwargs for LLM clients (empty if unset)."""
+    out: dict[str, float] = {}
+    t = getattr(config, "llm_temperature", None)
+    p = getattr(config, "llm_top_p", None)
+    if t is not None:
+        try:
+            out["temperature"] = float(t)
+        except (TypeError, ValueError):
+            pass
+    if p is not None:
+        try:
+            out["top_p"] = float(p)
+        except (TypeError, ValueError):
+            pass
+    return out

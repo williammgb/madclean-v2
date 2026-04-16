@@ -13,6 +13,7 @@ from madclean.components.coordinator.cleaning_coordinator import CleaningCoordin
 from madclean.utils.helpers import load_dataset, save_dataset
 from madclean.llm.llm_clients import OpenAIClient
 from madclean.config.settings import CleaningConfig
+from madclean.config.loader import load_default_cleaning_config
 
 class Pipeline:
     def __init__(
@@ -21,14 +22,20 @@ class Pipeline:
         agent_llm_configs: dict | None = None,
         config: CleaningConfig = None,
         log_callback=None,
+        trace_callback=None,
+        user_validation_callback=None,
+        hitl_callback=None,
         verbose: bool | None = None,
         cancel_check=None,
     ):
-        self.config = config or CleaningConfig() # use default if none is provided
+        self.config = config or load_default_cleaning_config() # load JSON-backed defaults if none is provided
         if verbose is not None:
             self.config.verbose = verbose
         self.verbose = self.config.verbose
         self._log_callback = log_callback
+        self._trace_callback = trace_callback
+        self._user_validation_callback = user_validation_callback
+        self._hitl_callback = hitl_callback
         self._cancel_check = cancel_check
 
         def _log(msg: str):
@@ -78,12 +85,21 @@ class Pipeline:
                 }
                 for k, v in self.agent_llm_configs.items()
             }
-            self.multi_agent_loop = MultiAgentCleaning(agent_specs=agent_specs, config=self.config)
+            self.multi_agent_loop = MultiAgentCleaning(
+                agent_specs=agent_specs,
+                config=self.config,
+                trace_callback=self._trace_callback,
+                user_validation_callback=self._user_validation_callback,
+                hitl_callback=self._hitl_callback,
+            )
         else:
             self.multi_agent_loop = MultiAgentCleaning(
                 llm_client=self.client,
                 llm_role=llm_config["role"],
-                config=self.config
+                config=self.config,
+                trace_callback=self._trace_callback,
+                user_validation_callback=self._user_validation_callback,
+                hitl_callback=self._hitl_callback,
             )
         if hasattr(self.multi_agent_loop, "set_cancel_check"):
             self.multi_agent_loop.set_cancel_check(self._cancel_check)

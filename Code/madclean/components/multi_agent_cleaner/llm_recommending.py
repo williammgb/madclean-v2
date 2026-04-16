@@ -7,6 +7,27 @@ from madclean.llm.llm_clients import BaseLLMClient
 from madclean.components.coordinator.prompt_generation import PromptGeneration
 from madclean.components.domain.schema import ColumnProfile, MultiColumnTask
 from madclean.config.settings import CleaningConfig
+from madclean.utils.helpers import llm_sampling_kwargs_from_config
+
+
+def _service_unavailable_recommender_payload(exc: BaseException) -> dict | None:
+    """Map HTTP 503 (and similar upstream overload) to a trace-friendly recommender payload."""
+    code = getattr(exc, "status_code", None)
+    if code is None:
+        resp = getattr(exc, "response", None)
+        if resp is not None:
+            code = getattr(resp, "status_code", None)
+    if code != 503:
+        return None
+    return {
+        "_api_error": True,
+        "http_status": 503,
+        "summary": (
+            "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. "
+            "This is not a failure of the cleaning system. System will retry in a few seconds."
+        ),
+    }
+
 
 class CodeOutputRecommendation(BaseModel):
     """Defines the required JSON output structure for cleaning instructions."""
@@ -66,11 +87,18 @@ class LLMRecommendationAgent:
         required_keys = list(schema.model_fields.keys())
         # 2. Call LLM and parse output, with retries
         for attempt in range(self.MAX_PARSE_ATTEMPTS):
-            raw_response, token_usage = await self.llm_client.call_llm_async(
-                working_messages,
-                response_schema=schema
-            )
-            await self._track_usage(token_usage)
+            try:
+                raw_response, token_usage = await self.llm_client.call_llm_async(
+                    working_messages,
+                    response_schema=schema,
+                    **llm_sampling_kwargs_from_config(self.config),
+                )
+                await self._track_usage(token_usage)
+            except Exception as call_exc:
+                api_payload = _service_unavailable_recommender_payload(call_exc)
+                if api_payload is not None and attempt < self.MAX_PARSE_ATTEMPTS - 1:
+                    continue
+                raise
 
             try:
                 # Remove noise and extract JSON
@@ -112,20 +140,34 @@ class LLMRecommendationAgent:
                                             messages: list | None = None) -> tuple[bool, dict | None, list | None]:
         if messages is None:
             # 1. First time the recommender agent is called. Provide profiler data.
-            messages = [{"role": "system", "content": self.system_prompt}] 
-            initial_prompt = self.prompt_generator.create_prompt_recommender(col, column_profile)     
+            messages = [{"role": "system", "content": self.system_prompt}]
+            hints = getattr(self.config, "recommender_column_hints", None) or {}
+            extra = (hints.get(col) or "").strip() if isinstance(hints, dict) else ""
+            if not extra:
+                extra = (getattr(self.config, "recommender_extra_instructions", None) or "").strip()
+            labeled_map = getattr(self.config, "recommender_column_labeled_examples", None) or {}
+            labeled = (labeled_map.get(col) or "").strip() if isinstance(labeled_map, dict) else ""
+            initial_prompt = self.prompt_generator.create_prompt_recommender(
+                col,
+                column_profile,
+                user_constraints=extra,
+                labeled_examples=labeled,
+            )
             messages.append({"role": "user", "content": initial_prompt})
         
         try:
-            parsed_response, raw_response = await self._call_llm_with_parsing(messages, response_schema=CodeOutputRecommendation)
+            parsed_response, raw_response = await self._call_llm_with_parsing(messages, schema=CodeOutputRecommendation)
             is_clean = parsed_response.get('is_clean', False)
             messages.append({"role": self.llm_role, "content": raw_response}) 
             if is_clean:
                 return True, None, None
             return False, parsed_response, messages
         except Exception as e:
+            api_payload = _service_unavailable_recommender_payload(e)
+            if api_payload is not None:
+                return False, api_payload, messages
             return False, None, messages
-        
+
     
     async def generate_recommendations_multi_col_async(self, df: pd.DataFrame, task_info: MultiColumnTask, 
                                                        messages: list | None = None) -> tuple[dict | None, list | None]:
@@ -136,68 +178,40 @@ class LLMRecommendationAgent:
         if messages is None:
             # 1. First time the recommender agent is called. Provide multi-column data.
             messages = [{"role": "system", "content": config['system_prompt']}]
-            initial_prompt = self.prompt_generator.create_prompt_recommender_multi_col(df, task_info)
+            hints = getattr(self.config, "recommender_column_hints", None) or {}
+            labeled_map = getattr(self.config, "recommender_column_labeled_examples", None) or {}
+            extra_parts: list[str] = []
+            labeled_parts: list[str] = []
+            if isinstance(hints, dict):
+                for c in task_info.target_columns or []:
+                    cs = str(c)
+                    h = (hints.get(cs) or "").strip()
+                    if h:
+                        extra_parts.append(f"- {cs}: {h}")
+            extra = "\n".join(extra_parts).strip()
+            if not extra:
+                extra = (getattr(self.config, "recommender_extra_instructions", None) or "").strip()
+            if isinstance(labeled_map, dict):
+                for c in task_info.target_columns or []:
+                    cs = str(c)
+                    block = (labeled_map.get(cs) or "").strip()
+                    if block:
+                        labeled_parts.append(f"### Column {cs}\n{block}")
+            labeled = "\n\n".join(labeled_parts).strip()
+            initial_prompt = self.prompt_generator.create_prompt_recommender_multi_col(
+                df,
+                task_info,
+                user_constraints=extra,
+                labeled_examples=labeled,
+            )
             messages.append({"role": "user", "content": initial_prompt})
         
         try:
-            parsed_response, raw_response = await self._call_llm_with_parsing(messages, response_schema=config['schema'])
+            parsed_response, raw_response = await self._call_llm_with_parsing(messages, schema=config['schema'])
             messages.append({"role": self.llm_role, "content": raw_response})
             return parsed_response, messages
         except Exception as e:
+            api_payload = _service_unavailable_recommender_payload(e)
+            if api_payload is not None:
+                return api_payload, messages
             return None, messages
-
-
-    # ==============OLD BELOW==========================
-
-
-
-
-    async def generate_recommendations_async(self, col: str, column_profile: ColumnProfile, messages: list | None = None) -> tuple[bool, dict | None, list | None]:
-        """Creates prompt with given data and passes it to LLM to generate column cleaning instructions."""
-        if messages is None:
-            # 1. First time the recommender agent is called. Provide profiler data.
-            messages = [{"role": "system", "content": self.system_prompt}] 
-            initial_prompt = self.prompt_generator.create_prompt_recommender(col, column_profile)     
-            messages.append({"role": "user", "content": initial_prompt})
-        # 2. Call LLM to generate instructions
-        raw_response, token_usage = await self.llm_client.call_llm_async(messages, response_schema=CodeOutputRecommendation)
-        await self._track_usage(token_usage)
-        messages.append({"role": self.llm_role, "content": raw_response})
-        # 3. Parse output
-        response = json.loads(raw_response)
-        is_clean = response.get('is_clean')
-        instructions = response.get('cleaning_instructions') 
-        if is_clean:
-            return True, None, None
-        if not instructions:
-            return False, None, messages
-        return False, response, messages
-
-    async def generate_recommendations_multi_col_async(self, df: pd.DataFrame, task_info: MultiColumnTask, messages: list | None = None) -> tuple[dict | None, list | None]:
-        """Creates prompt with given data and passes it to LLM to generate multi-column cleaning instructions."""
-        task_type = task_info.task_type
-        # 1. Look-up configuration
-        config = self.multi_col_config.get(task_type)
-        if not config:
-            raise ValueError(f"Recommender Agent does not support task type: '{task_type}'")
-        target_schema = config['schema']
-        system_prompt = config['system_prompt']
-        if messages is None:
-            # 1. First time the recommender agent is called. Provide multi-column data.
-            messages = [{"role": "system", "content": system_prompt}]
-            initial_prompt = self.prompt_generator.create_prompt_recommender_multi_col(df, task_info)
-            messages.append({"role": "user", "content": initial_prompt})
-        # 2. Call LLM to generate instructions
-        raw_response, token_usage = await self.llm_client.call_llm_async(messages, response_schema=target_schema)
-        await self._track_usage(token_usage)
-        messages.append({"role": self.llm_role, "content": raw_response})
-        # 3. Parse output, works for FDs and future extension schemas
-        response = json.loads(raw_response)
-        has_content = False
-        for key, value in response.items():
-            if key != 'summary' and value:
-                has_content = True
-                break
-        if not has_content:
-            return None, messages
-        return response, messages

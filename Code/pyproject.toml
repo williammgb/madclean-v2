@@ -28,3 +28,4 @@ include = ["madclean*"]
 
 [project.scripts]
 madclean = "madclean.main:cli"
+madclean-ui = "madclean.main:cli_ui"

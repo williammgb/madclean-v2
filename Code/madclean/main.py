@@ -1,10 +1,28 @@
 import os
 import argparse
+import subprocess
+from pathlib import Path
 from dotenv import load_dotenv
 ### Local imports
 from madclean.pipeline import Pipeline
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.llm.llm_registry import LLM_CLIENT_MAP
+
+def run_ui() -> int:
+    """Launch the Reflex UI from the repository GUI folder."""
+    repo_code_dir = Path(__file__).resolve().parents[1]
+    gui_dir = repo_code_dir / "gui"
+    if not gui_dir.exists():
+        raise FileNotFoundError(f"Could not find GUI directory at: {gui_dir}")
+    try:
+        subprocess.run(["reflex", "run"], cwd=str(gui_dir), check=True)
+        return 0
+    except FileNotFoundError as ex:
+        raise RuntimeError("`reflex` is not installed or not on PATH.") from ex
+
+def cli_ui() -> int:
+    """Dedicated UI entry point for pyproject console script."""
+    return run_ui()
 
 def main(file_path, 
          save_cleaned: bool = False,
@@ -59,6 +77,14 @@ def setup_llm(llm_client_name: str, llm_clients: dict):
 
 def cli(argv=None) -> int:
     """CLI wrapper. Returns a process exit code."""
+    argv = list(argv or [])
+    if len(argv) == 0:
+        import sys
+        argv = sys.argv[1:]
+
+    if argv and argv[0].lower() == "ui":
+        return run_ui()
+
     parser = argparse.ArgumentParser(
         prog="madclean",
         description="Run the data cleaning pipeline"
@@ -109,7 +135,6 @@ def cli(argv=None) -> int:
     return 0
 
 if __name__ == "__main__":
-    from pathlib import Path
     BASE_DIR = Path(__file__).resolve().parent.parent
     dataset = "beers"
     file_path = BASE_DIR / "data" / "benchmark_datasets" / f"{dataset}_dirty.csv"

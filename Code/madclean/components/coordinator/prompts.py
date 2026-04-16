@@ -77,6 +77,14 @@ The clean sample contains all values that can already be parsed as datetimes, bu
 The dirty sample contains all values that cannot be parsed as datetimes in their current form. If possible, infer the correct datetime by interpreting its structure or context, otherwise replace it with NaN or NaT.
 {column_sample}
 {additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
+
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
@@ -146,6 +154,14 @@ Use the random sample to understand the data distribution and identify the domin
 Use the unique sample to get a complete overview of the distinct values in the column.
 {column_sample}
 {additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
+
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
@@ -210,6 +226,14 @@ The clean sample contains all values that can already be parsed as numeric. Use 
 The dirty sample contains all values that cannot be parsed as numeric in their current form. If possible, infer the correct numeric by interpreting its structure or context, otherwise replace it with NaN.
 {column_sample}
 {additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
+
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
@@ -263,6 +287,14 @@ Use the random sample to understand the data distribution and identify the noise
 Use the unique sample to get a complete overview of all distinct values in the column.
 {column_sample}
 {additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
+
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
@@ -334,6 +366,14 @@ The clean sample contains all values that can already be parsed as numeric. Use 
 The dirty sample contains all values that cannot be parsed as numeric in their current form. If possible, infer the correct numeric by interpreting its structure or context, otherwise replace it with NaN.
 {column_sample}
 {additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
+
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
@@ -387,6 +427,14 @@ Use the random sample to understand the data distribution and identify the noise
 Use the unique sample to get a complete overview of all distinct values in the column.
 {column_sample}
 {additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
+
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
@@ -464,6 +512,14 @@ Use the random sample to understand the data distribution and identify the noise
 Use the unique sample to get a complete overview of all distinct values in the column.
 {column_sample}
 {additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
+
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
@@ -519,6 +575,14 @@ COLUMN SAMPLE
 Here is a sample of the data. Use it to decide which cleaning operations to apply.
 {column_sample}
 {additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
+
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
@@ -527,6 +591,121 @@ Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "examples_clean": List exactly 10 examples of clean, correctly formatted string values that strictly adhere to the desired casing and formatting standards. Ensure diversity across valid text patterns. None if "is_clean" is True
  - "examples_dirty": List representative dirty or invalid examples with their cleaned counterpart ("dirty_value → cleaned_value"). The set of examples MUST cover every unique cleaning operation needed for the entire column. Example: " john smith → John Smith", "ABCdE99 → ABCDE99", "empty → NaN", "New-York → New York". None if "is_clean" is True
  - "cleaning_instructions": List clear, actionable, and task-oriented steps focusing on the condition and transformation. State the current format/issue and the required final format/action. Example: "Remove leading and trailing whitespace and replace any sequences of multiple internal spaces with a single space.", "Replace missing value placeholders ('N/A', 'Unknown', empty string) with NaN." None if "is_clean" is True
+Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
+""",
+
+    "COLLECTION": """
+You are an expert data analyst specialized in identifying and describing data quality issues in tabular datasets.
+
+We have a dataframe called df and a column '{column_name}' which is of the semantic type COLLECTION.
+This column stores collection-like values as strings. Typical values represent list/dict/set/tuple literals, e.g.:
+- ["['a', 'b']", "['x','y','z']"]
+- ["{'k': 1}", "{'k':2, 'm':3}"]
+- ["(1, 2)", "(3,4)"]
+- ["{1, 2, 3}", "{1,2,3}"]
+
+Your task is to analyze the given column and produce precise, step-by-step cleaning instructions that an LLM Coding Agent can follow to generate Python code for cleaning the entire column.
+The cleaned output MUST remain a string column. Do not convert values to Python objects in final output.
+
+INSTRUCTIONS
+1. Identify the dominant collection style in the sample and standardize all valid values to that style:
+    - Collection type style (list vs dict vs set vs tuple string representation)
+    - Quote style, separator usage, and whitespace style
+    - Bracket/brace/parenthesis style
+2. Preserve string representation: every cleaned non-null cell must remain a string. Do NOT output lists/dicts/sets/tuples as objects.
+3. Ensure parseability for valid non-null values: cleaned strings should be parseable as collection literals (e.g., ast.literal_eval should not fail) unless the value is truly invalid and set to NaN.
+4. Preserve dominant formatting details exactly:
+    - If dominant style has delimiter without spaces (e.g., "['a','b']"), do not insert spaces.
+    - If dominant style has delimiter with spaces (e.g., "['a', 'b']"), keep that style.
+    - Do not change collection type unless clearly required by dominant format.
+5. Do not reorder elements or keys unless the dominant format explicitly requires ordering behavior already present in the sample.
+6. Replace placeholders/missing values with NaN. If an entry cannot be repaired confidently into a parseable collection string, set it to NaN.
+7. ALWAYS follow the dominant format from the sample and never contradict user constraints.
+
+CLEANING OPERATIONS
+- Fix malformed collection strings (missing closing bracket, wrong separator, minor typo) when correction is unambiguous.
+- Standardize spacing and separators to dominant style without changing semantics.
+- Normalize null-like placeholders ("N/A", "missing", empty string) to NaN.
+- Keep valid entries unchanged if they already match the dominant style.
+
+COLUMN_SAMPLE
+Here is a sample of the data. Use it to decide which cleaning operations to apply.
+Use the random sample to understand the data distribution and identify noise/inconsistencies.
+Use the unique sample to get a broad overview of all distinct values.
+{column_sample}
+{additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above.
+{labeled_examples}
+
+OUTPUT FORMAT
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
+ - "is_clean": True if the column is clean (no errors/inconsistencies detected), False otherwise.
+ - "summary": Concise description of what the collection strings represent and the dominant output format.
+ - "error_types": Distinct data-quality issues found. None if "is_clean" is True
+ - "examples_clean": Exactly 10 clean examples in the dominant string format. None if "is_clean" is True
+ - "examples_dirty": Representative dirty examples with cleaned counterpart ("dirty_value → cleaned_value") covering all required operations. None if "is_clean" is True
+ - "cleaning_instructions": Clear step-by-step instructions that enforce dominant format while keeping parseable string output. None if "is_clean" is True
+Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
+""",
+
+    "DELIMITED_STRING": """
+You are an expert data analyst specialized in identifying and describing data quality issues in tabular datasets.
+
+We have a dataframe called df and a column '{column_name}' which is of the semantic type DELIMITED_STRING.
+This column contains strings with multiple tokens separated by a delimiter, such as comma, semicolon, pipe, slash, or backslash. Examples:
+- "a,b,c"
+- "a; b; c"
+- "alpha|beta|gamma"
+- "x/y/z"
+
+Your task is to analyze the given column and produce precise, step-by-step cleaning instructions that an LLM Coding Agent can follow to generate Python code for cleaning the entire column.
+The cleaned output MUST remain a single string per cell. Never convert to list/array/object in final output.
+
+INSTRUCTIONS
+1. Detect the dominant delimiter and dominant spacing style around that delimiter.
+2. Enforce the dominant style strictly:
+    - If dominant style is "a,b,c", do not change to "a, b, c".
+    - If dominant style is "a, b, c", keep one space after delimiter.
+3. Preserve delimiter type and token order. Do not replace comma with semicolon, etc., unless dominant format demands it.
+4. Keep values as strings only; do not convert to Python lists or JSON arrays.
+5. Clean obvious typos/noise in tokens when unambiguous, but do not alter valid token semantics.
+6. Normalize null-like placeholders to NaN.
+7. If a value cannot be reliably repaired to dominant delimited-string format, set it to NaN.
+8. ALWAYS follow the dominant format from the sample and never contradict user constraints.
+
+CLEANING OPERATIONS
+- Standardize delimiter usage to the dominant delimiter.
+- Standardize spacing around delimiters to dominant spacing pattern.
+- Remove corrupt characters that break delimiter parsing when safe to do so.
+- Preserve values that are already valid and dominant.
+
+COLUMN_SAMPLE
+Here is a sample of the data. Use it to decide which cleaning operations to apply.
+Use the random sample to understand data distribution and identify inconsistent delimiter usage.
+Use the unique sample to inspect distinct formatting patterns.
+{column_sample}
+{additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above.
+{labeled_examples}
+
+OUTPUT FORMAT
+Return ONLY valid JSON with the following keys (use the EXACT same key names):
+ - "is_clean": True if the column is clean (no errors/inconsistencies detected), False otherwise.
+ - "summary": Concise description of tokenized string content and dominant delimiter/spacing style.
+ - "error_types": Distinct data-quality issues found. None if "is_clean" is True
+ - "examples_clean": Exactly 10 clean examples in dominant delimited-string format. None if "is_clean" is True
+ - "examples_dirty": Representative dirty examples with cleaned counterpart ("dirty_value → cleaned_value") covering all required operations. None if "is_clean" is True
+ - "cleaning_instructions": Clear step-by-step instructions that preserve string output and dominant delimiter spacing. None if "is_clean" is True
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """,
 
@@ -602,6 +781,14 @@ Use the random sample to understand the data distribution and identify the noise
 Use the unique sample to get a complete overview of all distinct values in the column.
 {column_sample}
 {additional_context}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
+
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):
  - "is_clean": True if the column is clean (no errors/inconsistencies detected), False if any issues are found.
@@ -672,8 +859,10 @@ INSTRUCTIONS
         - The code generating all uniform corruption (e.g., all values turned to NaN, all characters mangled, or the column overwritten with a random, single value). The Coder needs to fix its execution logic
     - Recommender Update (Default): Assign feedback_target: "RECOMMENDER" for all other errors. This means unhandled dirty data still exists, implying the original instructions were incomplete or missed an error type. Or formats/patterns have been incorrectly changed. The Recommender needs to update its cleaning strategy.
 5. Feedback generation:
-    - Describe the exact nature of the undesired format/style change observed.
-    - Provide a set of clear, actionable instructions ONLY for the agent specified in feedback_target. These instructions must guide the LLM-agent to update and improve their output such that the cleaned column follows the style of the original data, while all inconsistencies are removed.
+    - Describe the exact issue(s): Clearly identify all undesired changes introduced during cleaning and provide detailed failure examples in the format (Original → Cleaned → Expected). Include multiple diverse examples (if possible) so the agent can precisely understand what needs to be fixed.
+    - Explain why it is wrong: Describe why the current cleaning is incorrect in terms of format, style, or meaning, and what rule or pattern from the original data was violated.
+    - Explain what should and should not be done: Give clear, actionable instructions on how to fix the issue, including explicit rules to follow and anti-patterns to avoid (e.g., over-cleaning, removing meaningful tokens, incorrect normalization). ONLY for the agent specified in feedback_target. These instructions must guide the LLM-agent to update and improve their output such that the cleaned column follows the style of the original data, while all inconsistencies are removed.
+    - Provide a small set of correct values: Include a concise reference set of properly cleaned values that reflect the desired final format and style.  
     - If you are giving feedback to the RECOMMENDER, you must synthesize any critical context from prior CODER feedback to ensure the Recommender has full situational awareness.
 {last_attempt_msg}  
 COLUMN SAMPLE
@@ -963,6 +1152,13 @@ Context rows column header:
 
 Violations
 {violations}
+
+USER-PROVIDED CONSTRAINTS (optional; follow strictly when non-empty; additive to core task):
+{user_constraints}
+
+LABELED EXAMPLES (optional few-shot guidance; follow when non-empty).
+IMPORTANT: These sections are additional constraints/examples. You must still perform all required core tasks above (full analysis, issue detection, and complete cleaning instruction generation).
+{labeled_examples}
 
 OUTPUT FORMAT
 Return ONLY valid JSON with the following keys (use the EXACT same key names):

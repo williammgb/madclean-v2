@@ -3,7 +3,11 @@ import pandas as pd
 from typing import Callable, cast
 # Local imports
 from madclean.components.coordinator.prompts import *
-from madclean.utils.helpers import format_list_for_prompt
+from madclean.utils.helpers import (
+    format_list_for_prompt,
+    align_dirty_cleaned_series,
+    align_dirty_cleaned_dataframe,
+)
 from madclean.components.domain.schema import ColumnProfile, OutlierResult, MultiColumnTask, FDResult
 
 class PromptGeneration:
@@ -14,7 +18,14 @@ class PromptGeneration:
             "outlier_data": self._format_outlier_data
         }
     
-    def create_prompt_recommender(self, col: str, profile: ColumnProfile) -> str:
+    def create_prompt_recommender(
+        self,
+        col: str,
+        profile: ColumnProfile,
+        *,
+        user_constraints: str = "",
+        labeled_examples: str = "",
+    ) -> str:
         column_type = profile.semantic_type
         column_sample = profile.sample
         # 1. Get base prompt template
@@ -34,10 +45,14 @@ class PromptGeneration:
                     additional_context.append(formatted_block)
         # 3. Assemble final prompt
         context_str = "\n" + "\n\n".join(additional_context).strip() + "\n" if additional_context else ""
+        uc = (user_constraints or "").strip()
+        le = (labeled_examples or "").strip()
         final_prompt = recommender_prompt_template.format(
             column_name=col,
             column_sample=column_sample,
-            additional_context=context_str
+            additional_context=context_str,
+            user_constraints=uc if uc else "(none)",
+            labeled_examples=le if le else "(none)",
         )
         return final_prompt
 
@@ -81,7 +96,9 @@ class PromptGeneration:
     def create_prompt_validation(self, col: str, 
             dirty_series: pd.Series, cleaned_series: pd.Series, 
             column_type: str, last_attempt: bool = False,
-            max_sample_size: int = 150) -> str:
+            max_sample_size: int = 150,
+            random_sample_size: int = 60,
+            changed_sample_size: int = 90) -> str:
         PROMPT_MAP = {
         "DATETIME": "DATETIME",
         "BOOLEAN": "BOOLEAN",
@@ -91,11 +108,32 @@ class PromptGeneration:
         "DIRTY_FLOAT": "DIRTY_NUMERIC",
         "NAMED_ENTITY": "STRING",
         "DISCRETE_STRING": "STRING",
+        "COLLECTION": "STRING",
+        "DELIMITED_STRING": "STRING",
         "NATURAL_LANGUAGE_TEXT": "NLT"
         }
+        dirty_series, cleaned_series = align_dirty_cleaned_series(dirty_series, cleaned_series)
         # 1. Configure prompt based on semantic type
-        sample_size = min(len(dirty_series), max_sample_size)
-        sample_indices = random.sample(list(dirty_series.index), sample_size)
+        all_indices = list(dirty_series.index)
+        changed_indices = []
+        for idx in all_indices:
+            a = dirty_series.loc[idx]
+            b = cleaned_series.loc[idx]
+            if pd.isna(a) and pd.isna(b):
+                continue
+            if str(a) != str(b):
+                changed_indices.append(idx)
+        changed_take = min(len(changed_indices), max(0, changed_sample_size))
+        selected_changed = random.sample(changed_indices, changed_take) if changed_take > 0 else []
+        remaining = [idx for idx in all_indices if idx not in set(selected_changed)]
+        random_take = min(len(remaining), max(0, random_sample_size))
+        selected_random = random.sample(remaining, random_take) if random_take > 0 else []
+        sample_indices = selected_changed + selected_random
+        if not sample_indices:
+            sample_size = min(len(all_indices), max_sample_size)
+            sample_indices = random.sample(all_indices, sample_size) if sample_size > 0 else []
+        if max_sample_size > 0 and len(sample_indices) > max_sample_size:
+            sample_indices = sample_indices[:max_sample_size]
         dirty_sample = dirty_series.loc[sample_indices].tolist()
         cleaned_sample = cleaned_series.loc[sample_indices].tolist()
         dirty_sample_fmt = format_list_for_prompt(dirty_sample)
@@ -119,11 +157,23 @@ class PromptGeneration:
         return final_prompt
 
     # ===== Multi-column operations =====
-    def create_prompt_recommender_multi_col(self, df: pd.DataFrame, task_info: MultiColumnTask, max_sample_size: int = 40) -> str:
+    def create_prompt_recommender_multi_col(
+        self,
+        df: pd.DataFrame,
+        task_info: MultiColumnTask,
+        max_sample_size: int = 40,
+        *,
+        user_constraints: str = "",
+        labeled_examples: str = "",
+    ) -> str:
         """Enables multiple multi-column cleaning components to use this function."""
         task_type = task_info.task_type
         if task_type == 'FD':
-            return self._create_prompt_recommender_fd(df, task_info, max_sample_size)
+            return self._create_prompt_recommender_fd(
+                df, task_info, max_sample_size,
+                user_constraints=user_constraints,
+                labeled_examples=labeled_examples,
+            )
         else:
             raise ValueError(f"Unsupported multi-column task type: {task_type}")
 
@@ -138,24 +188,57 @@ class PromptGeneration:
     def create_prompt_validation_multi_col(self, 
                     dirty_target: pd.DataFrame, cleaned_target: pd.DataFrame, 
                     task_info: MultiColumnTask, last_attempt: bool, 
-                    max_sample_size: int = 150) -> str:
+                    max_sample_size: int = 150,
+                    random_sample_size: int = 60,
+                    changed_sample_size: int = 90) -> str:
         """Enables multiple multi-column cleaning components to use this function."""
         task_type = task_info.task_type
         comparison_str = self._generate_multi_col_comparison(
-            dirty_target, cleaned_target, max_sample_size)
+            dirty_target, cleaned_target, max_sample_size, random_sample_size, changed_sample_size)
         if task_type == 'FD':
             return self._create_prompt_validation_fd(task_info, last_attempt, comparison_str)
         else:
             raise ValueError(f"Unsupported multi-column task type: {task_type}")
 
-    def _generate_multi_col_comparison(self, dirty_target: pd.DataFrame, cleaned_target: pd.DataFrame, max_sample_size: int) -> str:
+    def _generate_multi_col_comparison(
+        self,
+        dirty_target: pd.DataFrame,
+        cleaned_target: pd.DataFrame,
+        max_sample_size: int,
+        random_sample_size: int,
+        changed_sample_size: int,
+    ) -> str:
         """
         Generates comparision string for any number of columns.
         Format: dirty_col1, dirty_col2 => clean_col1, clean_col2
         """
+        dirty_target, cleaned_target = align_dirty_cleaned_dataframe(dirty_target, cleaned_target)
         # 1. Sample dataset
-        sample_size = min(len(dirty_target), max_sample_size)
-        sample_indices = random.sample(list(dirty_target.index), sample_size)
+        all_indices = list(dirty_target.index)
+        changed_indices: list = []
+        for idx in all_indices:
+            dirty_vals = dirty_target.loc[idx].tolist()
+            cleaned_vals = cleaned_target.loc[idx].tolist()
+            changed = False
+            for a, b in zip(dirty_vals, cleaned_vals):
+                if pd.isna(a) and pd.isna(b):
+                    continue
+                if str(a) != str(b):
+                    changed = True
+                    break
+            if changed:
+                changed_indices.append(idx)
+        changed_take = min(len(changed_indices), max(0, changed_sample_size))
+        selected_changed = random.sample(changed_indices, changed_take) if changed_take > 0 else []
+        remaining = [idx for idx in all_indices if idx not in set(selected_changed)]
+        random_take = min(len(remaining), max(0, random_sample_size))
+        selected_random = random.sample(remaining, random_take) if random_take > 0 else []
+        sample_indices = selected_changed + selected_random
+        if not sample_indices:
+            sample_size = min(len(all_indices), max_sample_size)
+            sample_indices = random.sample(all_indices, sample_size) if sample_size > 0 else []
+        if max_sample_size > 0 and len(sample_indices) > max_sample_size:
+            sample_indices = sample_indices[:max_sample_size]
         # 2. Format values to correct string format
         lines= []
         for i in sample_indices:
@@ -169,7 +252,15 @@ class PromptGeneration:
         return "\n".join(lines)   
     
     # ===== FD implementation =====
-    def _create_prompt_recommender_fd(self, df: pd.DataFrame, task_info: MultiColumnTask, max_sample_size: int) -> str:
+    def _create_prompt_recommender_fd(
+        self,
+        df: pd.DataFrame,
+        task_info: MultiColumnTask,
+        max_sample_size: int,
+        *,
+        user_constraints: str = "",
+        labeled_examples: str = "",
+    ) -> str:
         def _format_violations_for_prompt(violations: list[dict]) -> str:
             formatted_output = []
             for violation in violations:
@@ -195,27 +286,32 @@ class PromptGeneration:
         fd_pair_sample_str = fd_pair_sample.to_csv(index=False).strip()
         # 3. Instantiate prompt template
         template = FD_RECOMMENDATION_PROMPT_TEMPLATE
+        uc = (user_constraints or "").strip()
+        le = (labeled_examples or "").strip()
+        fmt_kwargs = dict(
+            lhs=lhs,
+            rhs=rhs,
+            fd_pair_sample=fd_pair_sample_str,
+            imputable_count=imputation_count,
+            violation_count=violation_count,
+            user_constraints=uc if uc else "(none)",
+            labeled_examples=le if le else "(none)",
+        )
         if violation_count > 0:
             header_str = ",".join(df.columns)
             violations = fd_violation_data.get('violations', [])
             violations_str = _format_violations_for_prompt(violations)
             return template.format(
-                lhs=lhs,
-                rhs=rhs,
-                fd_pair_sample=fd_pair_sample_str,
-                imputable_count=imputation_count,
-                violation_count=violation_count,
+                **fmt_kwargs,
                 column_header=header_str,
-                violations=violations_str)   
+                violations=violations_str,
+            )
         else:
             return template.format(
-                lhs=lhs,
-                rhs=rhs,
-                fd_pair_sample=fd_pair_sample_str,
-                imputable_count=imputation_count,
-                violation_count=0,
+                **fmt_kwargs,
                 column_header="-",
-                violations="No violations")
+                violations="No violations",
+            )
 
     def _create_prompt_coding_fd(self, task_info: MultiColumnTask, recommender_data: dict, allowed_packages: str) -> str:
         fd_data = cast(FDResult, task_info.data)

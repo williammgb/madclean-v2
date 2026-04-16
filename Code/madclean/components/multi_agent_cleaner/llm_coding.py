@@ -1,4 +1,5 @@
 import json
+import asyncio
 import tempfile
 import os
 import re
@@ -12,6 +13,23 @@ from madclean.llm.llm_clients import BaseLLMClient
 from madclean.components.coordinator.prompt_generation import PromptGeneration
 from madclean.components.domain.schema import MultiColumnTask
 from madclean.config.settings import CleaningConfig
+from madclean.utils.helpers import llm_sampling_kwargs_from_config
+
+
+def _service_unavailable_coder_message(exc: BaseException) -> str | None:
+    """Map HTTP 503 (and similar upstream overload) to a user-facing coder error message."""
+    code = getattr(exc, "status_code", None)
+    if code is None:
+        resp = getattr(exc, "response", None)
+        if resp is not None:
+            code = getattr(resp, "status_code", None)
+    if code != 503:
+        return None
+    return (
+        "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. "
+        "This is not a failure of the cleaning system. System will retry in a few seconds."
+    )
+
 
 class LLMCodingAgent:
     """Isolated LLM agent responsible for generating and executing Python code based on instruction of LLMRecommendationAgent."""
@@ -38,7 +56,11 @@ class LLMCodingAgent:
 
     async def _call_llm_for_code_async(self, messages: list) -> tuple[str | None, str | None, str | None]:
         try:
-            raw_response, token_usage = await self.llm_client.call_llm_async(messages, response_schema="text/plain")
+            raw_response, token_usage = await self.llm_client.call_llm_async(
+                messages,
+                response_schema="text/plain",
+                **llm_sampling_kwargs_from_config(self.config),
+            )
             await self._track_usage(token_usage)
             if not raw_response:
                 return None, None, "Empty response from LLM."
@@ -54,6 +76,9 @@ class LLMCodingAgent:
                 return None, raw_response, "Extracted code string is empty."
             return code_str, raw_response, None
         except Exception as e:
+            unavailable_msg = _service_unavailable_coder_message(e)
+            if unavailable_msg:
+                return None, None, unavailable_msg
             error_msg = f"Code Extraction Error: {type(e).__name__}: {e}"
             return None, None, error_msg
       
@@ -150,11 +175,17 @@ sys.exit(0)
             messages.append({"role": "user", "content": initial_user_prompt})
         # 2. Call LLM to generate code. With retries for incorrectly generated code
         retries_messages = messages.copy()
+        last_api_unavailable_msg: str | None = None
         for attempt in range(1, self.config.max_coding_attempts + 1):
             code_str, llm_output, llm_error_msg = await self._call_llm_for_code_async(retries_messages)
             if llm_output:
                 retries_messages.append({"role": self.llm_role, "content": llm_output})
             if llm_error_msg:
+                if llm_error_msg.startswith("API error (HTTP 503 Service Unavailable)"):
+                    last_api_unavailable_msg = llm_error_msg
+                    if attempt < self.config.max_coding_attempts:
+                        await asyncio.sleep(3)
+                    continue
                 if llm_output:
                     fix_prompt = f"The previous attempt resulted in an empty code string. Please regenerate the entire valid code string now. The error was: {llm_error_msg}"
                 else:             
@@ -173,6 +204,8 @@ sys.exit(0)
                     f"\n\n{exec_error_msg}\n\n"
                     f"Please correct the code and provide the full, fixed executable code string again.")
                 retries_messages.append({"role": "user", "content": fix_prompt})
+        if last_api_unavailable_msg:
+            return None, last_api_unavailable_msg, messages
         return None, None, messages
     
     async def clean_multi_col_async(self, 
@@ -191,11 +224,17 @@ sys.exit(0)
             messages.append({"role": "user", "content": initial_prompt})
         # 2. Call LLM to generate code. With retries for incorrectly generated code
         retries_messages = messages.copy()
+        last_api_unavailable_msg: str | None = None
         for attempt in range(1, self.config.max_coding_attempts + 1):
             code_str, llm_output, llm_error_msg = await self._call_llm_for_code_async(retries_messages)
             if llm_output:
                 retries_messages.append({"role": self.llm_role, "content": llm_output})
             if llm_error_msg:
+                if llm_error_msg.startswith("API error (HTTP 503 Service Unavailable)"):
+                    last_api_unavailable_msg = llm_error_msg
+                    if attempt < self.config.max_coding_attempts:
+                        await asyncio.sleep(3)
+                    continue
                 if llm_output:
                     fix_prompt = f"The previous attempt resulted in an empty code string. Please regenerate the entire valid code string now. The error was: {llm_error_msg}"
                 else:             
@@ -214,4 +253,6 @@ sys.exit(0)
                     f"\n\n{exec_error_msg}\n\n"
                     f"Please correct the code and provide the full, fixed executable code string again.")
                 retries_messages.append({"role": "user", "content": fix_prompt})
+        if last_api_unavailable_msg:
+            return None, last_api_unavailable_msg, messages
         return None, None, messages

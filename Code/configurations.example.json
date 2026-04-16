@@ -1,0 +1,48 @@
+{
+  "verbose": true,
+  "enable_validation": true,
+  "enable_user_validation": false,
+  "enable_validation_multi": false,
+  "enable_multi_col_cleaning": true,
+  "human_in_the_loop": false,
+  "hitl_apply_to_all_columns": true,
+  "hitl_column_list": [],
+  "recommender_column_hints": {},
+  "recommender_column_labeled_examples": {},
+  "llm_temperature": null,
+  "llm_top_p": null,
+  "sample_sizes": {
+    "NUMERIC": {
+      "clean_sample_size": 50,
+      "dirty_sample_size": 250
+    },
+    "DATETIME": {
+      "clean_sample_size": 100,
+      "dirty_sample_size": 250
+    },
+    "DIRTY_NUMERIC": {
+      "random_sample_size": 50,
+      "unique_sample_size": 250
+    },
+    "STRING": {
+      "random_sample_size": 150,
+      "unique_sample_size": 250
+    },
+    "NLT": {
+      "short_sample_size": 100,
+      "long_sample_size": 20
+    }
+  },
+  "sample_size_validator": 150,
+  "sample_size_validator_random": 60,
+  "sample_size_validator_changed": 90,
+  "validator_failure_strategy": "accept_cleaned",
+  "max_cleaning_attempts": 6,
+  "max_multi_col_attempts": 3,
+  "max_parse_attempts": 3,
+  "max_coding_attempts": 3,
+  "semaphore_limit": 15,
+  "include_metadata": true,
+  "skip_columns": []
+}
+

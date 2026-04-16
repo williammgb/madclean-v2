@@ -29,6 +29,8 @@ class DataSampler:
             'DIRTY_FLOAT': ("DIRTY_NUMERIC", self._sample_column_dirty_numeric),
             'NAMED_ENTITY': ("STRING", self._sample_column_string),
             'DISCRETE_STRING': ("STRING", self._sample_column_string),
+            'COLLECTION': ("STRING", self._sample_column_string),
+            'DELIMITED_STRING': ("STRING", self._sample_column_string),
             'NATURAL_LANGUAGE_TEXT': ("NLT", self._sample_column_nlt),
         }
         # 1. Select sample configurations based on semantic type
@@ -153,7 +155,7 @@ class DataSampler:
         return random_sample, unique_sample, all_unique_included
 
     def _sample_column_string(self, series: pd.Series, sample_sizes_cfg: str) -> tuple[list, list, bool]:
-        """ Provides random sample and list of all unique values for NAMED_ENTITY and DISCRETE_STRING columns."""
+        """Provides random sample and list of all unique values for string-like semantic types."""
         cfg = self.sample_sizes[sample_sizes_cfg]
         # Gather random sample and uniuqe sample
         random_sample = series.sample(n=min(cfg['random_sample_size'], len(series)), replace=False).tolist()

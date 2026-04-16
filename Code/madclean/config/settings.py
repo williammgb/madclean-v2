@@ -1,29 +1,46 @@
 from dataclasses import dataclass, field
+from typing import Optional
+
+
 @dataclass
 class CleaningConfig:
     verbose: bool = True
 
     enable_validation: bool = True
+    enable_user_validation: bool = False
     enable_validation_multi: bool = False
     enable_multi_col_cleaning: bool = True
+
+    # Human-in-the-loop (GUI): optional code review after coder and review after LLM validator.
+    human_in_the_loop: bool = False
+    hitl_apply_to_all_columns: bool = True
+    hitl_column_list: list[str] = field(default_factory=list)
+    # Per-column extra instructions merged into the recommender prompt (GUI table headers).
+    recommender_column_hints: dict[str, str] = field(default_factory=dict)
+    # Optional per-column few-shot / labeled examples text merged into recommender prompts (before OUTPUT FORMAT).
+    recommender_column_labeled_examples: dict[str, str] = field(default_factory=dict)
+
+    # LLM sampling (omit from API request when None to use provider defaults).
+    llm_temperature: Optional[float] = None
+    llm_top_p: Optional[float] = None
 
     # sampling
     sample_sizes: dict = field(default_factory=lambda: {
         "NUMERIC": {
             "clean_sample_size": 50,
-            "dirty_sample_size": 500
+            "dirty_sample_size": 250
         },
         "DATETIME": {
             "clean_sample_size": 100,
-            "dirty_sample_size": 500
+            "dirty_sample_size": 250
         },
         "DIRTY_NUMERIC": { 
             "random_sample_size": 50,
-            "unique_sample_size": 500
+            "unique_sample_size": 250
         },
         "STRING": { 
             "random_sample_size": 150,
-            "unique_sample_size": 600
+            "unique_sample_size": 250
         },
         "NLT": {
             "short_sample_size": 100,
@@ -32,9 +49,12 @@ class CleaningConfig:
     })
 
     sample_size_validator: int = 150
+    sample_size_validator_random: int = 60
+    sample_size_validator_changed: int = 90
+    validator_failure_strategy: str = "accept_cleaned"  # accept_cleaned|leave_uncleaned|ask_user
 
     # retries
-    max_cleaning_attempts: int = 5
+    max_cleaning_attempts: int = 6
     max_multi_col_attempts: int = 3
     max_parse_attempts: int = 3
     max_coding_attempts: int = 3
@@ -44,5 +64,9 @@ class CleaningConfig:
 
     # additional
     include_metadata: bool = True
-    
+
+    # Columns that should be skipped entirely by the LLM pipeline.
+    # Used by the GUI when the user marks a column as "already clean".
+    skip_columns: list[str] = field(default_factory=list)
+
 

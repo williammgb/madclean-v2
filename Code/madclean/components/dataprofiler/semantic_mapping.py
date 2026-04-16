@@ -1,10 +1,13 @@
 import re
+import ast
+import warnings
 import spacy 
 import spacy.cli
 import pandas as pd
 import numpy as np
 from collections import Counter 
-from dateutil.parser import parse 
+from dateutil.parser import parse
+from dateutil.parser._parser import UnknownTimezoneWarning
 # Local imports 
 from madclean.utils.helpers import subsample_dataframe
 
@@ -134,6 +137,10 @@ class SemanticTypeDetection:
     
     def _classify_str_value(self, value: str, doc_dict: dict) -> str:
         """Classify a string as named entity, natural language text or discrete string."""    
+        if self._is_collection_string(value):
+            return 'collection'
+        if self._is_delimited_string(value):
+            return 'delimited_string'
         doc = doc_dict.get(value)
         if not doc:
             return 'discrete_string'
@@ -152,6 +159,51 @@ class SemanticTypeDetection:
             has_stopword = any(token.is_stop for token in doc)
             has_verb = any(token.pos_ == 'VERB' for token in doc)
             return 'natural_language_text' if has_stopword or has_verb else 'discrete_string'
+
+    @staticmethod
+    def _is_collection_string(value: str) -> bool:
+        """Detect Python-like collection literals stored as strings."""
+        if not isinstance(value, str):
+            return False
+        raw = value.strip()
+        if not raw:
+            return False
+        if raw == "set()":
+            return True
+        starts_ends = (raw.startswith('[') and raw.endswith(']')) \
+            or (raw.startswith('{') and raw.endswith('}')) \
+            or (raw.startswith('(') and raw.endswith(')'))
+        if not starts_ends:
+            return False
+        try:
+            parsed = ast.literal_eval(raw)
+        except (ValueError, SyntaxError):
+            return False
+        return isinstance(parsed, (list, dict, set, tuple))
+
+    @staticmethod
+    def _is_delimited_string(value: str) -> bool:
+        """Detect delimited strings such as 'a,b,c' while avoiding URL-like strings."""
+        if not isinstance(value, str):
+            return False
+        raw = value.strip()
+        if not raw:
+            return False
+        if "://" in raw:
+            return False
+        delimiters = [",", ";", "|", "/", "\\"]
+        for delim in delimiters:
+            if delim not in raw:
+                continue
+            if delim == "/" and raw.count("/") == 1 and re.fullmatch(r"\d+\s*/\s*\d+", raw):
+                continue
+            parts = [p.strip() for p in raw.split(delim)]
+            if len(parts) < 2:
+                continue
+            if any(p == "" for p in parts):
+                continue
+            return True
+        return False
 
     @staticmethod
     def _is_bool(value) -> bool:
@@ -188,9 +240,11 @@ class SemanticTypeDetection:
         if not isinstance(value, str):
             return False
         try:
-            parse(value, fuzzy=False)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UnknownTimezoneWarning)
+                parse(value, fuzzy=False)
             return True
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, OverflowError):
             return False
 
 ####### TEST CODE #######

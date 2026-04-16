@@ -10,3 +10,4 @@ spacy==3.8.7
 fuzzywuzzy==0.18.0
 RapidFuzz==3.14.3
 reflex==0.8.28.post1
+openpyxl==3.1.5

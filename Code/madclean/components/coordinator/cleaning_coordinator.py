@@ -96,7 +96,8 @@ class CleaningCoordinator:
         df_cleaned = df.copy()
         try:
             self.multi_agent_loop.reset_token_usage()
-            
+            skip_cols = set(getattr(self.config, "skip_columns", []) or [])
+
             # 1. Calculate total tasks
             col_count = len(column_profiles)
             multi_col_count = len(multi_col_tasks) if self.config.enable_multi_col_cleaning else 0
@@ -111,6 +112,41 @@ class CleaningCoordinator:
             for col, profile in column_profiles.items():
                 if callable(self.cancel_check) and self.cancel_check():
                     raise asyncio.CancelledError()
+                if col in skip_cols:
+                    # Respect GUI: user marked this column as already clean.
+                    self.multi_agent_loop.cleaning_report[col] = {
+                        "datatype": profile.semantic_type,
+                        "already_clean": True,
+                        "cleaned": False,
+                        "attempts": 0,
+                        "generated_code": "",
+                        "cleaning_validated": False,
+                        "trace_steps": [
+                            {
+                                "id": "finished",
+                                "title": "Finished",
+                                "status": "completed",
+                                "output": "User has determined this column is already clean.",
+                            }
+                        ],
+                    }
+                    # Emit a trace event so the GUI pipeline view shows a Finished card.
+                    try:
+                        self.multi_agent_loop._emit_trace(
+                            {
+                                "column": col,
+                                "step_id": "finished",
+                                "title": "Finished",
+                                "status": "completed",
+                                "output": "User has determined this column is already clean.",
+                            }
+                        )
+                    except Exception:
+                        # Tracing must never break cleaning.
+                        pass
+                    msg = f"[{col}] Skipping: user marked this column as already clean."
+                    self._update_progress(message=msg)
+                    continue
                 if profile.semantic_type in ("EMPTY", "UNKNOWN"):
                     self.multi_agent_loop.cleaning_report[col] = {
                             "datatype": profile.semantic_type,

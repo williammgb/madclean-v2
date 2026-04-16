@@ -1,0 +1,11 @@
+.env
+.venv/
+.DCvenv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Local project/runtime artifacts
+Code/gui/uploaded_files/
+Code/gui/.web/
+Code/gui/.states/

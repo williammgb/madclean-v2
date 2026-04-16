@@ -35,12 +35,14 @@ pip install .
 ## LLM configuration
 You must configure an LLM provider to use the framework's features.
 
-#### Using OpenAI or Gemini
+#### Using OpenAI, Gemini or OpenRouter
 Create a `.env` file in the project root and add your API key:
 ```
 OPENAI_API_KEY="your_api_key_here"
 # OR
 GEMINI_API_KEY="your_api_key_here"
+# OR
+OPENROUTER_API_KEY="your_api_key_here"
 ```
 Update the `LLM_CLIENT_NAME` entry in the llm_settings.py to point to your LLM provider.
 
@@ -48,7 +50,7 @@ Update the `LLM_CLIENT_NAME` entry in the llm_settings.py to point to your LLM p
 To add support for a new LLM provider:
 1. Add a new client class in `Code/madclean/llm/llm_clients.py` following `BaseLLMClient`.
 2. Register it in `Code/madclean/llm/llm_registry.py` (API keys via `.env` as documented there).
-3. Use the new key from the registry in the UI or wire it as the default for your entrypoint.
+3. Use the new key from the registry in the UI or update the `LLM_CLIENT_NAME` entry in `settings.py` to point to your new implementation.
 
 ## Usage
 After installation, the framework can be run using the CLI command:

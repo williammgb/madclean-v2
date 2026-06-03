@@ -160,7 +160,7 @@ class LLMRecommendationAgent:
             is_clean = parsed_response.get('is_clean', False)
             messages.append({"role": self.llm_role, "content": raw_response}) 
             if is_clean:
-                return True, None, None
+                return True, None, messages
             return False, parsed_response, messages
         except Exception as e:
             api_payload = _service_unavailable_recommender_payload(e)

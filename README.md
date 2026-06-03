@@ -126,3 +126,6 @@ Executing LLM-generated code should only be done with **trusted models and envir
 2. Append to `multi_col_cleaners` in `Code/madclean/pipeline.py`.
 3. Adjust `task_scheduler.py` if you need ordering beyond FD-topology + one batch for other types.
 4. Add `multi_col_config` entry in `llm_recommending.py`; recommender/coder/validation prompts in `prompts.py`; branches in `create_prompt_*_multi_col` in `prompt_generation.py` (use **`FD`** as the working template; only **`FD`** is wired end-to-end today).
+
+## Future improvements
+- HITL (GUI): If column is flagged as already clean and user disagrees and provides feedback. Column is still ignored (not passed to recommender with custom instructions).

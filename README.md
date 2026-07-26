@@ -5,8 +5,8 @@ High-quality data is essential for effective decision-making, data analytics and
 This framework was tested on Python version 3.11.
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/qahtanaa/COSC-Thesis-William.git
-cd COSC-Thesis-William
+git clone https://github.com/williammgb/msc-thesis-cosc.git
+msc-thesis-cosc
 ```
 ### 2. (Optional but recommended) Create a virtual environment
 Example using Python 3.11 (Windows):

@@ -112,20 +112,3 @@ Reflex will print the URLs in the terminal (typically a frontend on `http://loca
 ## Security Note
 This framework does **not** provide strong sandboxing guarantees for LLM-generated code.
 Executing LLM-generated code should only be done with **trusted models and environments**.
-
-## Adding additional cleaning components
-**Pipeline:** `DataProfiler` → profiles + multi-column task detection; `CleaningCoordinator` → single-column then multi-column cleaning; `MultiAgentCleaning` → recommender, coder, validator.
-
-### Single-column (profiling helpers; feed the recommender)
-1. Implement `SingleColumnCleaner` (`Code/madclean/components/domain/protocols.py`): `analyse(df, col, column_type) -> dict`.
-2. Map results to `ColumnProfile` fields and/or `profile.metadata` (`Code/madclean/components/domain/schema.py`); wire prompts in `PromptGeneration.create_prompt_recommender` / `context_formatters` (`Code/madclean/components/coordinator/prompt_generation.py`).
-3. Append your class to `single_col_cleaners` in `Code/madclean/pipeline.py`.
-
-### Multi-column (e.g. FD-style)
-1. Implement `MultiColumnCleaner` (`protocols.py`): `task_type`, `detect(df)`, `get_data(df, task_info)`; put structured payloads in `MultiColumnTask.data` (`schema.py`; see `functional_dependencies.py`).
-2. Append to `multi_col_cleaners` in `Code/madclean/pipeline.py`.
-3. Adjust `task_scheduler.py` if you need ordering beyond FD-topology + one batch for other types.
-4. Add `multi_col_config` entry in `llm_recommending.py`; recommender/coder/validation prompts in `prompts.py`; branches in `create_prompt_*_multi_col` in `prompt_generation.py` (use **`FD`** as the working template; only **`FD`** is wired end-to-end today).
-
-## Future improvements
-- HITL (GUI): If column is flagged as already clean and user disagrees and provides feedback. Column is still ignored (not passed to recommender with custom instructions).

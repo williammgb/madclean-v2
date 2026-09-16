@@ -5,8 +5,8 @@
     {
       "id": 0,
       "name": "skeleton",
-      "state": "in-progress",
-      "commit": null,
+      "state": "done",
+      "commit": "97d2dbd",
       "checks": [
         {"claim": "./run setup creates the uv environment on Python 3.12 from uv.lock (frozen), including the spaCy model", "passes": true, "evidence": "./run setup printed 'Checked 98 packages'; uv run python printed CPython 3.12.14, spacy 3.8.7, en_core_web_sm model 3.8.0 loaded"},
         {"claim": ".gitattributes is in place and all 14 benchmark CSVs are committed byte-identical to their source repos", "passes": true, "evidence": "git hash-object over Code/data/benchmark_datasets/*.csv: 14 of 14 match the blob hashes in hqahtan/COSC-Thesis-William, 0 differ"},

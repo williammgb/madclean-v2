@@ -33,6 +33,7 @@
       "long_sample_size": 20
     }
   },
+  "sampling_seed": null,
   "sample_size_validator": 150,
   "sample_size_validator_random": 60,
   "sample_size_validator_changed": 90,

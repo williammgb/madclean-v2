@@ -35,7 +35,7 @@ dev = [
 extend-exclude = ["gui/.web", "gui/.states"]
 
 [tool.ruff.lint]
-select = ["E9", "F63", "F7", "F82"]
+select = ["E9", "F63", "F7", "F82", "W605"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

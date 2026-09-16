@@ -65,7 +65,7 @@ class LLMCodingAgent:
             if not raw_response:
                 return None, None, "Empty response from LLM."
             
-            code_block_pattern = "```(?:python|py)?\s*\n?(.*?)\n?\s*```"
+            code_block_pattern = "```(?:python|py)?\\s*\n?(.*?)\n?\\s*```"
             match = re.search(code_block_pattern, raw_response, re.DOTALL | re.IGNORECASE)
             if match:
                 code_str = match.group(1).strip()
@@ -82,6 +82,15 @@ class LLMCodingAgent:
             error_msg = f"Code Extraction Error: {type(e).__name__}: {e}"
             return None, None, error_msg
       
+    @staticmethod
+    async def _execute_code_async(code_str: str, df: pd.DataFrame, columns: str | list[str], timeout: int = 30) -> pd.Series | pd.DataFrame | str:
+        """
+        Runs _execute_code in a worker thread so the event loop keeps serving other tasks meanwhile.
+        The input columns are copied first, on the event loop, because other tasks write into the same DataFrame.
+        """
+        input_df = df[[columns]].copy() if isinstance(columns, str) else df[list(columns)].copy()
+        return await asyncio.to_thread(LLMCodingAgent._execute_code, code_str, input_df, columns, timeout)
+
     @staticmethod
     def _execute_code(code_str: str, df: pd.DataFrame, columns: str | list[str] , timeout: int = 30) -> pd.Series | pd.DataFrame | str:
         """
@@ -193,7 +202,7 @@ sys.exit(0)
                 retries_messages.append({"role": "user", "content": fix_prompt})
                 continue
             # 3. Execute the LLM-generated code. If correct output type, return
-            exec_result = self._execute_code(code_str, df, col)
+            exec_result = await self._execute_code_async(code_str, df, col)
             if isinstance(exec_result, pd.Series):
                 messages.append({"role": self.llm_role, "content": llm_output})
                 return exec_result, code_str, messages
@@ -242,7 +251,7 @@ sys.exit(0)
                 retries_messages.append({"role": "user", "content": fix_prompt})
                 continue
             # 3. Execute the LLM-generated code. If result is correct output type, return it
-            exec_result = self._execute_code(code_str, df, columns=target_cols)
+            exec_result = await self._execute_code_async(code_str, df, target_cols)
             if isinstance(exec_result, pd.DataFrame):
                 messages.append({"role": self.llm_role, "content": llm_output})
                 return exec_result, code_str, messages

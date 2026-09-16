@@ -6,21 +6,44 @@ from typing import Callable
 from pathlib import Path
 import pandas as pd
 # local imports
-from madclean.config.settings import VERBOSE
 from madclean.llm.llm_registry import LLM_CLIENT_MAP
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.pipeline import Pipeline
 from .evaluation import CleaningEvaluation
 
+BASE_DIR = Path(__file__).resolve().parent.parent / "data" / "benchmark_datasets"
+DATASETS = {
+    "hospital": {
+        "dirty_path": BASE_DIR / "hospital_dirty.csv",
+        "ground_truth_path": BASE_DIR / "hospital_gt.csv",
+        "numeric_cols": {"ProviderNumber", "ZipCode", "PhoneNumber", "Score", "Sample"}
+    },
+    "beers": {
+        "dirty_path": BASE_DIR / "beers_dirty.csv",
+        "ground_truth_path": BASE_DIR / "beers_gt.csv",
+        "numeric_cols": {"id", "ounces", "abv", "ibu", "brewery_id"}
+    },
+    "movies": {
+        "dirty_path": BASE_DIR / "movies_dirty.csv",
+        "ground_truth_path": BASE_DIR / "movies_gt.csv",
+        "numeric_cols": {"Year", "Duration", "RatingValue", "RatingCount"}
+    },
+    "rayyan": {
+        "dirty_path": BASE_DIR / "rayyan_dirty.csv",
+        "ground_truth_path": BASE_DIR / "rayyan_gt.csv",
+        "numeric_cols": {"id", "article_jvolumn", "article_jissue"}
+    }
+}
+
 class EvaluationPipeline:
     """Evaluation pipeline to run once. When all datasets are available already, use evaluate_files.py"""
     API_DELAY_SECONDS = 60
 
-    def __init__(self, 
+    def __init__(self,
                  datasets: dict[str, dict[str, str | Path]],
                  baselines: list[str],
                  replication_count: int = 5,
-                 verbose: bool = VERBOSE):
+                 verbose: bool = True):
         self.datasets = datasets
         self.baselines = baselines
         self.replication_count = replication_count
@@ -34,10 +57,10 @@ class EvaluationPipeline:
         
     def run_framework(self, dirty_path: str | Path, evaluator: CleaningEvaluation):
         """Runs my custom data cleaning framework."""
-        llm_client = LLM_CLIENT_MAP[LLM_CLIENT_NAME]
+        llm_config = LLM_CLIENT_MAP[LLM_CLIENT_NAME]
         start_time = time.perf_counter()
-        llm_pipeline = Pipeline(llm_client=llm_client)
-        cleaned_df, token_usage = llm_pipeline.run(dirty_path, save_cleaned=True)
+        llm_pipeline = Pipeline(llm_config=llm_config)
+        cleaned_df, report = llm_pipeline.run(dirty_path, save_cleaned=True)
         end_time = time.perf_counter()
         runtime = end_time - start_time
 
@@ -45,8 +68,8 @@ class EvaluationPipeline:
             return self._get_empty_metrics(error_msg="Pipeline returned None")
         
         eval_results, _, _ = evaluator.evaluate(cleaned_df) 
-        performance_dict = {**eval_results, 
-                            "token_usage": token_usage, 
+        performance_dict = {**eval_results,
+                            "token_usage": (report or {}).get("total_usage", {}),
                             "runtime_seconds": runtime}
         return performance_dict
 
@@ -179,34 +202,10 @@ class EvaluationPipeline:
         if self.verbose: print(f"Saved evaluation results to {results_file_path}")
 
 if __name__ == "__main__":
-    BASE_DIR = Path(__file__).resolve().parent.parent / "data" / "benchmark_datasets"
-    datasets_to_evaluate = {
-        "hospital": {
-            "dirty_path": BASE_DIR / "hospital_dirty.csv",
-            "ground_truth_path": BASE_DIR / "hospital_gt.csv",
-            "numeric_cols": {"ProviderNumber", "ZipCode", "PhoneNumber", "Score", "Sample"}
-        },
-        "beers": {
-            "dirty_path": BASE_DIR / "beers_dirty.csv",
-            "ground_truth_path": BASE_DIR / "beers_gt.csv",
-            "numeric_cols": {"id", "ounces", "abv", "ibu", "brewery_id"}
-        },
-        "movies": {
-            "dirty_path": BASE_DIR / "movies_dirty.csv",
-            "ground_truth_path": BASE_DIR / "movies_gt.csv",
-            "numeric_cols": {"Year", "Duration", "RatingValue", "RatingCount"}
-        },
-        "rayyan": {
-            "dirty_path": BASE_DIR / "rayyan_dirty.csv",
-            "ground_truth_path": BASE_DIR / "rayyan_gt.csv",
-            "numeric_cols": {"id", "article_jvolumn", "article_jissue"}
-        }
-    }
-    
     baselines_to_run = ["raha_baran", "holoclean", "retclean", "cocoon", "saged"]
 
     evaluation_pipeline = EvaluationPipeline(
-        datasets=datasets_to_evaluate,
+        datasets=DATASETS,
         baselines=baselines_to_run,
         replication_count=4
     )

@@ -1,3 +1,4 @@
+import json
 import os
 from abc import ABC, abstractmethod
 from typing import Any, Optional
@@ -50,12 +51,37 @@ class OpenAIClient(BaseLLMClient):
                 api_key = os.getenv("OPENROUTER_API_KEY")
             else:
                 api_key = os.getenv("OPENAI_API_KEY")
-            
+
+        self.base_url = base_url
+        self._is_openrouter = bool(base_url and "openrouter.ai" in base_url)
         self.async_client = AsyncOpenAI(
             api_key=api_key,
             base_url=base_url
         )
-    
+
+    async def _openai_create(
+        self,
+        config: dict[str, Any],
+        sampling: dict[str, float],
+    ):
+        if sampling:
+            return await self.async_client.chat.completions.create(**config, **sampling)
+        return await self.async_client.chat.completions.create(**config)
+
+    async def _openai_parse(
+        self,
+        config: dict[str, Any],
+        response_schema: type[BaseModel],
+        sampling: dict[str, float],
+    ):
+        if sampling:
+            return await self.async_client.chat.completions.parse(
+                **config, response_format=response_schema, **sampling
+            )
+        return await self.async_client.chat.completions.parse(
+            **config, response_format=response_schema
+        )
+
     async def call_llm_async(
         self,
         messages: list[dict],
@@ -69,7 +95,18 @@ class OpenAIClient(BaseLLMClient):
             "extra_body": {"enable_thinking": False},
         }
 
-        if response_schema != "text/plain":
+        use_pydantic_schema = (
+            response_schema != "text/plain"
+            and isinstance(response_schema, type)
+            and issubclass(response_schema, BaseModel)
+        )
+        # OpenRouter does not reliably support chat.completions.parse().
+        use_parse = use_pydantic_schema and not self._is_openrouter
+        if use_parse:
+            config.pop("extra_body", None)
+        elif use_pydantic_schema:
+            config["response_format"] = {"type": "json_object"}
+        elif response_schema != "text/plain":
             config["response_format"] = response_schema
 
         sampling: dict[str, float] = {}
@@ -79,13 +116,27 @@ class OpenAIClient(BaseLLMClient):
             sampling["top_p"] = float(top_p)
 
         try:
-            if sampling:
-                response = await self.async_client.chat.completions.create(**config, **sampling)
+            if use_parse:
+                response = await self._openai_parse(config, response_schema, sampling)
             else:
-                response = await self.async_client.chat.completions.create(**config)
+                response = await self._openai_create(config, sampling)
         except Exception as exc:
             if sampling and _sampling_error_retry_without(exc):
-                response = await self.async_client.chat.completions.create(**config)
+                try:
+                    if use_parse:
+                        response = await self._openai_parse(config, response_schema, {})
+                    else:
+                        response = await self._openai_create(config, {})
+                except Exception as retry_exc:
+                    raise retry_exc from exc
+            elif use_parse and isinstance(exc, json.JSONDecodeError):
+                fallback_config = {k: v for k, v in config.items() if k != "response_format"}
+                fallback_config["response_format"] = {"type": "json_object"}
+                try:
+                    response = await self._openai_create(fallback_config, sampling)
+                except Exception as retry_exc:
+                    raise retry_exc from exc
+                use_parse = False
             else:
                 raise
 
@@ -93,7 +144,16 @@ class OpenAIClient(BaseLLMClient):
             "input_tokens": response.usage.prompt_tokens,
             "output_tokens": response.usage.completion_tokens,
         }
-        return response.choices[0].message.content, token_usage
+        if use_parse:
+            parsed = response.choices[0].message.parsed
+            content = (
+                parsed.model_dump_json()
+                if parsed is not None
+                else (response.choices[0].message.content or "")
+            )
+        else:
+            content = response.choices[0].message.content
+        return content, token_usage
  
 class GeminiClient(BaseLLMClient):
     def __init__(self, model_name: str):
@@ -153,11 +213,14 @@ class GeminiClient(BaseLLMClient):
                         response_mime_type="application/json",
                         response_schema=response_schema,
                     )
-                response = await self.async_client.models.generate_content(
-                    model=self.model_name,
-                    contents=contents,
-                    config=config,
-                )
+                try:
+                    response = await self.async_client.models.generate_content(
+                        model=self.model_name,
+                        contents=contents,
+                        config=config,
+                    )
+                except Exception as retry_exc:
+                    raise retry_exc from exc
             else:
                 raise
         token_usage = {

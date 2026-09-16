@@ -1,7 +1,52 @@
+import hashlib
+import random
+import re
 import pandas as pd
 import numpy as np
 from pathlib import Path
 from typing import Union, Optional, List, Any, Tuple
+
+# "{{" and "}}" escapes, or a {name} / {name:spec} placeholder. Any other brace text is literal.
+_PROMPT_TOKEN_RE = re.compile(r"\{\{|\}\}|\{([A-Za-z_][A-Za-z0-9_]*)(?::([^{}]*))?\}")
+
+
+def format_prompt_template(template: str, **kwargs: Any) -> str:
+    """
+    Fill a prompt template the way str.format does, except that brace text which is not a
+    placeholder (e.g. an example like {'k': 1}) is kept literally instead of raising.
+    Injected values are inserted as-is and never parsed again.
+    """
+    def _replace(match: re.Match) -> str:
+        token = match.group(0)
+        if token == "{{":
+            return "{"
+        if token == "}}":
+            return "}"
+        return format(kwargs[match.group(1)], match.group(2) or "")
+
+    return _PROMPT_TOKEN_RE.sub(_replace, template)
+
+
+def _seed_digest(seed: int, keys: tuple) -> int:
+    text = "|".join([str(seed), *(str(key) for key in keys)])
+    return int.from_bytes(hashlib.sha256(text.encode("utf-8")).digest()[:8], "big")
+
+
+def seeded_random(seed: int | None, *keys: Any) -> random.Random | None:
+    """
+    A random.Random for one sampling purpose (e.g. seed, "validation", column, attempt), or None when no
+    seed is set. Separate streams per key keep samples stable although columns are cleaned concurrently.
+    """
+    if seed is None:
+        return None
+    return random.Random(_seed_digest(seed, keys))
+
+
+def seeded_generator(seed: int | None, *keys: Any) -> np.random.Generator | None:
+    """numpy counterpart of seeded_random."""
+    if seed is None:
+        return None
+    return np.random.default_rng(_seed_digest(seed, keys))
 
 def load_dataset(file_path: Union[str, Path]) -> Optional[pd.DataFrame]:
     """Load a dataset from CSV, JSON or XLSX into a pandas DataFrame."""
@@ -32,11 +77,12 @@ def save_dataset(cleaned_df: pd.DataFrame, file_path: str, base_dir: Path):
     if base.endswith("_dirty"):
         base = base[:-6]
     cleaned_dir = base_dir / "data" / "cleaned"
+    cleaned_dir.mkdir(parents=True, exist_ok=True)
     cleaned_file_name = f"{base}_cleaned{ext}"
     cleaned_file_path = cleaned_dir / cleaned_file_name
     counter = 2
     while cleaned_file_path.exists():
-        cleaned_file_name = f"{base}_cleaned_{counter}.csv"
+        cleaned_file_name = f"{base}_cleaned_{counter}{ext}"
         cleaned_file_path = cleaned_dir / cleaned_file_name
         counter += 1 
     if ext == ".csv":

@@ -15,6 +15,14 @@ def _default_config_path() -> Path:
 
 
 def _coerce_value(name: str, value: Any, default: Any) -> Any:
+    if name == "sampling_seed":
+        if value is None:
+            return None
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value.strip().lstrip("-").isdigit():
+            return int(value.strip())
+        return default
     if name == "validator_failure_strategy":
         allowed = {"accept_cleaned", "leave_uncleaned", "ask_user"}
         s = str(value).strip()

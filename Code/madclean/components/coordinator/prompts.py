@@ -278,7 +278,7 @@ CLEANING operations
 EXAMPLES
 - Non-numeric datatypes: Convert "1,234" to 1234, "$100" to 100, "100%" to 100, "350 km/h" to 350 (remove unit), "100.5" to 100 or 101 (round), "€50" to 50. Example code: Use str.replace to remove symbols like r'[^0-9-]' then pd.to_numeric(errors='coerce'). For complex cases, use custom functions.
     - NOTE: When cleaning percentage values (e.g., "75%" or "0.75%"), only remove the percent symbol, do not convert the numeric value into a fraction. For example, "75%" → 75. Do not divide by 100 or otherwise scale the value.
-- Typos: Convert "12345a" to 12345 (remove 'a'), "p75" to 75, "12a34" to 1234, " 42 " to 42 (strip whitespace), "o100" to 100 (if 'o' typo for 0). Example code: Use regex like str.replace(r'\D', '') to remove non-digits, preserving negatives.
+- Typos: Convert "12345a" to 12345 (remove 'a'), "p75" to 75, "12a34" to 1234, " 42 " to 42 (strip whitespace), "o100" to 100 (if 'o' typo for 0). Example code: Use regex like str.replace(r'\\D', '') to remove non-digits, preserving negatives.
 - Missing values or DMVs: Replace NULL, NA, "missing", "", 9999, or -999 with NaN.
 
 COLUMN SAMPLE

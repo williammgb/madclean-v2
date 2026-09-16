@@ -228,7 +228,10 @@ class Pipeline:
                 self._log("-" * 35)
 
             # 5. Save cleaned DataFrame
-            if save_cleaned:
+            if save_cleaned and cleaned_df is None:
+                if self.verbose:
+                    self._log("No cleaned DataFrame to save (run was stopped).")
+            elif save_cleaned:
                 base_dir = Path(__file__).resolve().parent.parent  # Framework root directory
                 cleaned_file_path = save_dataset(cleaned_df, file_path, base_dir)
                 if self.verbose:

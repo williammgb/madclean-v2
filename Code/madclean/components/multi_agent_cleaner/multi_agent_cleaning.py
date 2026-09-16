@@ -10,7 +10,7 @@ from madclean.components.multi_agent_cleaner.llm_coding import LLMCodingAgent
 from madclean.components.multi_agent_cleaner.llm_validation import LLMValidationAgent
 from madclean.components.multi_agent_cleaner.llm_recommending import LLMRecommendationAgent
 from madclean.components.domain.schema import ColumnProfile, MultiColumnTask
-from madclean.utils.helpers import align_dirty_cleaned_series
+from madclean.utils.helpers import align_dirty_cleaned_series, seeded_random
 
 class MultiAgentCleaning:
     """Multi-Agent LLM Cleaning Coordinator that coordinates the workflow between the LLM agents."""
@@ -167,6 +167,11 @@ class MultiAgentCleaning:
             parts.append(f"{label}:\n{rendered}")
         return "\n\n".join(parts).strip()
 
+    def _sampler(self, purpose: str, key: str, attempt: int):
+        """Seeded random source for one review sample, or the random module when no seed is configured."""
+        rng = seeded_random(getattr(self.config, "sampling_seed", None), purpose, key, attempt)
+        return rng if rng is not None else random
+
     def _emit_trace(self, event: dict):
         if not callable(self.trace_callback):
             return
@@ -186,6 +191,7 @@ class MultiAgentCleaning:
     ) -> tuple[bool, str | None, str | None]:
         if not callable(self.user_validation_callback):
             return True, feedback_target, correction_instructions
+        sampler = self._sampler("user_validation", col, attempt)
         try:
             dirty_column, cleaned_column = align_dirty_cleaned_series(dirty_column, cleaned_column)
             all_indices = list(dirty_column.index)
@@ -197,17 +203,17 @@ class MultiAgentCleaning:
             changed_target = max(0, int(getattr(self.config, "sample_size_validator_changed", 0)))
             random_target = max(0, int(getattr(self.config, "sample_size_validator_random", 0)))
             changed_take = min(len(changed_indices), changed_target)
-            selected_changed = random.sample(changed_indices, changed_take) if changed_take > 0 else []
+            selected_changed = sampler.sample(changed_indices, changed_take) if changed_take > 0 else []
 
             remaining = [idx for idx in all_indices if idx not in set(selected_changed)]
             random_take = min(len(remaining), random_target)
-            selected_random = random.sample(remaining, random_take) if random_take > 0 else []
+            selected_random = sampler.sample(remaining, random_take) if random_take > 0 else []
 
             sample_indices = selected_changed + selected_random
             # Fallback to total validator sample if no split sizes are configured.
             if not sample_indices:
                 sample_size = min(len(dirty_column), max(1, int(self.config.sample_size_validator)))
-                sample_indices = random.sample(all_indices, sample_size) if sample_size > 0 else []
+                sample_indices = sampler.sample(all_indices, sample_size) if sample_size > 0 else []
             o = dirty_column.loc[sample_indices].astype(str).fillna("") if sample_indices else pd.Series(dtype=str)
             cl = cleaned_column.loc[sample_indices].astype(str).fillna("") if sample_indices else pd.Series(dtype=str)
             chg = (o != cl).map(lambda x: "1" if x else "0")
@@ -304,6 +310,7 @@ class MultiAgentCleaning:
             return True, ""
         if not callable(self.hitl_callback):
             return True, ""
+        sampler = self._sampler("already_clean_review", col, attempt_idx)
         try:
             non_null = series.dropna()
             n = min(12, int(non_null.shape[0]))
@@ -311,7 +318,7 @@ class MultiAgentCleaning:
                 sample_rows: list[dict[str, str]] = []
             else:
                 idx_pool = list(non_null.index)
-                pick = random.sample(idx_pool, n) if len(idx_pool) > n else idx_pool
+                pick = sampler.sample(idx_pool, n) if len(idx_pool) > n else idx_pool
                 sample_rows = []
                 for i in pick:
                     o = str(series.loc[i])
@@ -350,6 +357,7 @@ class MultiAgentCleaning:
             return llm_needs_correction, feedback_target, correction_instructions
         if not callable(self.hitl_callback):
             return llm_needs_correction, feedback_target, correction_instructions
+        sampler = self._sampler("validation_review", col, attempt_idx)
         try:
             dirty_column, cleaned_column = align_dirty_cleaned_series(dirty_column, cleaned_column)
             all_indices = list(dirty_column.index)
@@ -359,14 +367,14 @@ class MultiAgentCleaning:
             changed_target = max(0, int(getattr(self.config, "sample_size_validator_changed", 0)))
             random_target = max(0, int(getattr(self.config, "sample_size_validator_random", 0)))
             changed_take = min(len(changed_indices), changed_target)
-            selected_changed = random.sample(changed_indices, changed_take) if changed_take > 0 else []
+            selected_changed = sampler.sample(changed_indices, changed_take) if changed_take > 0 else []
             remaining = [idx for idx in all_indices if idx not in set(selected_changed)]
             random_take = min(len(remaining), random_target)
-            selected_random = random.sample(remaining, random_take) if random_take > 0 else []
+            selected_random = sampler.sample(remaining, random_take) if random_take > 0 else []
             sample_indices = selected_changed + selected_random
             if not sample_indices:
                 sample_size = min(len(dirty_column), max(1, int(self.config.sample_size_validator)))
-                sample_indices = random.sample(all_indices, sample_size) if sample_size > 0 else []
+                sample_indices = sampler.sample(all_indices, sample_size) if sample_size > 0 else []
             o = dirty_column.loc[sample_indices].astype(str).fillna("") if sample_indices else pd.Series(dtype=str)
             cl = cleaned_column.loc[sample_indices].astype(str).fillna("") if sample_indices else pd.Series(dtype=str)
             chg = (o != cl).map(lambda x: "1" if x else "0")
@@ -437,6 +445,7 @@ class MultiAgentCleaning:
             return llm_needs_correction, feedback_target, correction_instructions
         if not callable(self.hitl_callback):
             return llm_needs_correction, feedback_target, correction_instructions
+        sampler = self._sampler("validation_review", task_key, attempt_idx)
         try:
             dirty_sample, cleaned_sample = align_dirty_cleaned_series(dirty_sample, cleaned_sample)
             all_indices = list(dirty_sample.index)
@@ -446,14 +455,14 @@ class MultiAgentCleaning:
             changed_target = max(0, int(getattr(self.config, "sample_size_validator_changed", 0)))
             random_target = max(0, int(getattr(self.config, "sample_size_validator_random", 0)))
             changed_take = min(len(changed_indices), changed_target)
-            selected_changed = random.sample(changed_indices, changed_take) if changed_take > 0 else []
+            selected_changed = sampler.sample(changed_indices, changed_take) if changed_take > 0 else []
             remaining = [idx for idx in all_indices if idx not in set(selected_changed)]
             random_take = min(len(remaining), random_target)
-            selected_random = random.sample(remaining, random_take) if random_take > 0 else []
+            selected_random = sampler.sample(remaining, random_take) if random_take > 0 else []
             sample_indices = selected_changed + selected_random
             if not sample_indices:
                 sample_size = min(len(dirty_sample), max(1, int(self.config.sample_size_validator)))
-                sample_indices = random.sample(all_indices, sample_size) if sample_size > 0 else []
+                sample_indices = sampler.sample(all_indices, sample_size) if sample_size > 0 else []
             sample_df = pd.DataFrame(
                 {
                     "original": dirty_sample.loc[sample_indices].astype(str).fillna("") if sample_indices else [],
@@ -675,7 +684,7 @@ class MultiAgentCleaning:
                         f"ready_for_validation={'yes' if cleaned_column is not None else 'no'}"
                     )
                 if reviewed_code.strip() != (final_code_str or "").strip():
-                    exec_result = LLMCodingAgent._execute_code(reviewed_code, df, col)
+                    exec_result = await LLMCodingAgent._execute_code_async(reviewed_code, df, col)
                     if isinstance(exec_result, pd.Series):
                         cleaned_column = exec_result
                         final_code_str = reviewed_code
@@ -838,7 +847,8 @@ class MultiAgentCleaning:
 
             last_attempt = attempt == (self.config.max_cleaning_attempts - 1)
             needs_correction, feedback_target, correction_instructions, new_validator_history, validator_raw = await self.validation_agent.validate_async(
-                col, df[col], cleaned_column, column_type, messages=validator_history, last_attempt=last_attempt)
+                col, df[col], cleaned_column, column_type, messages=validator_history, last_attempt=last_attempt,
+                attempt=attempt)
             validator_history = new_validator_history
             if self._hitl_applies_to_column(col) and not self.config.enable_user_validation:
                 self._emit_trace(
@@ -1067,7 +1077,7 @@ class MultiAgentCleaning:
             if cleaned_targets is not None and self._hitl_applies_to_fd_task(target_cols):
                 reviewed_code = self._request_hitl_code_review_fd(task_key, target_cols, attempt, _final_code_str or "")
                 if reviewed_code.strip() != (_final_code_str or "").strip():
-                    exec_result = LLMCodingAgent._execute_code(reviewed_code, df, columns=target_cols)
+                    exec_result = await LLMCodingAgent._execute_code_async(reviewed_code, df, target_cols)
                     if isinstance(exec_result, pd.DataFrame):
                         cleaned_targets = exec_result
                         _final_code_str = reviewed_code
@@ -1210,7 +1220,8 @@ class MultiAgentCleaning:
                 cleaned_targets=cleaned_targets,
                 task_info=task_info,
                 messages=validator_history,
-                last_attempt=last_attempt)
+                last_attempt=last_attempt,
+                attempt=attempt)
             validator_history = new_validator_history
             if self._hitl_applies_to_fd_task(target_cols) and not self.config.enable_user_validation:
                 self._emit_trace(

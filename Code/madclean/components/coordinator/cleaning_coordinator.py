@@ -30,18 +30,48 @@ class CleaningCoordinator:
         }
     
     async def _tracked_col_task(self, col, profile, df_cleaned):
-        col, cleaned_series, status_msg = await self.multi_agent_loop._run_column_cleaning_async(
-            df_cleaned, col, profile
-        )
+        try:
+            col, cleaned_series, status_msg = await self.multi_agent_loop._run_column_cleaning_async(
+                df_cleaned, col, profile
+            )
+        except Exception as exc:
+            # One broken column must not end the run: report it failed and keep its original values.
+            cleaned_series = None
+            status_msg = self._record_task_failure(
+                col, exc, {"datatype": profile.semantic_type, "already_clean": False}
+            )
         self._update_progress(message=status_msg)
         return col, cleaned_series
-        
+
     async def _tracked_multi_col_task(self, df_cleaned, task_info, column_tasks_map, successfully_applied_cols):
-        target_cols, cleaned_df, status_msg = await self._multi_col_task_wrapper(
-            df_cleaned, task_info, column_tasks_map, successfully_applied_cols
-        )
+        try:
+            target_cols, cleaned_df, status_msg = await self._multi_col_task_wrapper(
+                df_cleaned, task_info, column_tasks_map, successfully_applied_cols
+            )
+        except Exception as exc:
+            target_cols, cleaned_df = task_info.target_columns, None
+            status_msg = self._record_task_failure(
+                task_info.verbose_key, exc, {"target_columns": task_info.target_columns}
+            )
         self._update_progress(message=status_msg)
         return target_cols, cleaned_df
+
+    def _record_task_failure(self, key: str, exc: Exception, identity: dict) -> str:
+        """Writes a FAILED report entry and trace event for a task that raised, and returns its log message."""
+        reason = f"{type(exc).__name__}: {exc}"
+        self.multi_agent_loop.cleaning_report[key] = {
+            **identity,
+            "cleaned": False,
+            "attempts": 0,
+            "generated_code": "",
+            "cleaning_validated": False,
+            "trace_steps": [{"id": "finished", "title": "Finished", "status": "failed", "output": reason}],
+            "reason": reason,
+        }
+        self.multi_agent_loop._emit_trace(
+            {"column": key, "step_id": "finished", "title": "Finished", "status": "failed", "output": reason}
+        )
+        return f"[{key}] FAILED cleaning: {reason}"
     
     async def _run_with_semaphore(self, coro):
             async with self.semaphore:

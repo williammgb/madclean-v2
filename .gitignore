@@ -9,6 +9,7 @@ __pycache__/
 Code/gui/uploaded_files/
 Code/gui/.web/
 Code/gui/.states/
+Code/data/cleaned/
 
 # Tooling caches and build output
 .pytest_cache/

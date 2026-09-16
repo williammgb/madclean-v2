@@ -124,6 +124,23 @@ browser_check() {
   echo "browser: page rendered, $(grep -c "CONSOLE" .work/gates/smoke-console.log) console messages, none are errors"
 }
 
+# One benchmark run of one dataset with the real model from .env (costs API tokens).
+# Not a gate: it never stamps, but its result line goes into the journal.
+live_run() {
+  dataset=$1
+  mkdir -p .work/gates
+  log=.work/gates/live.log
+  rm -f "$log.code"
+  started=$(date +%s)
+  { py python -m evaluation.live_run "$dataset" && echo 0 > "$log.code" || echo $? > "$log.code"; } 2>&1 | tee "$log"
+  code=$(cat "$log.code" 2>/dev/null || echo 1)
+  took=$(( $(date +%s) - started ))
+  if [ "$code" -eq 0 ]; then result=passed; else result=failed; fi
+  said=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1 | tr -d '\033' | cut -c1-200)
+  journal "live $dataset $result (${took}s): $said"
+  return "$code"
+}
+
 usage() {
   cat <<'USAGE'
 usage: ./run <task> [args]
@@ -133,6 +150,7 @@ usage: ./run <task> [args]
   full    the full gate — ruff, then every test at real size
   smoke   run madclean --help, start madclean-ui and wait until it answers
   check   lint one file:  ./run check path/to/file.py
+  live    one real-model benchmark run, costs API tokens:  ./run live beers
 USAGE
 }
 
@@ -145,6 +163,9 @@ case "$task" in
   fast)  gate fast fast_gate "$@" ;;
   full)  gate full full_gate "$@" ;;
   smoke) gate smoke smoke_gate ;;
+  live)
+    if [ -z "${1:-}" ]; then echo "usage: ./run live <dataset>" >&2; exit 1; fi
+    live_run "$1" ;;
   check)
     case "${1:-}" in
       *.py) uv run --project Code --frozen ruff check "$1" ;;

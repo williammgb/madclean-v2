@@ -14,7 +14,7 @@ class DataProfiler:
                  multi_col_cleaners: list[MultiColumnCleaner] = None):
         self.config = config
         self.type_detector = SemanticTypeDetection()
-        self.data_sampler = DataSampler(sample_sizes=self.config.sample_sizes) 
+        self.data_sampler = DataSampler(sample_sizes=self.config.sample_sizes, seed=self.config.sampling_seed)
         self.single_col_cleaners = single_col_cleaners if single_col_cleaners is not None else []
         self.multi_col_cleaners = multi_col_cleaners if multi_col_cleaners is not None else []
          

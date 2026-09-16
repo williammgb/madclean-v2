@@ -23,7 +23,7 @@ LLM_CLIENT_MAP = {
     },
     "Qwen_9B": {
         "class": OpenAIClient, 
-        "default_model": "qwen/qwen3.5-9b7", 
+        "default_model": "qwen/qwen3.5-9b",
         "role": "assistant",
         "base_url": "https://openrouter.ai/api/v1",
         "api_key_name": "OPENROUTER_API_KEY"

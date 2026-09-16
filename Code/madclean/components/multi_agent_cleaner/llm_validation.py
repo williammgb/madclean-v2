@@ -8,7 +8,7 @@ from madclean.llm.llm_clients import BaseLLMClient
 from madclean.components.coordinator.prompt_generation import PromptGeneration
 from madclean.components.domain.schema import MultiColumnTask
 from madclean.config.settings import CleaningConfig
-from madclean.utils.helpers import llm_sampling_kwargs_from_config
+from madclean.utils.helpers import llm_sampling_kwargs_from_config, seeded_random
 
 class CodeOutputValidation(BaseModel):
     """Defines the required JSON output strcuture for verification of Gemini API."""
@@ -75,7 +75,8 @@ class LLMValidationAgent:
                cleaned_column: pd.Series,
                column_type: str, 
                messages: list[dict[str, str]] | None = None,
-               last_attempt: bool = False) -> tuple[bool, str | None, str| None, list[dict[str, str]], str]: 
+               last_attempt: bool = False,
+               attempt: int = 0) -> tuple[bool, str | None, str| None, list[dict[str, str]], str]:
         """
         Compares dirty and cleaned columns and validates cleaning operations.
         If validator detects undesired changes, it sends feedback to the corresponding LLM agent.
@@ -96,6 +97,7 @@ class LLMValidationAgent:
             max_sample_size=self.config.sample_size_validator,
             random_sample_size=self.config.sample_size_validator_random,
             changed_sample_size=self.config.sample_size_validator_changed,
+            rng=seeded_random(self.config.sampling_seed, "validation", col, attempt),
         )
         hints = getattr(self.config, "recommender_column_hints", None) or {}
         if isinstance(hints, dict):
@@ -141,7 +143,8 @@ class LLMValidationAgent:
                 cleaned_targets: pd.DataFrame,
                 task_info: MultiColumnTask,
                 messages: list[dict[str, str]] | None = None,
-                last_attempt: bool = False) -> tuple[bool, str | None, str | None, list[dict[str, str]], str]:
+                last_attempt: bool = False,
+                attempt: int = 0) -> tuple[bool, str | None, str | None, list[dict[str, str]], str]:
         """
         Compares dirty and cleaned column pairs and validates cleaning operations.
         If validator detects undesired changes, it sends feedback to the corresponding LLM agent.
@@ -157,6 +160,7 @@ class LLMValidationAgent:
             max_sample_size=self.config.sample_size_validator,
             random_sample_size=self.config.sample_size_validator_random,
             changed_sample_size=self.config.sample_size_validator_changed,
+            rng=seeded_random(self.config.sampling_seed, "validation", task_info.verbose_key, attempt),
         )
         messages.append({"role": "user", "content": prompt})
         # 2. Call Validation Agent

@@ -5,6 +5,7 @@ from typing import Callable, cast
 from madclean.components.coordinator.prompts import *
 from madclean.utils.helpers import (
     format_list_for_prompt,
+    format_prompt_template,
     align_dirty_cleaned_series,
     align_dirty_cleaned_dataframe,
 )
@@ -47,7 +48,8 @@ class PromptGeneration:
         context_str = "\n" + "\n\n".join(additional_context).strip() + "\n" if additional_context else ""
         uc = (user_constraints or "").strip()
         le = (labeled_examples or "").strip()
-        final_prompt = recommender_prompt_template.format(
+        final_prompt = format_prompt_template(
+            recommender_prompt_template,
             column_name=col,
             column_sample=column_sample,
             additional_context=context_str,
@@ -68,7 +70,8 @@ class PromptGeneration:
         context_str = "\n".join(formatted_context).strip()
         # 2. Assemble outlier prompt block
         outlier_prompt_template = OUTLIER_PROMPT_TEMPLATE
-        final_prompt = outlier_prompt_template.format(
+        final_prompt = format_prompt_template(
+                outlier_prompt_template,
                 median=outlier_data.median,
                 mad=outlier_data.mad,
                 outliers=outliers,
@@ -83,7 +86,8 @@ class PromptGeneration:
                 return "\n".join(data_with_lines)
             return ""
         coding_prompt_template = CODING_PROMPT_TEMPLATE
-        final_prompt = coding_prompt_template.format(column_name=col,
+        final_prompt = format_prompt_template(coding_prompt_template,
+                                                     column_name=col,
                                                      column_type=column_type,
                                                      summary=recommender_data['summary'] if recommender_data['summary'] is not None else "",
                                                      error_types=format_data(recommender_data['error_types']),
@@ -98,7 +102,9 @@ class PromptGeneration:
             column_type: str, last_attempt: bool = False,
             max_sample_size: int = 150,
             random_sample_size: int = 60,
-            changed_sample_size: int = 90) -> str:
+            changed_sample_size: int = 90,
+            rng: random.Random | None = None) -> str:
+        sampler = rng if rng is not None else random
         PROMPT_MAP = {
         "DATETIME": "DATETIME",
         "BOOLEAN": "BOOLEAN",
@@ -124,14 +130,14 @@ class PromptGeneration:
             if str(a) != str(b):
                 changed_indices.append(idx)
         changed_take = min(len(changed_indices), max(0, changed_sample_size))
-        selected_changed = random.sample(changed_indices, changed_take) if changed_take > 0 else []
+        selected_changed = sampler.sample(changed_indices, changed_take) if changed_take > 0 else []
         remaining = [idx for idx in all_indices if idx not in set(selected_changed)]
         random_take = min(len(remaining), max(0, random_sample_size))
-        selected_random = random.sample(remaining, random_take) if random_take > 0 else []
+        selected_random = sampler.sample(remaining, random_take) if random_take > 0 else []
         sample_indices = selected_changed + selected_random
         if not sample_indices:
             sample_size = min(len(all_indices), max_sample_size)
-            sample_indices = random.sample(all_indices, sample_size) if sample_size > 0 else []
+            sample_indices = sampler.sample(all_indices, sample_size) if sample_size > 0 else []
         if max_sample_size > 0 and len(sample_indices) > max_sample_size:
             sample_indices = sample_indices[:max_sample_size]
         dirty_sample = dirty_series.loc[sample_indices].tolist()
@@ -149,7 +155,8 @@ class PromptGeneration:
         # 3. Instantiate prompt template
         prompt_type = PROMPT_MAP.get(column_type)
         prompt_template = VALIDATION_PROMPT_TEMPLATES.get(prompt_type)
-        final_prompt = prompt_template.format(
+        final_prompt = format_prompt_template(
+            prompt_template,
             last_attempt_msg=last_attempt_msg if last_attempt else "",
             column_name=col,
             column_comparison_sample=column_comparison_str
@@ -190,11 +197,12 @@ class PromptGeneration:
                     task_info: MultiColumnTask, last_attempt: bool, 
                     max_sample_size: int = 150,
                     random_sample_size: int = 60,
-                    changed_sample_size: int = 90) -> str:
+                    changed_sample_size: int = 90,
+                    rng: random.Random | None = None) -> str:
         """Enables multiple multi-column cleaning components to use this function."""
         task_type = task_info.task_type
         comparison_str = self._generate_multi_col_comparison(
-            dirty_target, cleaned_target, max_sample_size, random_sample_size, changed_sample_size)
+            dirty_target, cleaned_target, max_sample_size, random_sample_size, changed_sample_size, rng)
         if task_type == 'FD':
             return self._create_prompt_validation_fd(task_info, last_attempt, comparison_str)
         else:
@@ -207,11 +215,13 @@ class PromptGeneration:
         max_sample_size: int,
         random_sample_size: int,
         changed_sample_size: int,
+        rng: random.Random | None = None,
     ) -> str:
         """
         Generates comparision string for any number of columns.
         Format: dirty_col1, dirty_col2 => clean_col1, clean_col2
         """
+        sampler = rng if rng is not None else random
         dirty_target, cleaned_target = align_dirty_cleaned_dataframe(dirty_target, cleaned_target)
         # 1. Sample dataset
         all_indices = list(dirty_target.index)
@@ -229,14 +239,14 @@ class PromptGeneration:
             if changed:
                 changed_indices.append(idx)
         changed_take = min(len(changed_indices), max(0, changed_sample_size))
-        selected_changed = random.sample(changed_indices, changed_take) if changed_take > 0 else []
+        selected_changed = sampler.sample(changed_indices, changed_take) if changed_take > 0 else []
         remaining = [idx for idx in all_indices if idx not in set(selected_changed)]
         random_take = min(len(remaining), max(0, random_sample_size))
-        selected_random = random.sample(remaining, random_take) if random_take > 0 else []
+        selected_random = sampler.sample(remaining, random_take) if random_take > 0 else []
         sample_indices = selected_changed + selected_random
         if not sample_indices:
             sample_size = min(len(all_indices), max_sample_size)
-            sample_indices = random.sample(all_indices, sample_size) if sample_size > 0 else []
+            sample_indices = sampler.sample(all_indices, sample_size) if sample_size > 0 else []
         if max_sample_size > 0 and len(sample_indices) > max_sample_size:
             sample_indices = sample_indices[:max_sample_size]
         # 2. Format values to correct string format
@@ -301,13 +311,15 @@ class PromptGeneration:
             header_str = ",".join(df.columns)
             violations = fd_violation_data.get('violations', [])
             violations_str = _format_violations_for_prompt(violations)
-            return template.format(
+            return format_prompt_template(
+                template,
                 **fmt_kwargs,
                 column_header=header_str,
                 violations=violations_str,
             )
         else:
-            return template.format(
+            return format_prompt_template(
+                template,
                 **fmt_kwargs,
                 column_header="-",
                 violations="No violations",
@@ -315,7 +327,8 @@ class PromptGeneration:
 
     def _create_prompt_coding_fd(self, task_info: MultiColumnTask, recommender_data: dict, allowed_packages: str) -> str:
         fd_data = cast(FDResult, task_info.data)
-        return FD_CODING_PROMPT_TEMPLATE.format(
+        return format_prompt_template(
+            FD_CODING_PROMPT_TEMPLATE,
             lhs=fd_data.lhs,
             rhs=fd_data.rhs,
             summary=recommender_data['summary'],
@@ -331,7 +344,8 @@ class PromptGeneration:
             "\nThis is the final validation attempt. "
             "If no undesired changes have occured, approve the columns as clean (set 'needs_correction' to False) even if some minor errors remain. "
             "Since partial correction without undesired changes is preferred over reverting to the original column.\n")
-        return FD_VALIDATION_PROMPT_TEMPLATE.format(
+        return format_prompt_template(
+            FD_VALIDATION_PROMPT_TEMPLATE,
             lhs=lhs,
             rhs=rhs,
             last_attempt_msg=last_attempt_msg if last_attempt else "",

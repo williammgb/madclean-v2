@@ -7,7 +7,6 @@ from typing import Callable
 from pathlib import Path
 import pandas as pd
 # local imports
-from madclean.config.settings import VERBOSE
 from madclean.llm.llm_registry import LLM_CLIENT_MAP
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.pipeline import Pipeline
@@ -21,7 +20,7 @@ class EvaluationPipeline:
                  datasets: dict[str, dict[str, str | Path]],
                  baselines: list[str],
                  replication_count: int = 5,
-                 verbose: bool = VERBOSE):
+                 verbose: bool = True):
         self.datasets = datasets
         self.baselines = baselines
         self.replication_count = replication_count

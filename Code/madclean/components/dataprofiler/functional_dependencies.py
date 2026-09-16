@@ -92,8 +92,8 @@ class FunctionalDependencies:
         imputation_data = {'count': imputation_count}
         # 5. Only return data if FD needs to be enforced. If it has no violations/imputables, return None
         if (violation_data['count'] > 0 or imputation_data['count'] > 0):
-            fd.violation_count = violation_data['count'] 
-            fd.imputable_count = imputation_data['count']
+            fd.violations_count = violation_data['count']
+            fd.imputables_count = imputation_data['count']
             fd.violation_data = violation_data
             fd.imputation_data = imputation_data
             task_info.data = fd

@@ -48,6 +48,9 @@ class CleaningConfig:
         }
     })
 
+    # None keeps sampling random on every run; a number makes the samples each agent sees repeatable.
+    sampling_seed: Optional[int] = None
+
     sample_size_validator: int = 150
     sample_size_validator_random: int = 60
     sample_size_validator_changed: int = 90

@@ -1,0 +1,75 @@
+{
+  "project": "madclean-v2",
+  "updated": "2026-09-16",
+  "slices": [
+    {
+      "id": 0,
+      "name": "skeleton",
+      "state": "in-progress",
+      "commit": null,
+      "checks": [
+        {"claim": "./run setup creates the uv environment on Python 3.12 from uv.lock (frozen), including the spaCy model", "passes": true, "evidence": "./run setup printed 'Checked 98 packages'; uv run python printed CPython 3.12.14, spacy 3.8.7, en_core_web_sm model 3.8.0 loaded"},
+        {"claim": ".gitattributes is in place and all 14 benchmark CSVs are committed byte-identical to their source repos", "passes": true, "evidence": "git hash-object over Code/data/benchmark_datasets/*.csv: 14 of 14 match the blob hashes in hqahtan/COSC-Thesis-William, 0 differ"},
+        {"claim": "a test re-scores stored beers_cleaned.csv (run 1) and matches detailed_results/eval_results_1.json", "passes": true, "evidence": "./run fast: tests/test_golden_scores.py::[beers-run1] passed; ./run full also passed the other 15 stored runs"},
+        {"claim": "madclean --help runs and madclean-ui serves a page on port 3000", "passes": true, "evidence": "./run smoke printed 'cli: madclean --help ran' and 'browser: page rendered, 7 console messages, none are errors'"},
+        {"claim": "the fast gate passes", "passes": true, "evidence": "./run fast: '2 passed, 21 deselected, 1 warning in 9.48s' (gate 12s warm)"},
+        {"claim": "the full gate passes, and its real duration is recorded in SPEC.md", "passes": true, "evidence": "./run full: '23 passed, 2 warnings in 234.17s' (gate 236s, recorded in SPEC.md Verification)"},
+        {"claim": "./run smoke starts the real entrypoint and it comes up", "passes": true, "evidence": "./run smoke: 'gui: page rendered in the browser with no console errors; backend /ping answered' (49s), no listener left on 3000 or 8000"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "bug fixes and offline end-to-end test",
+      "state": "planned",
+      "commit": null,
+      "checks": [
+        {"claim": "a column typed COLLECTION no longer crashes prompt creation, checked by a property test with random braces", "passes": false, "evidence": null},
+        {"claim": "one column raising an exception leaves the other columns cleaned and that column marked failed", "passes": false, "evidence": null},
+        {"claim": "evaluation_pipeline.py and evaluate_files.py import and run", "passes": false, "evidence": null},
+        {"claim": "generated code runs off the event loop, and a fake-LLM run with 10 columns is faster than the thesis code on the same fake", "passes": false, "evidence": null},
+        {"claim": "--save-cleaned works on a fresh clone and keeps the input file type, and saving after a stopped run does not crash", "passes": false, "evidence": null},
+        {"claim": "FD counts are stored under violations_count and imputables_count", "passes": false, "evidence": null},
+        {"claim": "sampling takes a seed from config and two fake-LLM runs with the same seed give identical output", "passes": false, "evidence": null},
+        {"claim": "the three hqahtan fixes are in, each with a test", "passes": false, "evidence": null},
+        {"claim": "one live beers run with Gemini completes and its paper-mode scores are recorded in the journal", "passes": false, "evidence": null}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "dataclasses instead of dicts",
+      "state": "planned",
+      "commit": null,
+      "checks": [
+        {"claim": "report, trace steps, token usage, model registry and scores are dataclasses", "passes": false, "evidence": null},
+        {"claim": "the duplicated report and trace blocks in multi_agent_cleaning.py are removed", "passes": false, "evidence": null},
+        {"claim": "fake-LLM pipeline output is identical before and after the refactor", "passes": false, "evidence": null}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "evaluation module",
+      "state": "planned",
+      "commit": null,
+      "checks": [
+        {"claim": "one evaluation module is used by the CLI, the GUI and the benchmark scripts", "passes": false, "evidence": null},
+        {"claim": "paper mode reproduces every committed results JSON to 4 decimals", "passes": false, "evidence": null},
+        {"claim": "strict-types mode exists and is covered by property tests", "passes": false, "evidence": null},
+        {"claim": "results include per-run scores plus mean and standard deviation", "passes": false, "evidence": null},
+        {"claim": "agent stats (attempts, validator rejections, tokens per column) are reported", "passes": false, "evidence": null},
+        {"claim": "one command re-scores MADClean and all baselines", "passes": false, "evidence": null}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "GUI rebuild",
+      "state": "planned",
+      "commit": null,
+      "checks": [
+        {"claim": "the GUI matches the approved preview: top bar, workflow rail, colour-band headers, IBM Plex Sans", "passes": false, "evidence": null},
+        {"claim": "GUI code is split into page modules and state per area", "passes": false, "evidence": null},
+        {"claim": "stop and review state are per browser session, so two tabs do not interfere", "passes": false, "evidence": null},
+        {"claim": "notebook export produces an .ipynb that runs top to bottom and reproduces the cleaned CSV", "passes": false, "evidence": null}
+      ]
+    }
+  ]
+}

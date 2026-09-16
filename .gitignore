@@ -9,3 +9,16 @@ __pycache__/
 Code/gui/uploaded_files/
 Code/gui/.web/
 Code/gui/.states/
+
+# Tooling caches and build output
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+*.egg-info/
+build/
+
+# Workflow files: only the spec, the done ledger and the journal are kept
+.work/*
+!.work/SPEC.md
+!.work/slices.json
+!.work/JOURNAL.md

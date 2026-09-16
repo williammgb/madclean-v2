@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "madclean"
 version = "0.1.0"
 description = "MADClean: Multi-Agent Data Cleaning"
-requires-python = ">=3.9"
+requires-python = ">=3.12,<3.13"
 dependencies = [
   "numpy==2.3.2",
   "pandas==2.3.2",
@@ -17,9 +17,31 @@ dependencies = [
   "google-genai==1.39.1",
   "protobuf==5.29.5",
   "spacy==3.8.7",
+  "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
   "fuzzywuzzy==0.18.0",
   "RapidFuzz==3.14.3",
+  "openpyxl==3.1.5",
   "reflex==0.8.28.post1"
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "hypothesis>=6.100,<6.156",
+  "ruff>=0.6",
+]
+
+[tool.ruff]
+extend-exclude = ["gui/.web", "gui/.states"]
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+  "slow: real-size checks that belong to the full gate only",
 ]
 
 [tool.setuptools.packages.find]

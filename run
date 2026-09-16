@@ -1,0 +1,155 @@
+#!/bin/sh
+# One entrypoint for this project. Every command a person or an agent runs goes
+# through here: one place to look, one thing to allowlist, one thing that can't
+# drift from what SPEC.md claims the commands are.
+#
+# The Python project lives in Code/; this script stays at the repo root so the
+# gate stamps and the journal land in .work/.
+set -eu
+cd "$(dirname "$0")"
+
+# A gate that passes stamps .work/gates/<task>.stamp. The commit hook compares
+# those stamps against the files being committed and refuses a commit the fast
+# gate never saw — gate output older than the code it is quoted as proving is not
+# evidence.
+stamp() {
+  mkdir -p .work/gates
+  date -u +%Y-%m-%dT%H:%M:%SZ > ".work/gates/$1.stamp"
+}
+
+# One line in .work/JOURNAL.md, the project's record of what was tested. A gate run
+# with the same result as the line just above it adds nothing, so the builder's
+# inner loop of fast-gate reruns does not bury everything else.
+journal() {
+  file=.work/JOURNAL.md
+  [ -f "$file" ] || return 0
+  last=$(grep -v '^[[:space:]]*$' "$file" | tail -n 1)
+  case "$last" in "- ${1%% (*}"*) return 0 ;; esac
+  [ -z "$(tail -c 1 "$file")" ] || echo >> "$file"
+  printf -- '- %s\n' "$1" >> "$file"
+}
+
+# gate <name> <command...>
+# Runs one gate with its output shown as it goes. A filtered run (./run fast -k name)
+# proved a subset, not the gate, so it neither stamps nor writes to the journal. A
+# full run stamps when it passes, and journals either way with the last line the
+# command printed — for most test runners, the count.
+gate() {
+  name=$1; shift
+  if [ "$filtered" -gt 0 ]; then "$@"; return; fi
+  mkdir -p .work/gates
+  log=".work/gates/$name.log"
+  rm -f "$log.code"
+  started=$(date +%s)
+  { "$@" && echo 0 > "$log.code" || echo $? > "$log.code"; } 2>&1 | tee "$log"
+  code=$(cat "$log.code" 2>/dev/null || echo 1)
+  took=$(( $(date +%s) - started ))
+  if [ "$code" -eq 0 ]; then result=passed; stamp "$name"; else result=failed; fi
+  said=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1 | tr -d '\033' | cut -c1-160)
+  journal "$name gate $result (${took}s): $said"
+  return "$code"
+}
+
+py() {
+  uv --directory Code run --frozen "$@"
+}
+
+# pytest goes through `python -m`: Windows Application Control blocks the
+# pytest.exe launcher that uv writes into the virtual environment on this machine.
+fast_gate() {
+  py ruff check . && py python -m pytest -q -m "not slow" "$@"
+}
+
+full_gate() {
+  py ruff check . && py python -m pytest -q "$@"
+}
+
+# Starts the GUI the way a person does (madclean-ui), waits until the page and the
+# backend answer, then stops the whole process tree again.
+smoke_gate() {
+  py madclean --help > /dev/null || return 1
+  echo "cli: madclean --help ran"
+  mkdir -p .work/gates
+  ui_log=.work/gates/smoke-ui.log
+  py madclean-ui > "$ui_log" 2>&1 &
+  ui_pid=$!
+  up=0
+  if curl -fsS -o /dev/null --retry 120 --retry-delay 5 --retry-connrefused --retry-all-errors --max-time 10 http://localhost:3000/ \
+     && curl -fsS -o /dev/null --max-time 10 http://localhost:8000/ping; then
+    up=1
+    browser_check || up=0
+  fi
+  winpid=$(cat "/proc/$ui_pid/winpid" 2>/dev/null || true)
+  if [ -n "$winpid" ]; then taskkill //F //T //PID "$winpid" > /dev/null 2>&1 || true; fi
+  kill "$ui_pid" 2> /dev/null || true
+  tries=0
+  while curl -fsS -o /dev/null --max-time 2 http://localhost:8000/ping 2> /dev/null \
+     || curl -fsS -o /dev/null --max-time 2 http://localhost:3000/ 2> /dev/null; do
+    tries=$((tries + 1))
+    if [ "$tries" -ge 15 ]; then
+      echo "gui: still answering 15s after shutdown, a process was left running"
+      return 1
+    fi
+    sleep 1
+  done
+  if [ "$up" -eq 1 ]; then
+    echo "gui: page rendered in the browser with no console errors; backend /ping answered"
+  else
+    echo "gui: did not come up cleanly, last lines of $ui_log:"
+    tail -n 20 "$ui_log"
+    return 1
+  fi
+}
+
+# Renders the page in headless Microsoft Edge, then fails on a missing app title or
+# any console error the page itself logged.
+browser_check() {
+  edge="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+  if [ ! -x "$edge" ]; then
+    echo "browser: Microsoft Edge not found at $edge"
+    return 1
+  fi
+  "$edge" --headless=new --disable-gpu --enable-logging=stderr --v=0 \
+    --user-data-dir="${TEMP:-/tmp}/madclean-smoke-edge" --virtual-time-budget=20000 \
+    --dump-dom http://localhost:3000/ > .work/gates/smoke-dom.html 2> .work/gates/smoke-console.log || true
+  if ! grep -q "MADClean" .work/gates/smoke-dom.html; then
+    echo "browser: rendered page does not contain MADClean"
+    return 1
+  fi
+  if grep "CONSOLE" .work/gates/smoke-console.log | grep "localhost:3000" | grep -qi "ERROR\|Uncaught"; then
+    echo "browser: console errors from the page:"
+    grep "CONSOLE" .work/gates/smoke-console.log | grep "localhost:3000" | grep -i "ERROR\|Uncaught" | cut -c1-240
+    return 1
+  fi
+  echo "browser: page rendered, $(grep -c "CONSOLE" .work/gates/smoke-console.log) console messages, none are errors"
+}
+
+usage() {
+  cat <<'USAGE'
+usage: ./run <task> [args]
+
+  setup   install Python 3.12 and the locked dependencies (uv sync --frozen)
+  fast    the fast gate — ruff, then tests not marked slow (under ~60s, no network)
+  full    the full gate — ruff, then every test at real size
+  smoke   run madclean --help, start madclean-ui and wait until it answers
+  check   lint one file:  ./run check path/to/file.py
+USAGE
+}
+
+task="${1:-}"
+[ $# -gt 0 ] && shift
+filtered=$#
+
+case "$task" in
+  setup) uv --directory Code sync --frozen ;;
+  fast)  gate fast fast_gate "$@" ;;
+  full)  gate full full_gate "$@" ;;
+  smoke) gate smoke smoke_gate ;;
+  check)
+    case "${1:-}" in
+      *.py) uv run --project Code --frozen ruff check "$1" ;;
+      *) exit 0 ;;
+    esac ;;
+  ""|-h|--help|help) usage ;;
+  *) echo "run: unknown task '$task'" >&2; usage >&2; exit 1 ;;
+esac

@@ -116,3 +116,11 @@ while its section has no `built:` line.
 - you decided: the per-call token counts each model client returns stay a plain dict; only the totals per agent become a dataclass.
 - you decided: only the thesis scorer gets typed scores in slice 2; the GUI scorer waits for slice 3, which replaces it.
 - you decided: the two identical copies of the human-review sampling code are merged in slice 2; the third copy, which only dependency tasks would reach, stays as it is.
+
+## Slice 1 — bug fixes and offline end-to-end test
+- [F15] plan-check found: returned no journal lines (its reply was 38 characters) — read the reply, or relaunch it if it died
+- F15 rejected: this plan-check ran against the slice 2 plan (the heading above it is the hook's, slice 1 is unchanged); it finished and its report arrived as a hand-back message with the two findings below.
+- [F16] plan-check found: the spec says records convert to dicts with `asdict` at the GUI edge, but the slice 2 plan uses a hand-written `CleaningReport.to_dict()` for the report, and that deviation was not recorded in the spec.
+- F16 fixed: the spec's records decision now says trace events use `asdict` and the run report uses `CleaningReport.to_dict()`, because the GUI prints that dict and it has to keep the thesis's flat shape and key order.
+- [F17] plan-check found: the slice 2 done-means demands 7 equivalence scenarios in the fast gate, although the plan's own fallback can move 3 of them to the full gate.
+- F17 fixed: that done-means line now requires all 8 scenarios to pass, with 7 in the fast gate, or 4 if the fallback is applied, and all 8 in the full gate.

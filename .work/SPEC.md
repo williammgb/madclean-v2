@@ -36,7 +36,7 @@ Measured by env-doctor on 2026-09-16.
 - NOT ported from hqahtan: recommender returning `None` history for already-clean columns
 - data files: `.gitattributes` marks `*.csv` as `-text` (byte-identical everywhere); tax, adult, restaurants committed with plain git
 - layout: keep `Code/madclean`, `Code/gui`, `Code/evaluation`; tests in `Code/tests`; `./run` at repo root
-- internal records: stdlib `@dataclass`; pydantic only for parsing model JSON; `asdict` at the GUI edge
+- internal records: stdlib `@dataclass`; pydantic only for parsing model JSON; records are converted back to plain dicts at the GUI edge — `asdict` for trace events, and `CleaningReport.to_dict()` for the run report, because the GUI prints that dict and it must keep the thesis's flat shape, key order and absent-when-unset keys
 - offline tests: scripted fake LLM client implementing `BaseLLMClient`
 - one failing column: marked failed in the report, keeps original values, other columns continue
 - evaluation: one module shared by CLI, GUI and benchmark scripts; paper mode is default and reproduces committed JSON exactly (0.0 where undefined); strict-types mode added; display shows "—" for undefined; per-run JSON plus mean and standard deviation

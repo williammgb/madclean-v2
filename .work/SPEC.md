@@ -56,7 +56,7 @@ Measured by env-doctor on 2026-09-16.
 - ask before adding any dependency not listed in Stack
 
 ## Verification
-Fast gate: ./run fast     # < 60s, no network — ruff (E9,F63,F7,F82,W605); pytest -m "not slow": unit + property tests, fake-LLM pipeline on beers, seven refactor-equivalence scenarios, re-score one stored beers run vs committed JSON — measured 28s warm (slice 2)
+Fast gate: ./run fast     # < 60s, no network — ruff (E9,F63,F7,F82,W605); pytest -m "not slow": unit + property tests, fake-LLM pipeline on beers, seven refactor-equivalence scenarios, re-score one stored beers run vs committed JSON — measured 29s warm (slice 2)
 Full gate: ./run full     # background, minutes — ruff; pytest incl. slow: re-score all stored MADClean/ablation/baseline outputs vs committed JSON, profile all 7 datasets, the full beers equivalence scenario — measured 110s (slice 2)
 Smoke:     ./run smoke    # `madclean --help`; start madclean-ui; wait for :3000 and :8000/ping; render in headless Edge, fail on console errors; stop and confirm nothing still answers (the GUI build is proved here) — measured 125s on first start (slice 0)
 Live:      ./run live beers  # manual only, real Gemini calls, once after slice 1

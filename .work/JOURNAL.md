@@ -144,3 +144,20 @@ while its section has no `built:` line.
 - decided: the report is converted to the thesis's flat dictionary at exactly two points in the GUI, checked by grep and by the smoke launch, so the rest of the GUI keeps reading the shape it was written for.
 - found: the dependency-task failure entry used to list its generated code before its validation flag, unlike every other dependency entry; the record type fixes the order, which the references accept because they compare by key, not by position.
 - measured: the gates got much faster on the new interpreter — fast 28s for 87 tests, full 110s for 112 tests, smoke 51s.
+
+## Slice 1 — bug fixes and offline end-to-end test
+- [F18] final-check found: returned no journal lines (its reply was 745 characters) — read the reply, or relaunch it if it died
+- F18 rejected: final-check finished; its verdict and journal block arrived as a hand-back message, and its findings are recorded below under slice 2.
+- fast gate passed (30s): 88 passed, 24 deselected, 1 warning in 29.03s
+
+## Slice 2 — dataclasses instead of dicts
+- found: plan-drift and edge-hunter were both killed by the agent runner after ten minutes without progress, so both passes were done by hand instead.
+- plan-drift, by hand: every file in the plan's list was touched and nothing planned was skipped; the diff touches two files beyond the list — `Code/pyproject.toml`, the approved environment repair, and `.work/SPEC.md`, which the workflow requires updating — and no other.
+- edge-hunter, by hand: nothing outside the two GUI edge lines still reads a record or a registry entry as a dictionary; the five remaining `cleaning_report[...]` writes all assign record objects, the GUI's own `report.items()` runs on the converted dictionary, the SAGED and empty-metrics dictionaries were deliberately left alone, and `evaluation/live_run.py` reads only `run_framework`'s dictionary.
+- [F19] final-check verdict: FIX FIRST — the slice 2 ledger's fast-gate and "-k records" counts quoted runs made before the last test was added, so the committed tree had never had a fast-gate run of its own.
+- F19 fixed: `./run fast` was re-run at the committed tree and the ledger now quotes what it printed — 88 passed in 29.03s, and 4 tests under `-k records`. The full gate and the smoke gate had already run after every code edit, so no behaviour was ever in doubt; the counts were.
+- noted by final-check: no test in the slice was weakened — every test edit is a type adaptation, no assertion was removed and none was loosened; P3 even adds a bound.
+- noted by final-check: the references are substantive rather than stubs (the human-review scenario alone pins 19 report steps, 33 trace events and 12 review payloads), and a missing reference is written and then fails the test, so nothing can be captured silently.
+- noted by final-check: `total_usage` is now always on the report, where the thesis set it only once tokens had been spent, so a cancelled or zero-token run gains two keys; every consumer defaults safely and no scenario pins that case.
+- noted by final-check: `evaluation/evaluation.py`'s `__main__` block now prints a dataclass instead of a dictionary; no gate runs it and it points at a path that does not exist.
+- F20 fixed: the user-validation scenario's callback raises for the two dependency columns, which the pipeline swallows and treats as "needs correction"; that was accidental and is now spelled out in a comment, rather than re-captured, so the reference keeps its provenance on pre-refactor code.

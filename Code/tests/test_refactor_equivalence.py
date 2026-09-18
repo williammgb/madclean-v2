@@ -446,6 +446,9 @@ def test_user_validation(tmp_path, fast_env):
 
     def decide(payload):
         column = payload["column"]
+        # The two dependency columns are deliberately absent, so this raises for them. The
+        # pipeline swallows a failing callback and treats it as "needs correction", which is
+        # the branch the reference pins for codex and cityx.
         answers = decisions[column]
         index = min(seen[column], len(answers) - 1)
         seen[column] += 1

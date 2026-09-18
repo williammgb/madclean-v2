@@ -18,7 +18,7 @@ from madclean.components.domain.schema import MultiColumnTask, ColumnProfile, FD
 from madclean.components.dataprofiler.dataprofiler import DataProfiler
 from madclean.components.dataprofiler.outlier_detection import OutlierDetection
 from madclean.components.dataprofiler.functional_dependencies import FunctionalDependencies
-from madclean.evaluation.dataset_evaluation import (
+from madclean.evaluation import (
     check_frames_compatible,
     compute_cleaning_metrics,
     format_pct,

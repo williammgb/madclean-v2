@@ -3,6 +3,7 @@ import asyncio
 import json
 import random
 import time
+from contextvars import ContextVar
 from functools import partial
 # Local imports
 from madclean.llm.llm_clients import BaseLLMClient
@@ -14,10 +15,16 @@ from madclean.components.domain.report import (
     AgentTokenUsage,
     ColumnReport,
     FDReport,
+    TokenUsage,
     TraceEvent,
     TraceStep,
 )
 from madclean.utils.helpers import align_dirty_cleaned_series, seeded_random
+
+# Which column or dependency task the calls of this asyncio task belong to. Columns are cleaned
+# concurrently through one shared set of agents, so the task's own context is the only place that
+# knows whose tokens are being counted. Each asyncio task gets its own copy.
+_current_task_key: ContextVar[str | None] = ContextVar("madclean_task_key", default=None)
 
 class MultiAgentCleaning:
     """Multi-Agent LLM Cleaning Coordinator that coordinates the workflow between the LLM agents."""
@@ -40,6 +47,9 @@ class MultiAgentCleaning:
         self.user_validation_callback = user_validation_callback
         self.hitl_callback = hitl_callback
         self.token_usage = AgentTokenUsage()
+        # Tokens per column or dependency task, for the agent statistics. It is kept beside the
+        # report rather than inside it, so the report's dictionary form does not change shape.
+        self.per_task_usage: dict[str, TokenUsage] = {}
         self._token_lock = asyncio.Lock()
         if agent_specs:
             recommender = agent_specs.get("recommender")
@@ -65,6 +75,7 @@ class MultiAgentCleaning:
 
     def reset_token_usage(self):
         self.token_usage = AgentTokenUsage()
+        self.per_task_usage = {}
 
     @staticmethod
     def _trace_text(payload) -> str:
@@ -582,9 +593,14 @@ class MultiAgentCleaning:
     async def _update_token_count(self, agent, input_tokens, output_tokens):
         async with self._token_lock:
             getattr(self.token_usage, agent).add(input_tokens, output_tokens)
+            key = _current_task_key.get()
+            if key is not None:
+                self.per_task_usage.setdefault(key, TokenUsage()).add(input_tokens, output_tokens)
     
     async def _run_column_cleaning_async(self, df: pd.DataFrame, col: str, column_profile: ColumnProfile) -> tuple[str, pd.Series | None, str]:
-        """Manages the cleaning and verification workflow for a single column. This is the core interaction loop."""      
+        """Manages the cleaning and verification workflow for a single column. This is the core interaction loop."""
+        # Every model call made from here on is this column's, for the token statistics.
+        _current_task_key.set(col)
         column_type = column_profile.semantic_type
         recommender_history = None
         coder_history = None
@@ -875,6 +891,8 @@ class MultiAgentCleaning:
         _final_code_str = ""
         target_cols = task_info.target_columns
         task_key = task_info.verbose_key
+        # Every model call made from here on belongs to this dependency task.
+        _current_task_key.set(task_key)
         trace_steps: list[TraceStep] = []
         fd_recommender_api_failure_summary: str | None = None
         # 1. Run multi-agent cleaning loop. Start with RecommenderAgent

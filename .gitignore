@@ -10,6 +10,7 @@ gui/uploaded_files/
 gui/.web/
 gui/.states/
 data/cleaned/
+evaluation/results/scoreboard.json
 
 # Tooling caches and build output
 .pytest_cache/

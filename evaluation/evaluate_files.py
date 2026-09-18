@@ -12,7 +12,8 @@ from madclean.llm.llm_registry import LLM_CLIENT_MAP
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.pipeline import Pipeline
 from madclean.utils.console import configure_console
-from .evaluation import CleaningEvaluation
+from madclean.evaluation import Evaluator
+from madclean.evaluation.datasets import BENCHMARKS, as_paths
 
 class EvaluationPipeline:
     """Evaluation pipeline for when all cleaned datasets are already available as stored files."""
@@ -34,7 +35,7 @@ class EvaluationPipeline:
             } for method in self.all_methods
         }
         
-    def run_framework(self, dataset, evaluator: CleaningEvaluation):
+    def run_framework(self, dataset, evaluator: Evaluator):
         """Runs my custom data cleaning framework."""
         base_dir = Path(__file__).resolve().parent # evaluation dir
         file_path = base_dir / "results" / dataset / 'avg_eval_results.json'
@@ -42,7 +43,7 @@ class EvaluationPipeline:
             results = json.load(f)
         return results
 
-    def evaluate_baselines(self, baseline: str, dataset: str, evaluator: CleaningEvaluation):
+    def evaluate_baselines(self, baseline: str, dataset: str, evaluator: Evaluator):
         base_dir = Path(__file__).resolve().parent # evaluation folder
         method_dir = base_dir / "baselines" / baseline / "data"
         # 1. Try to load runtime
@@ -64,7 +65,7 @@ class EvaluationPipeline:
             try:
                 pred_error_mask = pd.read_csv(file_path, encoding="utf-8").astype(bool)
                 # Compare predicted mask vs ground truth mask
-                detection_metrics = self._compute_detection_only(evaluator._errors_mask, pred_error_mask)
+                detection_metrics = self._compute_detection_only(evaluator.errors, pred_error_mask)
                 return {**detection_metrics, 'runtime_seconds': runtime}
             except Exception as e:
                 print(f"Error evaluating SAGED: {e}")
@@ -77,7 +78,7 @@ class EvaluationPipeline:
                 return self._get_empty_metrics(error_msg="Cleaned file does not exist")
             try:
                 cleaned_df = pd.read_csv(file_path, encoding="utf-8")
-                eval_results, _, _ = evaluator.evaluate(cleaned_df)
+                eval_results = evaluator.evaluate(cleaned_df).overall
                 return {**asdict(eval_results), 'runtime_seconds': runtime}
             except Exception as e:
                 print(f"Error evaluating {baseline}: {e}")
@@ -135,10 +136,10 @@ class EvaluationPipeline:
         # 1. Setup evaluators for each dataset
         evaluators = {}
         for dataset, config in self.datasets.items():
-            evaluators[dataset] = CleaningEvaluation(
-                config['dirty_path'], 
-                config['ground_truth_path'], 
-                numeric_cols=config['numeric_cols']
+            evaluators[dataset] = Evaluator(
+                config['dirty_path'],
+                config['ground_truth_path'],
+                numeric_columns=config['numeric_cols'],
             )
         # 2. Run and evaluate framework
         for dataset, config in self.datasets.items():
@@ -166,30 +167,9 @@ class EvaluationPipeline:
 
 if __name__ == "__main__":
     configure_console()
-    BASE_DIR = Path(__file__).resolve().parent.parent / "data" / "benchmark_datasets"
-    datasets_to_evaluate = {
-        "hospital": {
-            "dirty_path": BASE_DIR / "hospital_dirty.csv",
-            "ground_truth_path": BASE_DIR / "hospital_gt.csv",
-            "numeric_cols": {"ProviderNumber", "ZipCode", "PhoneNumber", "Score", "Sample"}
-        },
-        "beers": {
-            "dirty_path": BASE_DIR / "beers_dirty.csv",
-            "ground_truth_path": BASE_DIR / "beers_gt.csv",
-            "numeric_cols": {"id", "ounces", "abv", "ibu", "brewery_id"}
-        },
-        "movies": {
-            "dirty_path": BASE_DIR / "movies_dirty.csv",
-            "ground_truth_path": BASE_DIR / "movies_gt.csv",
-            "numeric_cols": {"Year", "Duration", "RatingValue", "RatingCount"}
-        },
-        "rayyan": {
-            "dirty_path": BASE_DIR / "rayyan_dirty.csv",
-            "ground_truth_path": BASE_DIR / "rayyan_gt.csv",
-            "numeric_cols": {"id", "article_jvolumn", "article_jissue"}
-        }
-    }
-    
+    datasets_to_evaluate = {name: as_paths(name) for name in BENCHMARKS}
+
+
     baselines_to_run = ["raha_baran", "holoclean", "retclean", "cocoon", "saged"]
 
     evaluation_pipeline = EvaluationPipeline(

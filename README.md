@@ -114,10 +114,27 @@ backend on `http://localhost:8000`.
 | `./run full` | lint, then the whole suite at real size |
 | `./run smoke` | start the CLI and the UI and check that both answer |
 | `./run check <file.py>` | lint one file |
+| `./run score` | re-score every stored run and baseline, offline, in both scoring modes |
 | `./run live <dataset>` | one real-model benchmark run — this costs API tokens |
 
 No test in `./run fast` or `./run full` calls a real model; they all run against a scripted fake
 client, so the suite is free to run and deterministic.
+
+## Evaluation
+
+`madclean/evaluation/` scores a cleaned dataset against its ground truth, and everything that
+reports a number — the command line, the web interface and the benchmark scripts — goes through it.
+It scores in two modes:
+
+- **paper** — the comparison the thesis used, so the committed results reproduce exactly: missing
+  on both sides matches, the columns a benchmark declares numeric compare as numbers, everything
+  else compares as it is.
+- **strict** — the type has to agree as well. A column left as text where the ground truth holds
+  numbers is counted wrong, which is invisible in paper mode.
+
+`./run score` re-scores every stored MADClean run and every baseline in both modes and prints one
+table, with the mean and the standard deviation over the runs of each dataset. It reads stored
+files only: no model is called and no baseline is re-run.
 
 ## Security note
 

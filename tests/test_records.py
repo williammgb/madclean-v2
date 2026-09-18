@@ -7,8 +7,9 @@ import pandas as pd
 from hypothesis import given
 from hypothesis import strategies as st
 
-from evaluation.evaluation import CleaningEvaluation
 from fake_llm import FakeLLMClient
+from madclean.evaluation import Evaluator
+from madclean.evaluation.scoring import count_scores
 from madclean.components.domain.report import (
     AgentTokenUsage,
     CleaningReport,
@@ -173,14 +174,8 @@ def mask_triples(draw):
 def test_scores_keep_the_committed_key_structure_and_plain_number_types(masks):
     errors_mask, changes_mask, equal_mask = masks
 
-    # _compute_metrics reads nothing but its arguments, so it needs no loaded dataset.
-    scores = CleaningEvaluation._compute_metrics(
-        None,
-        errors_mask=errors_mask,
-        changes_mask=changes_mask,
-        equal_mask=equal_mask,
-        total_size=errors_mask.size,
-    )
+    # The counting reads nothing but its three masks, so it needs no loaded dataset.
+    scores = count_scores(errors_mask, changes_mask, equal_mask, errors_mask.size)
     data = asdict(scores)
 
     assert list(data) == list(SECTION_KEYS)
@@ -234,7 +229,9 @@ def test_a_run_hands_back_dataclasses_and_not_dicts(tmp_path):
     assert events and all(isinstance(event, TraceEvent) for event in events)
     assert all(isinstance(spec, LLMSpec) for spec in LLM_CLIENT_MAP.values())
 
-    evaluator = CleaningEvaluation(dirty_path, tmp_path / "small_gt.csv", numeric_cols={"numbers"})
-    overall, per_column, _ = evaluator.evaluate(cleaned)
-    assert isinstance(overall, Scores)
-    assert per_column and all(isinstance(scores, Scores) for scores in per_column.values())
+    evaluator = Evaluator(dirty_path, tmp_path / "small_gt.csv", numeric_columns={"numbers"})
+    evaluation = evaluator.evaluate(cleaned)
+    assert isinstance(evaluation.overall, Scores)
+    assert evaluation.per_column and all(
+        isinstance(scores, Scores) for scores in evaluation.per_column.values()
+    )

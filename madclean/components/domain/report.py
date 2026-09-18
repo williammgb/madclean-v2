@@ -111,6 +111,10 @@ class CleaningReport:
     cancelled: bool = False
     runtime_seconds: float | None = None
     total_usage: TokenUsage | None = None
+    # Tokens per column and per dependency task, for the agent statistics. Deliberately left out of
+    # to_dict(): the dictionary form is what the GUI reads and what the equivalence references pin,
+    # and it keeps the thesis's shape.
+    per_task_usage: dict[str, TokenUsage] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         """The flat dictionary the thesis returned: one key per entry, then the run's own fields.

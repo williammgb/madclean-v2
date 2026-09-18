@@ -5,20 +5,15 @@ from pathlib import Path
 
 import pytest
 
-from evaluation.evaluation import CleaningEvaluation
+from madclean.evaluation import BENCHMARKS, Evaluator
 from madclean.utils.helpers import load_dataset
 
 CODE_DIR = Path(__file__).resolve().parents[1]
 DATASETS_DIR = CODE_DIR / "data" / "benchmark_datasets"
 RESULTS_DIR = CODE_DIR / "evaluation" / "results"
 
-# Same numeric columns as the thesis evaluation run (evaluation/evaluation_pipeline.py).
-NUMERIC_COLUMNS = {
-    "hospital": {"ProviderNumber", "ZipCode", "PhoneNumber", "Score", "Sample"},
-    "beers": {"id", "ounces", "abv", "ibu", "brewery_id"},
-    "movies": {"Year", "Duration", "RatingValue", "RatingCount"},
-    "rayyan": {"id", "article_jvolumn", "article_jissue"},
-}
+# The numeric columns the thesis scored with now live with the scorer; these are those sets.
+NUMERIC_COLUMNS = {name: set(found.numeric_columns) for name, found in BENCHMARKS.items()}
 
 
 def _stored_runs():
@@ -34,7 +29,7 @@ def evaluator_for():
 
     def get(dataset):
         if dataset not in cache:
-            cache[dataset] = CleaningEvaluation(
+            cache[dataset] = Evaluator(
                 DATASETS_DIR / f"{dataset}_dirty.csv",
                 DATASETS_DIR / f"{dataset}_gt.csv",
                 NUMERIC_COLUMNS[dataset],
@@ -58,7 +53,8 @@ def _mismatches(actual, expected, prefix=""):
 def test_stored_cleaned_output_reproduces_committed_scores(evaluator_for, dataset, run):
     name = f"{dataset}_cleaned.csv" if run == 1 else f"{dataset}_cleaned_{run}.csv"
     cleaned = load_dataset(RESULTS_DIR / dataset / "data" / name)
-    overall, per_column, _ = evaluator_for(dataset).evaluate(cleaned)
+    evaluation = evaluator_for(dataset).evaluate(cleaned)
+    overall, per_column = evaluation.overall, evaluation.per_column
 
     details = RESULTS_DIR / dataset / "detailed_results"
     committed_overall = json.loads((details / f"eval_results_{run}.json").read_text(encoding="utf-8"))

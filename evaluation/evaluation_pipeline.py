@@ -11,31 +11,12 @@ from madclean.llm.llm_registry import LLM_CLIENT_MAP
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.pipeline import Pipeline
 from madclean.utils.console import configure_console
-from .evaluation import CleaningEvaluation
+from madclean.evaluation import Evaluator
+from madclean.evaluation.datasets import BENCHMARKS, DATA_DIR, as_paths
 
-BASE_DIR = Path(__file__).resolve().parent.parent / "data" / "benchmark_datasets"
-DATASETS = {
-    "hospital": {
-        "dirty_path": BASE_DIR / "hospital_dirty.csv",
-        "ground_truth_path": BASE_DIR / "hospital_gt.csv",
-        "numeric_cols": {"ProviderNumber", "ZipCode", "PhoneNumber", "Score", "Sample"}
-    },
-    "beers": {
-        "dirty_path": BASE_DIR / "beers_dirty.csv",
-        "ground_truth_path": BASE_DIR / "beers_gt.csv",
-        "numeric_cols": {"id", "ounces", "abv", "ibu", "brewery_id"}
-    },
-    "movies": {
-        "dirty_path": BASE_DIR / "movies_dirty.csv",
-        "ground_truth_path": BASE_DIR / "movies_gt.csv",
-        "numeric_cols": {"Year", "Duration", "RatingValue", "RatingCount"}
-    },
-    "rayyan": {
-        "dirty_path": BASE_DIR / "rayyan_dirty.csv",
-        "ground_truth_path": BASE_DIR / "rayyan_gt.csv",
-        "numeric_cols": {"id", "article_jvolumn", "article_jissue"}
-    }
-}
+BASE_DIR = DATA_DIR
+# The datasets and the columns each one declares numeric now live with the scorer that uses them.
+DATASETS = {name: as_paths(name) for name in BENCHMARKS}
 
 class EvaluationPipeline:
     """Evaluation pipeline to run once. When all datasets are available already, use evaluate_files.py"""
@@ -57,7 +38,7 @@ class EvaluationPipeline:
             } for method in self.all_methods
         }
         
-    def run_framework(self, dirty_path: str | Path, evaluator: CleaningEvaluation):
+    def run_framework(self, dirty_path: str | Path, evaluator: Evaluator):
         """Runs my custom data cleaning framework."""
         llm_config = LLM_CLIENT_MAP[LLM_CLIENT_NAME]
         start_time = time.perf_counter()
@@ -69,14 +50,14 @@ class EvaluationPipeline:
         if cleaned_df is None:
             return self._get_empty_metrics(error_msg="Pipeline returned None")
         
-        eval_results, _, _ = evaluator.evaluate(cleaned_df)
+        eval_results = evaluator.evaluate(cleaned_df).overall
         total_usage = report.total_usage if report is not None else None
         performance_dict = {**asdict(eval_results),
                             "token_usage": asdict(total_usage) if total_usage is not None else {},
                             "runtime_seconds": runtime}
         return performance_dict
 
-    def evaluate_baselines(self, baseline: str, dataset: str, evaluator: CleaningEvaluation):
+    def evaluate_baselines(self, baseline: str, dataset: str, evaluator: Evaluator):
         base_dir = Path(__file__).resolve().parent # evaluation folder
         method_dir = base_dir / "baselines" / baseline / "data"
         # 1. Try to load runtime
@@ -98,7 +79,7 @@ class EvaluationPipeline:
             try:
                 pred_error_mask = pd.read_csv(file_path, encoding="utf-8").astype(bool) # UPDATE NAMES
                 # Compare predicted mask vs ground truth mask
-                detection_metrics = self._compute_detection_only(evaluator._errors_mask, pred_error_mask)
+                detection_metrics = self._compute_detection_only(evaluator.errors, pred_error_mask)
                 return {**detection_metrics, 'runtime_seconds': runtime}
             except Exception as e:
                 print(f"Error evaluating SAGED: {e}")
@@ -111,7 +92,7 @@ class EvaluationPipeline:
                 return self._get_empty_metrics(error_msg="Cleaned file does not exist")
             try:
                 cleaned_df = pd.read_csv(file_path)
-                eval_results, _, _ = evaluator.evaluate(cleaned_df)
+                eval_results = evaluator.evaluate(cleaned_df).overall
                 return {**asdict(eval_results), 'runtime_seconds': runtime}
             except Exception as e:
                 print(f"Error evaluating {baseline}: {e}")
@@ -169,10 +150,10 @@ class EvaluationPipeline:
         # 1. Setup evaluators for each dataset
         evaluators = {}
         for dataset, config in self.datasets.items():
-            evaluators[dataset] = CleaningEvaluation(
-                config['dirty_path'], 
-                config['ground_truth_path'], 
-                numeric_cols=config['numeric_cols']
+            evaluators[dataset] = Evaluator(
+                config['dirty_path'],
+                config['ground_truth_path'],
+                numeric_columns=config['numeric_cols'],
             )
         # 2. Run and evaluate framework
         for r in range(self.replication_count):

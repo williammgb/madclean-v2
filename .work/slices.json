@@ -51,15 +51,15 @@
     {
       "id": 3,
       "name": "evaluation module",
-      "state": "planned",
+      "state": "in-progress",
       "commit": null,
       "checks": [
-        {"claim": "one evaluation module is used by the CLI, the GUI and the benchmark scripts", "passes": false, "evidence": null},
-        {"claim": "paper mode reproduces every committed results JSON to 4 decimals", "passes": false, "evidence": null},
-        {"claim": "strict-types mode exists and is covered by property tests", "passes": false, "evidence": null},
-        {"claim": "results include per-run scores plus mean and standard deviation", "passes": false, "evidence": null},
-        {"claim": "agent stats (attempts, validator rejections, tokens per column) are reported", "passes": false, "evidence": null},
-        {"claim": "one command re-scores MADClean and all baselines", "passes": false, "evidence": null}
+        {"claim": "one evaluation module is used by the CLI, the GUI and the benchmark scripts", "passes": true, "evidence": "grep -rn 'CleaningEvaluation|dataset_evaluation|_errors_mask' over all .py outside .venv: 0 hits (both old scorers are deleted); grep -rln 'madclean.evaluation' lists exactly 10 files — gui/gui/state.py, evaluation/evaluation_pipeline.py, evaluation/evaluate_files.py and 7 test files; ./run full: 144 passed and ./run smoke: page rendered with no console errors"},
+        {"claim": "paper mode reproduces every committed results JSON to 4 decimals", "passes": true, "evidence": "./run full: test_golden_scores 16 stored runs pass through Evaluator (overall and per column, abs_tol 5e-5), and test_aggregate reproduces all four avg_eval_results.json files from the four runs each"},
+        {"claim": "strict-types mode exists and is covered by property tests", "passes": true, "evidence": "./run fast -k strict: 11 passed — 7 table cases for the paper/strict difference, a property over random frames that strict never calls a cell equal that paper does not, score bounds in both modes, and beers counting 5,056 strict errors against 3,401 paper errors"},
+        {"claim": "results include per-run scores plus mean and standard deviation", "passes": true, "evidence": "./run full -k aggregate: 7 passed (mean inside range, population standard deviation, 0.0 for one run, the four committed averages reproduced, and every averaged field carrying runs=4 with its spread)"},
+        {"claim": "agent stats (attempts, validator rejections, tokens per column) are reported", "passes": true, "evidence": "./run fast -k agent_stats: 5 passed — per-column attempts and outcomes match the report, per-column tokens sum to the run total, a scripted validator rejection is counted once against the column that got it, and to_dict() gains no key"},
+        {"claim": "one command re-scores MADClean and all baselines", "passes": true, "evidence": "./run score prints both modes for madclean and 4 baselines over 4 datasets with mean ± sd and writes scoreboard.json; ./run full -k scoreboard: 5 passed, including that its beers paper numbers equal avg_eval_results.json"}
       ]
     },
     {

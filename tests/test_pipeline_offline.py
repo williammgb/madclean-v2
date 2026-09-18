@@ -193,10 +193,12 @@ class _StubLoop:
     def __init__(self):
         self.cleaning_report = {}
         self.token_usage = AgentTokenUsage()
+        self.per_task_usage = {}
         self.traces = []
 
     def reset_token_usage(self):
         self.token_usage = AgentTokenUsage()
+        self.per_task_usage = {}
 
     def _emit_trace(self, event):
         self.traces.append(event)

@@ -235,6 +235,7 @@ class CleaningCoordinator:
             return df_cleaned, CleaningReport(
                 entries=self.multi_agent_loop.cleaning_report,
                 token_usage=self.multi_agent_loop.token_usage,
+                per_task_usage=self.multi_agent_loop.per_task_usage,
             )
         except asyncio.CancelledError:
             # Cooperative cancellation: return whatever progress we have so far.
@@ -242,6 +243,7 @@ class CleaningCoordinator:
             return df_cleaned, CleaningReport(
                 entries=self.multi_agent_loop.cleaning_report,
                 token_usage=self.multi_agent_loop.token_usage,
+                per_task_usage=self.multi_agent_loop.per_task_usage,
                 cancelled=True,
             )
 

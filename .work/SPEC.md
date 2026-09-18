@@ -94,8 +94,18 @@ Proved by: both gates, plus the smoke launch and the live beers run
 
 Proved by: both gates, plus the smoke launch
 
+## Slice 3 — done means
+- [x] one module scores for the CLI, the GUI and the benchmark scripts, and nothing else compares cells
+- [x] paper mode reproduces every committed results JSON to 4 decimals, per run and averaged
+- [x] strict-types mode exists — the ground truth column's type has to match — and is covered by property tests
+- [x] results carry per-run scores plus mean and standard deviation
+- [x] agent stats report attempts, validator rejections and tokens per column
+- [x] `./run score` re-scores MADClean and every baseline from stored files, offline
+- [x] the report dictionary and the eight equivalence references are unchanged
+
+Proved by: both gates, plus the smoke launch and `./run score`
+
 ## Later slices
-- slice 3: evaluation module, strict mode, mean ± std, agent stats (attempts, validator rejections, tokens per column), one command re-scores all methods
 - slice 4: GUI rebuild from the preview, notebook export, per-session state
 
 ## Open

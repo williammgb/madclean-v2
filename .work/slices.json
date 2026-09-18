@@ -51,8 +51,8 @@
     {
       "id": 3,
       "name": "evaluation module",
-      "state": "in-progress",
-      "commit": null,
+      "state": "done",
+      "commit": "a1932fd",
       "checks": [
         {"claim": "one evaluation module is used by the CLI, the GUI and the benchmark scripts", "passes": true, "evidence": "grep -rn 'CleaningEvaluation|dataset_evaluation|_errors_mask' over all .py outside .venv: 0 hits (both old scorers are deleted); grep -rln 'madclean.evaluation' lists exactly 10 files — gui/gui/state.py, evaluation/evaluation_pipeline.py, evaluation/evaluate_files.py and 7 test files; ./run full: 144 passed and ./run smoke: page rendered with no console errors"},
         {"claim": "paper mode reproduces every committed results JSON to 4 decimals", "passes": true, "evidence": "./run full: test_golden_scores 16 stored runs pass through Evaluator (overall and per column, abs_tol 5e-5), and test_aggregate reproduces all four avg_eval_results.json files from the four runs each"},

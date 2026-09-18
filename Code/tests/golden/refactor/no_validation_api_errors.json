@@ -1,0 +1,394 @@
+{
+  "table": {
+    "csv": "colplain,colrec503,colcode503,colboom,codex,cityx\r\nCOLPLAIN_ANNA ,colrec503_anna ,colcode503_anna ,colboom_anna ,A1,DELFT\r\nCOLPLAIN_BRAM,colrec503_Bram,colcode503_Bram,colboom_Bram,A1,DELFT\r\nCOLPLAIN_CEES,colrec503_cees,colcode503_cees,colboom_cees,A1,DELFT\r\nCOLPLAIN_DIRK ,colrec503_Dirk ,colcode503_Dirk ,colboom_Dirk ,B2,GOUDA\r\nCOLPLAIN_EVA,colrec503_eva,colcode503_eva,colboom_eva,B2,GOUDA\r\nCOLPLAIN_FEMKE,colrec503_Femke,colcode503_Femke,colboom_Femke,B2,GOUDA\r\nCOLPLAIN_GIJS,colrec503_gijs,colcode503_gijs,colboom_gijs,C3,BREDA\r\nCOLPLAIN_HANNA,colrec503_Hanna,colcode503_Hanna,colboom_Hanna,C3,BREDA\r\nCOLPLAIN_IVO,colrec503_ivo,colcode503_ivo,colboom_ivo,C3,BREDA\r\nCOLPLAIN_JOOST,colrec503_Joost,colcode503_Joost,colboom_Joost,D4,EMMEN\r\nCOLPLAIN_KIM ,colrec503_Kim ,colcode503_Kim ,colboom_Kim ,D4,EMMEN\r\nCOLPLAIN_LARS,colrec503_lars,colcode503_lars,colboom_lars,D4,EMMEN\r\nCOLPLAIN_MILA,colrec503_Mila,colcode503_Mila,colboom_Mila,E5,ALMERE\r\nCOLPLAIN_NOOR,colrec503_noor,colcode503_noor,colboom_noor,E5,ALMERE\r\nCOLPLAIN_OLAF,colrec503_Olaf,colcode503_Olaf,colboom_Olaf,E5,LELYSTAD\r\nCOLPLAIN_PIM,colrec503_pim,colcode503_pim,colboom_pim,F6,VENLO\r\nCOLPLAIN_QUINN,colrec503_Quinn,colcode503_Quinn,colboom_Quinn,F6,VENLO\r\nCOLPLAIN_ROOS,colrec503_roos,colcode503_roos,colboom_roos,F6,\r\nCOLPLAIN_SAM,colrec503_Sam,colcode503_Sam,colboom_Sam,G7,ZWOLLE\r\nCOLPLAIN_TESS,colrec503_tess,colcode503_tess,colboom_tess,G7,ZWOLLE\r\n",
+    "dtypes": {
+      "colplain": "object",
+      "colrec503": "object",
+      "colcode503": "object",
+      "colboom": "object",
+      "codex": "object",
+      "cityx": "object"
+    }
+  },
+  "report": {
+    "colplain": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        }
+      ]
+    },
+    "colrec503": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": false,
+      "attempts": 2,
+      "generated_code": "",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "api_unavailable",
+          "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "api_unavailable",
+          "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+        }
+      ]
+    },
+    "colcode503": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": false,
+      "attempts": 2,
+      "generated_code": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds.",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "api_unavailable",
+          "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "api_unavailable",
+          "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+        }
+      ]
+    },
+    "colboom": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": false,
+      "attempts": 0,
+      "generated_code": "",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "finished",
+          "title": "Finished",
+          "status": "failed",
+          "output": "RuntimeError: prompt creation broke for colboom"
+        }
+      ],
+      "reason": "RuntimeError: prompt creation broke for colboom"
+    },
+    "codex": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        }
+      ]
+    },
+    "cityx": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        }
+      ]
+    },
+    "codex → cityx": {
+      "target_columns": [
+        "codex",
+        "cityx"
+      ],
+      "cleaned": false,
+      "attempts": 2,
+      "cleaning_validated": false,
+      "generated_code": "",
+      "trace_steps": [
+        {
+          "id": "fd_recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "api_unavailable",
+          "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+        },
+        {
+          "id": "fd_recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "api_unavailable",
+          "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+        }
+      ]
+    },
+    "token_usage": {
+      "recommender": {
+        "input_tokens": 57826,
+        "output_tokens": 940,
+        "total_tokens": 58766
+      },
+      "coding": {
+        "input_tokens": 7644,
+        "output_tokens": 714,
+        "total_tokens": 8358
+      },
+      "validation": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      }
+    },
+    "total_usage": {
+      "input_tokens": 65470,
+      "output_tokens": 1654,
+      "total_tokens": 67124
+    }
+  },
+  "traces": {
+    "colplain": [
+      {
+        "column": "colplain",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colplain",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "colplain",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned successfully."
+      }
+    ],
+    "colrec503": [
+      {
+        "column": "colrec503",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "api_unavailable",
+        "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+      },
+      {
+        "column": "colrec503",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "api_unavailable",
+        "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+      },
+      {
+        "column": "colrec503",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+      }
+    ],
+    "colcode503": [
+      {
+        "column": "colcode503",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colcode503",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "api_unavailable",
+        "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+      },
+      {
+        "column": "colcode503",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colcode503",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "api_unavailable",
+        "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+      },
+      {
+        "column": "colcode503",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "Cleaning failed after maximum attempts."
+      }
+    ],
+    "colboom": [
+      {
+        "column": "colboom",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "RuntimeError: prompt creation broke for colboom"
+      }
+    ],
+    "codex": [
+      {
+        "column": "codex",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "codex",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "codex",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned successfully."
+      }
+    ],
+    "cityx": [
+      {
+        "column": "cityx",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "cityx",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "cityx",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned successfully."
+      }
+    ],
+    "codex → cityx": [
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "api_unavailable",
+        "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "api_unavailable",
+        "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "API error (HTTP 503 Service Unavailable): the LLM provider is temporarily unavailable. This is not a failure of the cleaning system. System will retry in a few seconds."
+      }
+    ]
+  },
+  "prompts": {
+    "coder": [
+      "0fe15350f4cc80d5ae202a6d1b313933aeb1c95c4fd6cdfe0715d73d1e8ab52d",
+      "0fe15350f4cc80d5ae202a6d1b313933aeb1c95c4fd6cdfe0715d73d1e8ab52d",
+      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
+      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
+      "c7067f02c2c5fd3d0e516aae287a7c4c5e2b324d383cde0d6518ec2ef74b6e4d"
+    ],
+    "fd_recommender": [
+      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
+      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
+      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
+      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
+      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
+      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5"
+    ],
+    "recommender": [
+      "01aa53b81423ff802ed89b41d0b5549ec35b553193a92382f95bbfffe4b62bcd",
+      "6be32aaa6f94fd41b61571c6636bc24ef4da96355fdb2e8efe78e73371361ffb",
+      "71a06bda4a9d3e01da90d699c6cb564269e7c47bf8f9e11767df71a6afd9064d",
+      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
+      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
+      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
+      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
+      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
+      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
+      "8d87fd9ed58287c0ad9477a769a03a067a243a1eed85e1cd16db34f2d6004a09",
+      "e4d831933a532bcdd037e58e49bd878ce17d66e5147ffbeaa9a2dac8870c0f21"
+    ]
+  },
+  "reviews": {}
+}

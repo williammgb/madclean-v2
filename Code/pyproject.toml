@@ -31,6 +31,12 @@ dev = [
   "ruff>=0.6",
 ]
 
+[tool.uv]
+# Windows Smart App Control blocks _ssl.pyd in uv's own CPython 3.12 build, which stops every
+# import of madclean.llm. The signed python.org 3.12 on this machine is not blocked, so uv must
+# never fall back to its managed build.
+python-preference = "only-system"
+
 [tool.ruff]
 extend-exclude = ["gui/.web", "gui/.states"]
 

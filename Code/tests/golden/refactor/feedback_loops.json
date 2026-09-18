@@ -1,0 +1,705 @@
+{
+  "table": {
+    "csv": "colcoder,colreject,colbadjson,colbreak,codex,cityx\r\ncolcoder_anna ,colreject_anna ,colbadjson_anna ,colbreak_anna ,A1,Delft\r\ncolcoder_Bram,colreject_Bram,colbadjson_Bram,colbreak_Bram,A1,Delft\r\ncolcoder_cees,colreject_cees,colbadjson_cees,colbreak_cees,A1,Delft\r\ncolcoder_Dirk ,colreject_Dirk ,colbadjson_Dirk ,colbreak_Dirk ,B2,Gouda\r\ncolcoder_eva,colreject_eva,colbadjson_eva,colbreak_eva,B2,Gouda\r\ncolcoder_Femke,colreject_Femke,colbadjson_Femke,colbreak_Femke,B2,Gouda\r\ncolcoder_gijs,colreject_gijs,colbadjson_gijs,colbreak_gijs,C3,Breda\r\ncolcoder_Hanna,colreject_Hanna,colbadjson_Hanna,colbreak_Hanna,C3,Breda\r\ncolcoder_ivo,colreject_ivo,colbadjson_ivo,colbreak_ivo,C3,Breda\r\ncolcoder_Joost,colreject_Joost,colbadjson_Joost,colbreak_Joost,D4,Emmen\r\ncolcoder_Kim ,colreject_Kim ,colbadjson_Kim ,colbreak_Kim ,D4,Emmen\r\ncolcoder_lars,colreject_lars,colbadjson_lars,colbreak_lars,D4,Emmen\r\ncolcoder_Mila,colreject_Mila,colbadjson_Mila,colbreak_Mila,E5,Almere\r\ncolcoder_noor,colreject_noor,colbadjson_noor,colbreak_noor,E5,Almere\r\ncolcoder_Olaf,colreject_Olaf,colbadjson_Olaf,colbreak_Olaf,E5,Lelystad\r\ncolcoder_pim,colreject_pim,colbadjson_pim,colbreak_pim,F6,Venlo\r\ncolcoder_Quinn,colreject_Quinn,colbadjson_Quinn,colbreak_Quinn,F6,Venlo\r\ncolcoder_roos,colreject_roos,colbadjson_roos,colbreak_roos,F6,\r\ncolcoder_Sam,colreject_Sam,colbadjson_Sam,colbreak_Sam,G7,Zwolle\r\ncolcoder_tess,colreject_tess,colbadjson_tess,colbreak_tess,G7,Zwolle\r\n",
+    "dtypes": {
+      "colcoder": "object",
+      "colreject": "object",
+      "colbadjson": "object",
+      "colbreak": "object",
+      "codex": "object",
+      "cityx": "object"
+    }
+  },
+  "report": {
+    "colcoder": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 3,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: CODER\n\nCorrection instructions:\nKeep the original spacing."
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nDescribe the format more precisely."
+        },
+        {
+          "id": "recommender_3",
+          "title": "Recommender (attempt 3)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_3",
+          "title": "Coder (attempt 3)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_3",
+          "title": "Validator (attempt 3)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "colreject": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": false,
+      "attempts": 3,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nStill wrong."
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nStill wrong."
+        },
+        {
+          "id": "recommender_3",
+          "title": "Recommender (attempt 3)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_3",
+          "title": "Coder (attempt 3)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_3",
+          "title": "Validator (attempt 3)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nStill wrong."
+        }
+      ]
+    },
+    "colbadjson": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 2,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "invalid_response",
+          "output": ""
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "colbreak": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 2,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "failed",
+          "output": ""
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "codex": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "cityx": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "codex → cityx": {
+      "target_columns": [
+        "codex",
+        "cityx"
+      ],
+      "cleaned": true,
+      "attempts": 2,
+      "cleaning_validated": true,
+      "generated_code": "def clean_column(data):\n    return data",
+      "trace_steps": [
+        {
+          "id": "fd_recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+        },
+        {
+          "id": "fd_coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "fd_validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: CODER\n\nCorrection instructions:\nImpute the missing city."
+        },
+        {
+          "id": "fd_coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "fd_validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "token_usage": {
+      "recommender": {
+        "input_tokens": 159938,
+        "output_tokens": 2152,
+        "total_tokens": 162090
+      },
+      "coding": {
+        "input_tokens": 33360,
+        "output_tokens": 702,
+        "total_tokens": 34062
+      },
+      "validation": {
+        "input_tokens": 138611,
+        "output_tokens": 1153,
+        "total_tokens": 139764
+      }
+    },
+    "total_usage": {
+      "input_tokens": 331909,
+      "output_tokens": 4007,
+      "total_tokens": 335916
+    }
+  },
+  "traces": {
+    "colcoder": [
+      {
+        "column": "colcoder",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: CODER\n\nCorrection instructions:\nKeep the original spacing."
+      },
+      {
+        "column": "colcoder",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nDescribe the format more precisely."
+      },
+      {
+        "column": "colcoder",
+        "step_id": "recommender_3",
+        "title": "Recommender (attempt 3)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "coder_3",
+        "title": "Coder (attempt 3)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "colcoder",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "colreject": [
+      {
+        "column": "colreject",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colreject",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colreject",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nStill wrong."
+      },
+      {
+        "column": "colreject",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colreject",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colreject",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nStill wrong."
+      },
+      {
+        "column": "colreject",
+        "step_id": "recommender_3",
+        "title": "Recommender (attempt 3)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colreject",
+        "step_id": "coder_3",
+        "title": "Coder (attempt 3)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colreject",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nStill wrong."
+      },
+      {
+        "column": "colreject",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "Cleaning failed after maximum attempts."
+      }
+    ],
+    "colbadjson": [
+      {
+        "column": "colbadjson",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "invalid_response",
+        "output": ""
+      },
+      {
+        "column": "colbadjson",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colbadjson",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colbadjson",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "colbadjson",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "colbreak": [
+      {
+        "column": "colbreak",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colbreak",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "failed",
+        "output": ""
+      },
+      {
+        "column": "colbreak",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colbreak",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colbreak",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "colbreak",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "codex": [
+      {
+        "column": "codex",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "codex",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "codex",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "codex",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "cityx": [
+      {
+        "column": "cityx",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "cityx",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "cityx",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "cityx",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "codex → cityx": [
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: CODER\n\nCorrection instructions:\nImpute the missing city."
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "FD task cleaned and validated."
+      }
+    ]
+  },
+  "prompts": {
+    "coder": [
+      "066eeb3ecf0bd9aa6b096b09438efcfc3c58f15e4a6c633538722ccb217d4984",
+      "066eeb3ecf0bd9aa6b096b09438efcfc3c58f15e4a6c633538722ccb217d4984",
+      "066eeb3ecf0bd9aa6b096b09438efcfc3c58f15e4a6c633538722ccb217d4984",
+      "1ca60f56a53f0672344afa6f98d647c39ddad3671a52bb00e50ce486b40f4e5e",
+      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
+      "536dc59cc587b3bce668476978d6a57fe8281a44b74718251aa39a1aea2bfd3f",
+      "536dc59cc587b3bce668476978d6a57fe8281a44b74718251aa39a1aea2bfd3f",
+      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
+      "92ee328429b2fdd25dadc879313a5434c17b3bf1f5f1603e30465971738958ac",
+      "eae15545667f07e6fa0329159b2ae60a0638c8e0e09fe24252aa2adfaed8b5ae",
+      "f3fb69e00fb482f23eace4c00f813e13fe0727b2859869f2b6b281a6e43b16a4",
+      "f3fb69e00fb482f23eace4c00f813e13fe0727b2859869f2b6b281a6e43b16a4",
+      "f6066f89b7145155ab397a462c943454e5831f0d3be74d60f2ecd1291c583c40"
+    ],
+    "fd_recommender": [
+      "14cd24324be366512a571dba2abef936e4ede7bd7f2105292622b25e829b7a32"
+    ],
+    "recommender": [
+      "26ce6dce83f37a8a8028549f82d9c5c83130dc5fb4f01440445fe6f768a2d709",
+      "2ea82a89fa2f4bd9dfff154686f7d414cede91036dc286a1dd53bfe40950b483",
+      "6f4fe5f668fd152afbf26985a23496131408de4c131de696d3538e840ae3031d",
+      "71a06bda4a9d3e01da90d699c6cb564269e7c47bf8f9e11767df71a6afd9064d",
+      "81f71d324cb08f5646dea72264cc110b1509209f55a80f6eb7c06c9e86143b39",
+      "980c67db577032e9b34066db4337d2484ae99fb856f4e1ff8c44a08f3cc863c7",
+      "9c0aadf40018a3caf6aacd250a2443429f212872063f8d683436365a3373324b",
+      "dab2ff5eeb4e3b3e91f4d8265973dbc057eacac5bb8ab9697b71c24e00086c22",
+      "e4d831933a532bcdd037e58e49bd878ce17d66e5147ffbeaa9a2dac8870c0f21",
+      "ecdf9c5459142fe601ce4c90af18dbd933666cc245a596695a8075019742e134",
+      "fc7eaece845111412243ab2b7eeb78864a967df7c5bd6ef7cb58d23ed8812112",
+      "fd494395699c6e6cb8d0b9e1861a694bb404af78f1b983c1ecc1b7be48b7aff5",
+      "fefa05fe06999aef9bc82b5dea96b64c6917533549f5a3c7a7478fd13c76a481"
+    ],
+    "validator": [
+      "14a70d3f073ca4c57ebf66638bdacb39bb79e7e643da79066a689edfe86efa99",
+      "167a135dde4bd34a3f787b7fd4fdcdf5f6e45ce92b8d0e157acdb687f093dd15",
+      "206c9ccc5676de05284029be1c297dad030e0158bdcb66ca6630745fc81cd3a5",
+      "30e57fa3d3dda955bbd2b4310672ce024aef3c0ee18c328df64fd56be23ca3f4",
+      "3ec0fbf567b4b57380b99f2ee8c65128a036ecacb86ec767cfa1de61443ed6c1",
+      "637fcb2125d7182fcdc45a6d4ecd3029605e761af5c0a00be0d3738e80ebf341",
+      "87c20cf859bb10f2e9218e628e53ce3371c36b4d75d5753e408aeb4b84cb711d",
+      "8c88fa1cffbce9352d81c404207a2b49234bbd83c79d9bf1df354ba3e8dc2f10",
+      "9ee2593c2b11469edce4a6208df777fdcb250ffcc6d7988bf1c28e8c9a965300",
+      "dfe0dcfffd808a3fd6cc4a4cc721079018b55ade99c359ef1d24e168028a1ae2",
+      "ecc6e2d0098eba0d0ce3fb3963b60310279cb8b06b6ed06d6cb36a7455e348bd",
+      "fcaf29633db7e39d8aba1262ff0d946283f2cee38584112c9e25ae48fb46a45f"
+    ]
+  },
+  "reviews": {}
+}

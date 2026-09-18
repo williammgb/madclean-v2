@@ -124,3 +124,13 @@ while its section has no `built:` line.
 - F16 fixed: the spec's records decision now says trace events use `asdict` and the run report uses `CleaningReport.to_dict()`, because the GUI prints that dict and it has to keep the thesis's flat shape and key order.
 - [F17] plan-check found: the slice 2 done-means demands 7 equivalence scenarios in the fast gate, although the plan's own fallback can move 3 of them to the full gate.
 - F17 fixed: that done-means line now requires all 8 scenarios to pass, with 7 in the fast gate, or 4 if the fallback is applied, and all 8 in the full gate.
+- fast gate passed (30s): 84 passed, 24 deselected, 1 warning in 28.37s
+
+## Slice 2 — dataclasses instead of dicts
+- blocked: Windows Smart App Control started blocking `_ssl.pyd` inside uv's own build of Python 3.12, so every test that imports the model clients failed to even load; reinstalling that build got the same verdict, while Python 3.11, 3.13 and the system 3.14 were all fine.
+- you decided: repair it with the signed python.org build rather than moving the project to Python 3.13, so every pinned version stays exactly as it was.
+- fixed: Python 3.12.10 from python.org (signature checked, Python Software Foundation) was installed for this user only, the virtual environment was rebuilt on it, and `Code/pyproject.toml` now sets `[tool.uv] python-preference = "only-system"` so uv can never fall back to its blocked build. This is the one file changed outside the slice plan's list, and it is environment repair, not slice work.
+- decided: the scripted fake model answers per column and per call, instead of counting the assistant's turns as the plan suggested, because the recommender's own retries on unparseable JSON add turns of their own; counting per column keeps answers independent of how concurrent columns interleave, which was the point of the plan's rule.
+- built: eight scenarios in `Code/tests/test_refactor_equivalence.py` that drive the pipeline into named branches and record everything a caller can see — the cleaned table, the run report, the trace events per column, a hash per prompt and every review request — against reference files in `Code/tests/golden/refactor/`.
+- proved: the references were captured while `git diff --stat 59f6b1c -- Code/madclean Code/evaluation Code/gui` was empty, so they describe the code as it was before the refactor; the seven fast scenarios then passed twice unchanged (4.0s and 4.0s) and the full beers scenario passed its second run too (7.9s).
+- measured: the fast gate now takes 28s for 84 tests, down from 50s for 77, because the python.org build starts faster than uv's; that leaves room for the refactor's own tests.

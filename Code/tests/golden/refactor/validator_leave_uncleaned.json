@@ -1,0 +1,273 @@
+{
+  "table": {
+    "csv": "colstr,codex,cityx\r\ncolstr_anna ,A1,DELFT\r\ncolstr_Bram,A1,DELFT\r\ncolstr_cees,A1,DELFT\r\ncolstr_Dirk ,B2,GOUDA\r\ncolstr_eva,B2,GOUDA\r\ncolstr_Femke,B2,GOUDA\r\ncolstr_gijs,C3,BREDA\r\ncolstr_Hanna,C3,BREDA\r\ncolstr_ivo,C3,BREDA\r\ncolstr_Joost,D4,EMMEN\r\ncolstr_Kim ,D4,EMMEN\r\ncolstr_lars,D4,EMMEN\r\ncolstr_Mila,E5,ALMERE\r\ncolstr_noor,E5,ALMERE\r\ncolstr_Olaf,E5,LELYSTAD\r\ncolstr_pim,F6,VENLO\r\ncolstr_Quinn,F6,VENLO\r\ncolstr_roos,F6,\r\ncolstr_Sam,G7,ZWOLLE\r\ncolstr_tess,G7,ZWOLLE\r\n",
+    "dtypes": {
+      "colstr": "object",
+      "codex": "object",
+      "cityx": "object"
+    }
+  },
+  "report": {
+    "colstr": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": false,
+      "attempts": 1,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        }
+      ],
+      "reason": "Validator failed and strategy is leave_uncleaned"
+    },
+    "codex": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "cityx": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "codex → cityx": {
+      "target_columns": [
+        "codex",
+        "cityx"
+      ],
+      "cleaned": false,
+      "attempts": 1,
+      "cleaning_validated": false,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "trace_steps": [
+        {
+          "id": "fd_recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+        },
+        {
+          "id": "fd_coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        }
+      ],
+      "reason": "Validator failed and strategy is leave_uncleaned"
+    },
+    "token_usage": {
+      "recommender": {
+        "input_tokens": 39501,
+        "output_tokens": 737,
+        "total_tokens": 40238
+      },
+      "coding": {
+        "input_tokens": 10028,
+        "output_tokens": 952,
+        "total_tokens": 10980
+      },
+      "validation": {
+        "input_tokens": 54381,
+        "output_tokens": 364,
+        "total_tokens": 54745
+      }
+    },
+    "total_usage": {
+      "input_tokens": 103910,
+      "output_tokens": 2053,
+      "total_tokens": 105963
+    }
+  },
+  "traces": {
+    "colstr": [
+      {
+        "column": "colstr",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colstr",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "colstr",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "Validation unavailable; column left uncleaned."
+      }
+    ],
+    "codex": [
+      {
+        "column": "codex",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "codex",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "codex",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "codex",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "cityx": [
+      {
+        "column": "cityx",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "cityx",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "cityx",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "cityx",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "codex → cityx": [
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "Validation unavailable; FD task left uncleaned."
+      }
+    ]
+  },
+  "prompts": {
+    "coder": [
+      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
+      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
+      "779ea69d15229470fdc977f1cde713143157d48921b14f2d0825726ce75d0631",
+      "f6066f89b7145155ab397a462c943454e5831f0d3be74d60f2ecd1291c583c40"
+    ],
+    "fd_recommender": [
+      "8f37ac907b1c47aeb326d4c0f17a67fd620764135e6681cae4c534e9d45f7834"
+    ],
+    "recommender": [
+      "71a06bda4a9d3e01da90d699c6cb564269e7c47bf8f9e11767df71a6afd9064d",
+      "7fea477fe6d1f3a707781c0fb82ce1a65b5196c65fdcfbe7959148c8245671f4",
+      "e4d831933a532bcdd037e58e49bd878ce17d66e5147ffbeaa9a2dac8870c0f21"
+    ],
+    "validator": [
+      "0a8754f5ca8a72d2b880a4fbc890080703fd16b2d62fabf3b38026e00dd24383",
+      "34fdbf050df4065583c4524faa973d86f7078cebf6fcd93ffa160a0d92eb4ed3",
+      "4cf1da0abc15c25bed4e04a91b3e1d1aa59167c3e56a368f6a3481ff079acb7b",
+      "4e4ba900da4fc5b12b19bc5b4d956b8ccee1e939c0c382882f4479159ada34d9",
+      "8e0fd3a9434b195cd72ef9c1e4c779f149daa9f233ae18cbb2f1961efedd95d6",
+      "918f4ce2c6562d2b8dafc1fb38e0502b5db881924fd67a0ea2039625fb9e2f7e",
+      "a36c9bce8c0d5efe3d74823ac2cb03ca2c6c1c53cb9f9e33510cb4ed99e7d2a4",
+      "fcaf29633db7e39d8aba1262ff0d946283f2cee38584112c9e25ae48fb46a45f"
+    ]
+  },
+  "reviews": {}
+}

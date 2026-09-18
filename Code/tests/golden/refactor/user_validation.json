@@ -1,0 +1,2194 @@
+{
+  "table": {
+    "csv": "colcoder,colfail,codex,cityx\r\nCOLCODER_ANNA ,colfail_anna ,A1,DELFT\r\nCOLCODER_BRAM,colfail_Bram,A1,DELFT\r\nCOLCODER_CEES,colfail_cees,A1,DELFT\r\nCOLCODER_DIRK ,colfail_Dirk ,B2,GOUDA\r\nCOLCODER_EVA,colfail_eva,B2,GOUDA\r\nCOLCODER_FEMKE,colfail_Femke,B2,GOUDA\r\nCOLCODER_GIJS,colfail_gijs,C3,BREDA\r\nCOLCODER_HANNA,colfail_Hanna,C3,BREDA\r\nCOLCODER_IVO,colfail_ivo,C3,BREDA\r\nCOLCODER_JOOST,colfail_Joost,D4,EMMEN\r\nCOLCODER_KIM ,colfail_Kim ,D4,EMMEN\r\nCOLCODER_LARS,colfail_lars,D4,EMMEN\r\nCOLCODER_MILA,colfail_Mila,E5,ALMERE\r\nCOLCODER_NOOR,colfail_noor,E5,ALMERE\r\nCOLCODER_OLAF,colfail_Olaf,E5,LELYSTAD\r\nCOLCODER_PIM,colfail_pim,F6,VENLO\r\nCOLCODER_QUINN,colfail_Quinn,F6,VENLO\r\nCOLCODER_ROOS,colfail_roos,F6,\r\nCOLCODER_SAM,colfail_Sam,G7,ZWOLLE\r\nCOLCODER_TESS,colfail_tess,G7,ZWOLLE\r\n",
+    "dtypes": {
+      "colcoder": "object",
+      "colfail": "object",
+      "codex": "object",
+      "cityx": "object"
+    }
+  },
+  "report": {
+    "colcoder": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 3,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: CODER\n\nCorrection instructions:\nKeep the spacing."
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nBe precise."
+        },
+        {
+          "id": "recommender_3",
+          "title": "Recommender (attempt 3)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_3",
+          "title": "Coder (attempt 3)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_3",
+          "title": "Validator (attempt 3)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "colfail": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": false,
+      "attempts": 3,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nNo."
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nNo."
+        },
+        {
+          "id": "recommender_3",
+          "title": "Recommender (attempt 3)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_3",
+          "title": "Coder (attempt 3)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_3",
+          "title": "Validator (attempt 3)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nNo."
+        }
+      ]
+    },
+    "codex": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": false,
+      "attempts": 3,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+        },
+        {
+          "id": "recommender_3",
+          "title": "Recommender (attempt 3)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_3",
+          "title": "Coder (attempt 3)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_3",
+          "title": "Validator (attempt 3)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+        }
+      ]
+    },
+    "cityx": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": false,
+      "attempts": 3,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+        },
+        {
+          "id": "recommender_3",
+          "title": "Recommender (attempt 3)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_3",
+          "title": "Coder (attempt 3)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_3",
+          "title": "Validator (attempt 3)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+        }
+      ]
+    },
+    "codex → cityx": {
+      "target_columns": [
+        "codex",
+        "cityx"
+      ],
+      "cleaned": true,
+      "attempts": 1,
+      "cleaning_validated": true,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "trace_steps": [
+        {
+          "id": "fd_recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+        },
+        {
+          "id": "fd_coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "fd_validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "token_usage": {
+      "recommender": {
+        "input_tokens": 135187,
+        "output_tokens": 2241,
+        "total_tokens": 137428
+      },
+      "coding": {
+        "input_tokens": 33415,
+        "output_tokens": 3094,
+        "total_tokens": 36509
+      },
+      "validation": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      }
+    },
+    "total_usage": {
+      "input_tokens": 168602,
+      "output_tokens": 5335,
+      "total_tokens": 173937
+    }
+  },
+  "traces": {
+    "colcoder": [
+      {
+        "column": "colcoder",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "colcoder",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: CODER\n\nCorrection instructions:\nKeep the spacing."
+      },
+      {
+        "column": "colcoder",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "colcoder",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nBe precise."
+      },
+      {
+        "column": "colcoder",
+        "step_id": "recommender_3",
+        "title": "Recommender (attempt 3)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "coder_3",
+        "title": "Coder (attempt 3)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "colcoder",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "colcoder",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "colcoder",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated by user."
+      }
+    ],
+    "colfail": [
+      {
+        "column": "colfail",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colfail",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "colfail",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "colfail",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nNo."
+      },
+      {
+        "column": "colfail",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colfail",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "colfail",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "colfail",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nNo."
+      },
+      {
+        "column": "colfail",
+        "step_id": "recommender_3",
+        "title": "Recommender (attempt 3)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colfail",
+        "step_id": "coder_3",
+        "title": "Coder (attempt 3)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "colfail",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "colfail",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nNo."
+      },
+      {
+        "column": "colfail",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "Cleaning failed after maximum attempts."
+      }
+    ],
+    "codex": [
+      {
+        "column": "codex",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "codex",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "codex",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "codex",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+      },
+      {
+        "column": "codex",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "codex",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "codex",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "codex",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+      },
+      {
+        "column": "codex",
+        "step_id": "recommender_3",
+        "title": "Recommender (attempt 3)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "codex",
+        "step_id": "coder_3",
+        "title": "Coder (attempt 3)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "codex",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "codex",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+      },
+      {
+        "column": "codex",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "Cleaning failed after maximum attempts."
+      }
+    ],
+    "cityx": [
+      {
+        "column": "cityx",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "cityx",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "cityx",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "cityx",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+      },
+      {
+        "column": "cityx",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "cityx",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "cityx",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "cityx",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+      },
+      {
+        "column": "cityx",
+        "step_id": "recommender_3",
+        "title": "Recommender (attempt 3)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "cityx",
+        "step_id": "coder_3",
+        "title": "Coder (attempt 3)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "cityx",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "cityx",
+        "step_id": "validator_3",
+        "title": "Validator (attempt 3)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+      },
+      {
+        "column": "cityx",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "failed",
+        "output": "Cleaning failed after maximum attempts."
+      }
+    ],
+    "codex → cityx": [
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_user_validation",
+        "output": "Validation requires user review. Click this step to provide feedback."
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "fd_validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "codex → cityx",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "FD task cleaned and validated by user."
+      }
+    ]
+  },
+  "prompts": {
+    "coder": [
+      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
+      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
+      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
+      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
+      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
+      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
+      "a531fedd764f808ebb063f39e3c0c88ab966b93e9509d67de4214f52cd3c699a",
+      "b35552438a15493cc3a1cb6d29c26e2291436155e5dc6b4235bbf3faaba2d097",
+      "b35552438a15493cc3a1cb6d29c26e2291436155e5dc6b4235bbf3faaba2d097",
+      "b35552438a15493cc3a1cb6d29c26e2291436155e5dc6b4235bbf3faaba2d097",
+      "f3fb69e00fb482f23eace4c00f813e13fe0727b2859869f2b6b281a6e43b16a4",
+      "f3fb69e00fb482f23eace4c00f813e13fe0727b2859869f2b6b281a6e43b16a4",
+      "f6066f89b7145155ab397a462c943454e5831f0d3be74d60f2ecd1291c583c40"
+    ],
+    "fd_recommender": [
+      "d6fae95faaab350797686dcae24ddab267f6c2fd4f989c18b4ad037c83a9bc81"
+    ],
+    "recommender": [
+      "3f09ef1b3fbefb7bd4e2e02af75fde957bd112e370db82aa1375f96f9dbbc100",
+      "62c9a577a4a0bbcc5b7bc9e68f3b2869079b76b257edc904fa165fd1d938ab3b",
+      "71a06bda4a9d3e01da90d699c6cb564269e7c47bf8f9e11767df71a6afd9064d",
+      "7d501ec11a15933cc8b357d576c62155b17aab77aebfd89ecd2baaaa753b5a56",
+      "81f71d324cb08f5646dea72264cc110b1509209f55a80f6eb7c06c9e86143b39",
+      "853b1f3e8defddc0d3b981dd0daffdbf43a339a12c50fb6bbcb1fa8f49333d56",
+      "88abea43fed401ce10d40a6ec4e6c0f40f26a5161f2f1669423c3cd8d7301390",
+      "d5f715ffad634b29566cc42dfa4fc764b25e9181ccdd0dd949f98b1004e06ebf",
+      "e4d831933a532bcdd037e58e49bd878ce17d66e5147ffbeaa9a2dac8870c0f21",
+      "f3202be5faf41758bc10458e4f89519056ae7b19aa1b997db84ae826a7ced8eb",
+      "f9d6d71cc30d49a8aaace3a6e622b19245a92c137863d60ce346e82f2859e135"
+    ]
+  },
+  "reviews": {
+    "user_validation::colcoder": [
+      {
+        "column": "colcoder",
+        "attempt": 1,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "colcoder_Hanna",
+            "cleaned": "COLCODER_HANNA",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Bram",
+            "cleaned": "COLCODER_BRAM",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Kim ",
+            "cleaned": "COLCODER_KIM ",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Olaf",
+            "cleaned": "COLCODER_OLAF",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Dirk ",
+            "cleaned": "COLCODER_DIRK ",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Femke",
+            "cleaned": "COLCODER_FEMKE",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_noor",
+            "cleaned": "COLCODER_NOOR",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Quinn",
+            "cleaned": "COLCODER_QUINN",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_eva",
+            "cleaned": "COLCODER_EVA",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Mila",
+            "cleaned": "COLCODER_MILA",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_tess",
+            "cleaned": "COLCODER_TESS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_pim",
+            "cleaned": "COLCODER_PIM",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_ivo",
+            "cleaned": "COLCODER_IVO",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_anna ",
+            "cleaned": "COLCODER_ANNA ",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_roos",
+            "cleaned": "COLCODER_ROOS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_gijs",
+            "cleaned": "COLCODER_GIJS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Joost",
+            "cleaned": "COLCODER_JOOST",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_lars",
+            "cleaned": "COLCODER_LARS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Sam",
+            "cleaned": "COLCODER_SAM",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_cees",
+            "cleaned": "COLCODER_CEES",
+            "changed": "1"
+          }
+        ],
+        "modified_count": 20
+      },
+      {
+        "column": "colcoder",
+        "attempt": 2,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "colcoder_Dirk ",
+            "cleaned": "COLCODER_DIRK ",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Olaf",
+            "cleaned": "COLCODER_OLAF",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_cees",
+            "cleaned": "COLCODER_CEES",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_ivo",
+            "cleaned": "COLCODER_IVO",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_gijs",
+            "cleaned": "COLCODER_GIJS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Bram",
+            "cleaned": "COLCODER_BRAM",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Joost",
+            "cleaned": "COLCODER_JOOST",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Kim ",
+            "cleaned": "COLCODER_KIM ",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_anna ",
+            "cleaned": "COLCODER_ANNA ",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_eva",
+            "cleaned": "COLCODER_EVA",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_noor",
+            "cleaned": "COLCODER_NOOR",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_roos",
+            "cleaned": "COLCODER_ROOS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_tess",
+            "cleaned": "COLCODER_TESS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Femke",
+            "cleaned": "COLCODER_FEMKE",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Mila",
+            "cleaned": "COLCODER_MILA",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Quinn",
+            "cleaned": "COLCODER_QUINN",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Hanna",
+            "cleaned": "COLCODER_HANNA",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_lars",
+            "cleaned": "COLCODER_LARS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Sam",
+            "cleaned": "COLCODER_SAM",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_pim",
+            "cleaned": "COLCODER_PIM",
+            "changed": "1"
+          }
+        ],
+        "modified_count": 20
+      },
+      {
+        "column": "colcoder",
+        "attempt": 3,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "colcoder_Olaf",
+            "cleaned": "COLCODER_OLAF",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Dirk ",
+            "cleaned": "COLCODER_DIRK ",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_roos",
+            "cleaned": "COLCODER_ROOS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_ivo",
+            "cleaned": "COLCODER_IVO",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Kim ",
+            "cleaned": "COLCODER_KIM ",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Sam",
+            "cleaned": "COLCODER_SAM",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_cees",
+            "cleaned": "COLCODER_CEES",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Mila",
+            "cleaned": "COLCODER_MILA",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_pim",
+            "cleaned": "COLCODER_PIM",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_noor",
+            "cleaned": "COLCODER_NOOR",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_eva",
+            "cleaned": "COLCODER_EVA",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_lars",
+            "cleaned": "COLCODER_LARS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Bram",
+            "cleaned": "COLCODER_BRAM",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Femke",
+            "cleaned": "COLCODER_FEMKE",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Hanna",
+            "cleaned": "COLCODER_HANNA",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_gijs",
+            "cleaned": "COLCODER_GIJS",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_anna ",
+            "cleaned": "COLCODER_ANNA ",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Joost",
+            "cleaned": "COLCODER_JOOST",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_Quinn",
+            "cleaned": "COLCODER_QUINN",
+            "changed": "1"
+          },
+          {
+            "original": "colcoder_tess",
+            "cleaned": "COLCODER_TESS",
+            "changed": "1"
+          }
+        ],
+        "modified_count": 20
+      }
+    ],
+    "user_validation::colfail": [
+      {
+        "column": "colfail",
+        "attempt": 1,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "colfail_cees",
+            "cleaned": "COLFAIL_CEES",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_pim",
+            "cleaned": "COLFAIL_PIM",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_tess",
+            "cleaned": "COLFAIL_TESS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Kim ",
+            "cleaned": "COLFAIL_KIM ",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Hanna",
+            "cleaned": "COLFAIL_HANNA",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Sam",
+            "cleaned": "COLFAIL_SAM",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Quinn",
+            "cleaned": "COLFAIL_QUINN",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Bram",
+            "cleaned": "COLFAIL_BRAM",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_anna ",
+            "cleaned": "COLFAIL_ANNA ",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_ivo",
+            "cleaned": "COLFAIL_IVO",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Olaf",
+            "cleaned": "COLFAIL_OLAF",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Mila",
+            "cleaned": "COLFAIL_MILA",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_eva",
+            "cleaned": "COLFAIL_EVA",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Dirk ",
+            "cleaned": "COLFAIL_DIRK ",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Femke",
+            "cleaned": "COLFAIL_FEMKE",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_roos",
+            "cleaned": "COLFAIL_ROOS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_gijs",
+            "cleaned": "COLFAIL_GIJS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_lars",
+            "cleaned": "COLFAIL_LARS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_noor",
+            "cleaned": "COLFAIL_NOOR",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Joost",
+            "cleaned": "COLFAIL_JOOST",
+            "changed": "1"
+          }
+        ],
+        "modified_count": 20
+      },
+      {
+        "column": "colfail",
+        "attempt": 2,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "colfail_noor",
+            "cleaned": "COLFAIL_NOOR",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_gijs",
+            "cleaned": "COLFAIL_GIJS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_roos",
+            "cleaned": "COLFAIL_ROOS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_cees",
+            "cleaned": "COLFAIL_CEES",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Hanna",
+            "cleaned": "COLFAIL_HANNA",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Dirk ",
+            "cleaned": "COLFAIL_DIRK ",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Kim ",
+            "cleaned": "COLFAIL_KIM ",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Bram",
+            "cleaned": "COLFAIL_BRAM",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_anna ",
+            "cleaned": "COLFAIL_ANNA ",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_lars",
+            "cleaned": "COLFAIL_LARS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Mila",
+            "cleaned": "COLFAIL_MILA",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Sam",
+            "cleaned": "COLFAIL_SAM",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_pim",
+            "cleaned": "COLFAIL_PIM",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_ivo",
+            "cleaned": "COLFAIL_IVO",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Olaf",
+            "cleaned": "COLFAIL_OLAF",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Femke",
+            "cleaned": "COLFAIL_FEMKE",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_tess",
+            "cleaned": "COLFAIL_TESS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Quinn",
+            "cleaned": "COLFAIL_QUINN",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Joost",
+            "cleaned": "COLFAIL_JOOST",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_eva",
+            "cleaned": "COLFAIL_EVA",
+            "changed": "1"
+          }
+        ],
+        "modified_count": 20
+      },
+      {
+        "column": "colfail",
+        "attempt": 3,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "colfail_eva",
+            "cleaned": "COLFAIL_EVA",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_cees",
+            "cleaned": "COLFAIL_CEES",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Quinn",
+            "cleaned": "COLFAIL_QUINN",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Femke",
+            "cleaned": "COLFAIL_FEMKE",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Sam",
+            "cleaned": "COLFAIL_SAM",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_tess",
+            "cleaned": "COLFAIL_TESS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_gijs",
+            "cleaned": "COLFAIL_GIJS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Olaf",
+            "cleaned": "COLFAIL_OLAF",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Mila",
+            "cleaned": "COLFAIL_MILA",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_ivo",
+            "cleaned": "COLFAIL_IVO",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_pim",
+            "cleaned": "COLFAIL_PIM",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Dirk ",
+            "cleaned": "COLFAIL_DIRK ",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Joost",
+            "cleaned": "COLFAIL_JOOST",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Kim ",
+            "cleaned": "COLFAIL_KIM ",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_noor",
+            "cleaned": "COLFAIL_NOOR",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_roos",
+            "cleaned": "COLFAIL_ROOS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_anna ",
+            "cleaned": "COLFAIL_ANNA ",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_lars",
+            "cleaned": "COLFAIL_LARS",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Bram",
+            "cleaned": "COLFAIL_BRAM",
+            "changed": "1"
+          },
+          {
+            "original": "colfail_Hanna",
+            "cleaned": "COLFAIL_HANNA",
+            "changed": "1"
+          }
+        ],
+        "modified_count": 20
+      }
+    ],
+    "user_validation::codex": [
+      {
+        "column": "codex",
+        "attempt": 1,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "F6",
+            "cleaned": "F6",
+            "changed": "0"
+          },
+          {
+            "original": "A1",
+            "cleaned": "A1",
+            "changed": "0"
+          },
+          {
+            "original": "C3",
+            "cleaned": "C3",
+            "changed": "0"
+          },
+          {
+            "original": "B2",
+            "cleaned": "B2",
+            "changed": "0"
+          },
+          {
+            "original": "A1",
+            "cleaned": "A1",
+            "changed": "0"
+          },
+          {
+            "original": "G7",
+            "cleaned": "G7",
+            "changed": "0"
+          },
+          {
+            "original": "B2",
+            "cleaned": "B2",
+            "changed": "0"
+          },
+          {
+            "original": "C3",
+            "cleaned": "C3",
+            "changed": "0"
+          },
+          {
+            "original": "E5",
+            "cleaned": "E5",
+            "changed": "0"
+          },
+          {
+            "original": "G7",
+            "cleaned": "G7",
+            "changed": "0"
+          },
+          {
+            "original": "A1",
+            "cleaned": "A1",
+            "changed": "0"
+          },
+          {
+            "original": "F6",
+            "cleaned": "F6",
+            "changed": "0"
+          },
+          {
+            "original": "D4",
+            "cleaned": "D4",
+            "changed": "0"
+          },
+          {
+            "original": "D4",
+            "cleaned": "D4",
+            "changed": "0"
+          },
+          {
+            "original": "C3",
+            "cleaned": "C3",
+            "changed": "0"
+          },
+          {
+            "original": "D4",
+            "cleaned": "D4",
+            "changed": "0"
+          },
+          {
+            "original": "B2",
+            "cleaned": "B2",
+            "changed": "0"
+          },
+          {
+            "original": "F6",
+            "cleaned": "F6",
+            "changed": "0"
+          },
+          {
+            "original": "E5",
+            "cleaned": "E5",
+            "changed": "0"
+          },
+          {
+            "original": "E5",
+            "cleaned": "E5",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 0
+      },
+      {
+        "column": "codex",
+        "attempt": 2,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "F6",
+            "cleaned": "F6",
+            "changed": "0"
+          },
+          {
+            "original": "G7",
+            "cleaned": "G7",
+            "changed": "0"
+          },
+          {
+            "original": "G7",
+            "cleaned": "G7",
+            "changed": "0"
+          },
+          {
+            "original": "B2",
+            "cleaned": "B2",
+            "changed": "0"
+          },
+          {
+            "original": "D4",
+            "cleaned": "D4",
+            "changed": "0"
+          },
+          {
+            "original": "F6",
+            "cleaned": "F6",
+            "changed": "0"
+          },
+          {
+            "original": "A1",
+            "cleaned": "A1",
+            "changed": "0"
+          },
+          {
+            "original": "C3",
+            "cleaned": "C3",
+            "changed": "0"
+          },
+          {
+            "original": "D4",
+            "cleaned": "D4",
+            "changed": "0"
+          },
+          {
+            "original": "F6",
+            "cleaned": "F6",
+            "changed": "0"
+          },
+          {
+            "original": "A1",
+            "cleaned": "A1",
+            "changed": "0"
+          },
+          {
+            "original": "E5",
+            "cleaned": "E5",
+            "changed": "0"
+          },
+          {
+            "original": "B2",
+            "cleaned": "B2",
+            "changed": "0"
+          },
+          {
+            "original": "E5",
+            "cleaned": "E5",
+            "changed": "0"
+          },
+          {
+            "original": "D4",
+            "cleaned": "D4",
+            "changed": "0"
+          },
+          {
+            "original": "C3",
+            "cleaned": "C3",
+            "changed": "0"
+          },
+          {
+            "original": "E5",
+            "cleaned": "E5",
+            "changed": "0"
+          },
+          {
+            "original": "C3",
+            "cleaned": "C3",
+            "changed": "0"
+          },
+          {
+            "original": "A1",
+            "cleaned": "A1",
+            "changed": "0"
+          },
+          {
+            "original": "B2",
+            "cleaned": "B2",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 0
+      },
+      {
+        "column": "codex",
+        "attempt": 3,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "D4",
+            "cleaned": "D4",
+            "changed": "0"
+          },
+          {
+            "original": "C3",
+            "cleaned": "C3",
+            "changed": "0"
+          },
+          {
+            "original": "G7",
+            "cleaned": "G7",
+            "changed": "0"
+          },
+          {
+            "original": "F6",
+            "cleaned": "F6",
+            "changed": "0"
+          },
+          {
+            "original": "C3",
+            "cleaned": "C3",
+            "changed": "0"
+          },
+          {
+            "original": "B2",
+            "cleaned": "B2",
+            "changed": "0"
+          },
+          {
+            "original": "E5",
+            "cleaned": "E5",
+            "changed": "0"
+          },
+          {
+            "original": "G7",
+            "cleaned": "G7",
+            "changed": "0"
+          },
+          {
+            "original": "C3",
+            "cleaned": "C3",
+            "changed": "0"
+          },
+          {
+            "original": "E5",
+            "cleaned": "E5",
+            "changed": "0"
+          },
+          {
+            "original": "B2",
+            "cleaned": "B2",
+            "changed": "0"
+          },
+          {
+            "original": "D4",
+            "cleaned": "D4",
+            "changed": "0"
+          },
+          {
+            "original": "A1",
+            "cleaned": "A1",
+            "changed": "0"
+          },
+          {
+            "original": "B2",
+            "cleaned": "B2",
+            "changed": "0"
+          },
+          {
+            "original": "A1",
+            "cleaned": "A1",
+            "changed": "0"
+          },
+          {
+            "original": "D4",
+            "cleaned": "D4",
+            "changed": "0"
+          },
+          {
+            "original": "A1",
+            "cleaned": "A1",
+            "changed": "0"
+          },
+          {
+            "original": "F6",
+            "cleaned": "F6",
+            "changed": "0"
+          },
+          {
+            "original": "F6",
+            "cleaned": "F6",
+            "changed": "0"
+          },
+          {
+            "original": "E5",
+            "cleaned": "E5",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 0
+      }
+    ],
+    "user_validation::cityx": [
+      {
+        "column": "cityx",
+        "attempt": 1,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "Gouda",
+            "cleaned": "GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "Lelystad",
+            "cleaned": "LELYSTAD",
+            "changed": "1"
+          },
+          {
+            "original": "Delft",
+            "cleaned": "DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "Venlo",
+            "cleaned": "VENLO",
+            "changed": "1"
+          },
+          {
+            "original": "Breda",
+            "cleaned": "BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "Gouda",
+            "cleaned": "GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "Emmen",
+            "cleaned": "EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "Emmen",
+            "cleaned": "EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "Almere",
+            "cleaned": "ALMERE",
+            "changed": "1"
+          },
+          {
+            "original": "Zwolle",
+            "cleaned": "ZWOLLE",
+            "changed": "1"
+          },
+          {
+            "original": "Delft",
+            "cleaned": "DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "Zwolle",
+            "cleaned": "ZWOLLE",
+            "changed": "1"
+          },
+          {
+            "original": "Almere",
+            "cleaned": "ALMERE",
+            "changed": "1"
+          },
+          {
+            "original": "Breda",
+            "cleaned": "BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "Breda",
+            "cleaned": "BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "Delft",
+            "cleaned": "DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "Venlo",
+            "cleaned": "VENLO",
+            "changed": "1"
+          },
+          {
+            "original": "Emmen",
+            "cleaned": "EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "Gouda",
+            "cleaned": "GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "nan",
+            "cleaned": "nan",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 19
+      },
+      {
+        "column": "cityx",
+        "attempt": 2,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "Venlo",
+            "cleaned": "VENLO",
+            "changed": "1"
+          },
+          {
+            "original": "Delft",
+            "cleaned": "DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "Breda",
+            "cleaned": "BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "Emmen",
+            "cleaned": "EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "Delft",
+            "cleaned": "DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "Almere",
+            "cleaned": "ALMERE",
+            "changed": "1"
+          },
+          {
+            "original": "Venlo",
+            "cleaned": "VENLO",
+            "changed": "1"
+          },
+          {
+            "original": "Breda",
+            "cleaned": "BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "Zwolle",
+            "cleaned": "ZWOLLE",
+            "changed": "1"
+          },
+          {
+            "original": "Breda",
+            "cleaned": "BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "Gouda",
+            "cleaned": "GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "Gouda",
+            "cleaned": "GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "Emmen",
+            "cleaned": "EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "Gouda",
+            "cleaned": "GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "Emmen",
+            "cleaned": "EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "Delft",
+            "cleaned": "DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "Zwolle",
+            "cleaned": "ZWOLLE",
+            "changed": "1"
+          },
+          {
+            "original": "Almere",
+            "cleaned": "ALMERE",
+            "changed": "1"
+          },
+          {
+            "original": "Lelystad",
+            "cleaned": "LELYSTAD",
+            "changed": "1"
+          },
+          {
+            "original": "nan",
+            "cleaned": "nan",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 19
+      },
+      {
+        "column": "cityx",
+        "attempt": 3,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "Venlo",
+            "cleaned": "VENLO",
+            "changed": "1"
+          },
+          {
+            "original": "Almere",
+            "cleaned": "ALMERE",
+            "changed": "1"
+          },
+          {
+            "original": "Breda",
+            "cleaned": "BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "Breda",
+            "cleaned": "BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "Almere",
+            "cleaned": "ALMERE",
+            "changed": "1"
+          },
+          {
+            "original": "Emmen",
+            "cleaned": "EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "Gouda",
+            "cleaned": "GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "Delft",
+            "cleaned": "DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "Gouda",
+            "cleaned": "GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "Lelystad",
+            "cleaned": "LELYSTAD",
+            "changed": "1"
+          },
+          {
+            "original": "Breda",
+            "cleaned": "BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "Zwolle",
+            "cleaned": "ZWOLLE",
+            "changed": "1"
+          },
+          {
+            "original": "Delft",
+            "cleaned": "DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "Zwolle",
+            "cleaned": "ZWOLLE",
+            "changed": "1"
+          },
+          {
+            "original": "Delft",
+            "cleaned": "DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "Venlo",
+            "cleaned": "VENLO",
+            "changed": "1"
+          },
+          {
+            "original": "Emmen",
+            "cleaned": "EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "Gouda",
+            "cleaned": "GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "Emmen",
+            "cleaned": "EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "nan",
+            "cleaned": "nan",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 19
+      }
+    ],
+    "user_validation::codex → cityx": [
+      {
+        "column": "codex → cityx",
+        "attempt": 1,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "",
+        "sample_rows": [
+          {
+            "original": "B2, Gouda",
+            "cleaned": "B2, GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "G7, Zwolle",
+            "cleaned": "G7, ZWOLLE",
+            "changed": "1"
+          },
+          {
+            "original": "B2, Gouda",
+            "cleaned": "B2, GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "E5, Lelystad",
+            "cleaned": "E5, LELYSTAD",
+            "changed": "1"
+          },
+          {
+            "original": "C3, Breda",
+            "cleaned": "C3, BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "E5, Almere",
+            "cleaned": "E5, ALMERE",
+            "changed": "1"
+          },
+          {
+            "original": "F6, Venlo",
+            "cleaned": "F6, VENLO",
+            "changed": "1"
+          },
+          {
+            "original": "D4, Emmen",
+            "cleaned": "D4, EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "D4, Emmen",
+            "cleaned": "D4, EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "D4, Emmen",
+            "cleaned": "D4, EMMEN",
+            "changed": "1"
+          },
+          {
+            "original": "B2, Gouda",
+            "cleaned": "B2, GOUDA",
+            "changed": "1"
+          },
+          {
+            "original": "A1, Delft",
+            "cleaned": "A1, DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "E5, Almere",
+            "cleaned": "E5, ALMERE",
+            "changed": "1"
+          },
+          {
+            "original": "G7, Zwolle",
+            "cleaned": "G7, ZWOLLE",
+            "changed": "1"
+          },
+          {
+            "original": "F6, Venlo",
+            "cleaned": "F6, VENLO",
+            "changed": "1"
+          },
+          {
+            "original": "A1, Delft",
+            "cleaned": "A1, DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "C3, Breda",
+            "cleaned": "C3, BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "C3, Breda",
+            "cleaned": "C3, BREDA",
+            "changed": "1"
+          },
+          {
+            "original": "A1, Delft",
+            "cleaned": "A1, DELFT",
+            "changed": "1"
+          },
+          {
+            "original": "F6, nan",
+            "cleaned": "F6, nan",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 19
+      }
+    ]
+  }
+}

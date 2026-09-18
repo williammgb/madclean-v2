@@ -11,18 +11,37 @@ from madclean.llm.llm_clients import BaseLLMClient
 IDENTITY_CODE = "def clean_column(data):\n    return data\n"
 
 
+class ServiceUnavailable(RuntimeError):
+    """What a provider raises when it is overloaded; the agents map status 503 to an api_unavailable step."""
+
+    status_code = 503
+
+
+def first_user_text(messages) -> str:
+    """The first user turn of a prompt, which is where the agents name the column or dependency."""
+    for message in messages:
+        if message.get("role") == "user":
+            return str(message.get("content", ""))
+    return ""
+
+
 class FakeLLMClient(BaseLLMClient):
     """Scripted stand-in for a real model: answers by agent and records every prompt."""
 
-    def __init__(self, coder_code: str = IDENTITY_CODE):
+    def __init__(self, coder_code: str = IDENTITY_CODE, script=None):
         super().__init__(model_name="fake")
         self.coder_code = coder_code
+        self.script = script
         self.calls: list[tuple[str, list[dict]]] = []
 
     async def call_llm_async(self, messages, response_schema=None, temperature=None, top_p=None):
         kind = self._agent_for(response_schema)
         self.calls.append((kind, copy.deepcopy(messages)))
-        answer = self._answer(kind)
+        answer = self.script(kind, messages) if self.script is not None else None
+        if isinstance(answer, BaseException):
+            raise answer
+        if answer is None:
+            answer = self._answer(kind)
         usage = {
             "input_tokens": sum(len(str(m.get("content", ""))) for m in messages),
             "output_tokens": len(answer),

@@ -1,0 +1,1212 @@
+{
+  "table": {
+    "csv": "colclean,colgood,colbad,coldisagree,colrejected\r\ncolclean_anna ,COLGOOD_ANNA ,colbad_anna ,coldisagree_anna ,colrejected_anna \r\ncolclean_Bram,COLGOOD_BRAM,colbad_Bram,coldisagree_Bram,colrejected_Bram\r\ncolclean_cees,COLGOOD_CEES,colbad_cees,coldisagree_cees,colrejected_cees\r\ncolclean_Dirk ,COLGOOD_DIRK ,colbad_Dirk ,coldisagree_Dirk ,colrejected_Dirk \r\ncolclean_eva,COLGOOD_EVA,colbad_eva,coldisagree_eva,colrejected_eva\r\ncolclean_Femke,COLGOOD_FEMKE,colbad_Femke,coldisagree_Femke,colrejected_Femke\r\ncolclean_gijs,COLGOOD_GIJS,colbad_gijs,coldisagree_gijs,colrejected_gijs\r\ncolclean_Hanna,COLGOOD_HANNA,colbad_Hanna,coldisagree_Hanna,colrejected_Hanna\r\ncolclean_ivo,COLGOOD_IVO,colbad_ivo,coldisagree_ivo,colrejected_ivo\r\ncolclean_Joost,COLGOOD_JOOST,colbad_Joost,coldisagree_Joost,colrejected_Joost\r\ncolclean_Kim ,COLGOOD_KIM ,colbad_Kim ,coldisagree_Kim ,colrejected_Kim \r\ncolclean_lars,COLGOOD_LARS,colbad_lars,coldisagree_lars,colrejected_lars\r\ncolclean_Mila,COLGOOD_MILA,colbad_Mila,coldisagree_Mila,colrejected_Mila\r\ncolclean_noor,COLGOOD_NOOR,colbad_noor,coldisagree_noor,colrejected_noor\r\ncolclean_Olaf,COLGOOD_OLAF,colbad_Olaf,coldisagree_Olaf,colrejected_Olaf\r\ncolclean_pim,COLGOOD_PIM,colbad_pim,coldisagree_pim,colrejected_pim\r\ncolclean_Quinn,COLGOOD_QUINN,colbad_Quinn,coldisagree_Quinn,colrejected_Quinn\r\ncolclean_roos,COLGOOD_ROOS,colbad_roos,coldisagree_roos,colrejected_roos\r\ncolclean_Sam,COLGOOD_SAM,colbad_Sam,coldisagree_Sam,colrejected_Sam\r\ncolclean_tess,COLGOOD_TESS,colbad_tess,coldisagree_tess,colrejected_tess\r\n",
+    "dtypes": {
+      "colclean": "object",
+      "colgood": "object",
+      "colbad": "object",
+      "coldisagree": "object",
+      "colrejected": "object"
+    }
+  },
+  "report": {
+    "colclean": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": true,
+      "cleaned": false,
+      "attempts": 2,
+      "generated_code": "",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "already_clean",
+          "output": "Recommender Agent has determined column is already clean."
+        },
+        {
+          "id": "validator_already_clean",
+          "title": "Validator (already clean check)",
+          "status": "rejected",
+          "output": "Some values still have trailing spaces."
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "already_clean",
+          "output": "Recommender Agent has determined column is already clean."
+        },
+        {
+          "id": "validator_already_clean",
+          "title": "Validator (already clean check)",
+          "status": "approved",
+          "output": "User confirmed: values look acceptable without cleaning."
+        }
+      ]
+    },
+    "colgood": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data\n",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data\n"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "colbad": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "colrejected": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "coldisagree": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 2,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nThe casing is still wrong."
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_2",
+          "title": "Coder (attempt 2)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_2",
+          "title": "Validator (attempt 2)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "token_usage": {
+      "recommender": {
+        "input_tokens": 82557,
+        "output_tokens": 1238,
+        "total_tokens": 83795
+      },
+      "coding": {
+        "input_tokens": 12756,
+        "output_tokens": 265,
+        "total_tokens": 13021
+      },
+      "validation": {
+        "input_tokens": 46634,
+        "output_tokens": 446,
+        "total_tokens": 47080
+      }
+    },
+    "total_usage": {
+      "input_tokens": 141947,
+      "output_tokens": 1949,
+      "total_tokens": 143896
+    }
+  },
+  "traces": {
+    "colclean": [
+      {
+        "column": "colclean",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "already_clean",
+        "output": "Recommender Agent has determined column is already clean."
+      },
+      {
+        "column": "colclean",
+        "step_id": "validator_already_clean",
+        "title": "Validator (already clean check)",
+        "status": "pending_hitl",
+        "output": "Confirm that this column looks clean, or reject and describe what is wrong."
+      },
+      {
+        "column": "colclean",
+        "step_id": "validator_already_clean",
+        "title": "Validator (already clean check)",
+        "status": "rejected",
+        "output": "Some values still have trailing spaces."
+      },
+      {
+        "column": "colclean",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "already_clean",
+        "output": "Recommender Agent has determined column is already clean."
+      },
+      {
+        "column": "colclean",
+        "step_id": "validator_already_clean",
+        "title": "Validator (already clean check)",
+        "status": "pending_hitl",
+        "output": "Confirm that this column looks clean, or reject and describe what is wrong."
+      },
+      {
+        "column": "colclean",
+        "step_id": "validator_already_clean",
+        "title": "Validator (already clean check)",
+        "status": "approved",
+        "output": "User confirmed: values look acceptable without cleaning."
+      },
+      {
+        "column": "colclean",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column is already clean."
+      }
+    ],
+    "colgood": [
+      {
+        "column": "colgood",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colgood",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colgood",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data\n"
+      },
+      {
+        "column": "colgood",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "pending_hitl",
+        "output": "Validation result is ready for human review. Open this validator step to approve or revise."
+      },
+      {
+        "column": "colgood",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "colgood",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "colbad": [
+      {
+        "column": "colbad",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colbad",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colbad",
+        "step_id": "coder_user_edit_1",
+        "title": "User code review",
+        "status": "needs_correction",
+        "output": "Edited code failed to execute: ValueError: boom. Using coder output."
+      },
+      {
+        "column": "colbad",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "pending_hitl",
+        "output": "Validation result is ready for human review. Open this validator step to approve or revise."
+      },
+      {
+        "column": "colbad",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "colbad",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "coldisagree": [
+      {
+        "column": "coldisagree",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "coldisagree",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "coldisagree",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "pending_hitl",
+        "output": "Validation result is ready for human review. Open this validator step to approve or revise."
+      },
+      {
+        "column": "coldisagree",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_correction",
+        "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nThe casing is still wrong."
+      },
+      {
+        "column": "coldisagree",
+        "step_id": "recommender_2",
+        "title": "Recommender (attempt 2)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "coldisagree",
+        "step_id": "coder_2",
+        "title": "Coder (attempt 2)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "coldisagree",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "pending_hitl",
+        "output": "Validation result is ready for human review. Open this validator step to approve or revise."
+      },
+      {
+        "column": "coldisagree",
+        "step_id": "validator_2",
+        "title": "Validator (attempt 2)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "coldisagree",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ],
+    "colrejected": [
+      {
+        "column": "colrejected",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colrejected",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "def clean_column(data):\n    return data"
+      },
+      {
+        "column": "colrejected",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "pending_hitl",
+        "output": "Validation result is ready for human review. Open this validator step to approve or revise."
+      },
+      {
+        "column": "colrejected",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "colrejected",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ]
+  },
+  "prompts": {
+    "coder": [
+      "219dd9387619801442fbf4a658e60b00cf4c9375387ddc3473065cc7dd8d1e11",
+      "6ac163599a119cb48979999e320b0ead353caa87de0662276f3226ed53a26b64",
+      "a8562122cdb3a969fe99b71ad87fed3d8152ce6b1be9c42bfd4b0575691a9f1f",
+      "a8562122cdb3a969fe99b71ad87fed3d8152ce6b1be9c42bfd4b0575691a9f1f",
+      "b8d20283095c544f5126fdc1f5161d525f77eae0e2e670c256529bb793021da8"
+    ],
+    "recommender": [
+      "399fe9523cf4f25a04d4af534d9c7d53899c66391acf6e7385883b460830597e",
+      "405865d530346cf9a5647c884c7a90d63388022618d7ead4514059080a1be746",
+      "4a28eea90d191f28fe619a4a1293eef1fe5f1655a0ba4c4af0e4a43a363c52ce",
+      "a13739bb2123dd727192f3bea834f2e7933ec199df9810785e57ac4ab4faaafc",
+      "bf042f81632c3b6ed5e9856a445d081ba8f513bff459e9592c9ba2e5529852cf",
+      "c40c28ab5a5e31fcfbd7e7fd2e363b167648670764b16d01192f3d506667fb40",
+      "d04d2ec1a481c957f1d131c13b741183f19e8b021743da67694c812bcbe15b07"
+    ],
+    "validator": [
+      "459ae298dfec4d59ac3ab502f6d305039761d0215ac672026da34bc28fecfa52",
+      "5044b1dd91d9393fdee9639b304911ae8c413c93b1ff8f4733072deaf21edb5d",
+      "9ae8398311e6d93df5113047f6c71fab98571ebe55748310f173d1401ab7fdb4",
+      "b2429775a2cd694358643c467e265ad42d40d0ad4d990c0fdbbace8800b1c1f3",
+      "e66468f1ce6e961c879af8585265e8b557eb0490b62b1d131c599ab7bd1892d3"
+    ]
+  },
+  "reviews": {
+    "already_clean_review::colclean": [
+      {
+        "kind": "already_clean_review",
+        "column": "colclean",
+        "attempt": 1,
+        "sample_rows": [
+          {
+            "original": "colclean_lars",
+            "cleaned": "colclean_lars",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Kim ",
+            "cleaned": "colclean_Kim ",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Sam",
+            "cleaned": "colclean_Sam",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Femke",
+            "cleaned": "colclean_Femke",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_cees",
+            "cleaned": "colclean_cees",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_tess",
+            "cleaned": "colclean_tess",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_ivo",
+            "cleaned": "colclean_ivo",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Mila",
+            "cleaned": "colclean_Mila",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_gijs",
+            "cleaned": "colclean_gijs",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_eva",
+            "cleaned": "colclean_eva",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Olaf",
+            "cleaned": "colclean_Olaf",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Hanna",
+            "cleaned": "colclean_Hanna",
+            "changed": "0"
+          }
+        ]
+      },
+      {
+        "kind": "already_clean_review",
+        "column": "colclean",
+        "attempt": 2,
+        "sample_rows": [
+          {
+            "original": "colclean_tess",
+            "cleaned": "colclean_tess",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Quinn",
+            "cleaned": "colclean_Quinn",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Mila",
+            "cleaned": "colclean_Mila",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Femke",
+            "cleaned": "colclean_Femke",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Hanna",
+            "cleaned": "colclean_Hanna",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_eva",
+            "cleaned": "colclean_eva",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Bram",
+            "cleaned": "colclean_Bram",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_noor",
+            "cleaned": "colclean_noor",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_Dirk ",
+            "cleaned": "colclean_Dirk ",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_pim",
+            "cleaned": "colclean_pim",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_lars",
+            "cleaned": "colclean_lars",
+            "changed": "0"
+          },
+          {
+            "original": "colclean_roos",
+            "cleaned": "colclean_roos",
+            "changed": "0"
+          }
+        ]
+      }
+    ],
+    "code_review::colgood": [
+      {
+        "kind": "code_review",
+        "column": "colgood",
+        "attempt": 1,
+        "code": "def clean_column(data):\n    return data"
+      }
+    ],
+    "code_review::colbad": [
+      {
+        "kind": "code_review",
+        "column": "colbad",
+        "attempt": 1,
+        "code": "def clean_column(data):\n    return data"
+      }
+    ],
+    "code_review::coldisagree": [
+      {
+        "kind": "code_review",
+        "column": "coldisagree",
+        "attempt": 1,
+        "code": "def clean_column(data):\n    return data"
+      },
+      {
+        "kind": "code_review",
+        "column": "coldisagree",
+        "attempt": 2,
+        "code": "def clean_column(data):\n    return data"
+      }
+    ],
+    "code_review::colrejected": [
+      {
+        "kind": "code_review",
+        "column": "colrejected",
+        "attempt": 1,
+        "code": "def clean_column(data):\n    return data"
+      }
+    ],
+    "validation_review::colgood": [
+      {
+        "kind": "validation_review",
+        "column": "colgood",
+        "attempt": 1,
+        "llm_needs_correction": false,
+        "llm_feedback_target": "",
+        "llm_correction_instructions": "",
+        "validator_output": "{\"needs_correction\": false, \"feedback_target\": null, \"correction_instructions\": \"\"}",
+        "sample_rows": [
+          {
+            "original": "colgood_lars",
+            "cleaned": "COLGOOD_LARS",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Kim ",
+            "cleaned": "COLGOOD_KIM ",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Sam",
+            "cleaned": "COLGOOD_SAM",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Hanna",
+            "cleaned": "COLGOOD_HANNA",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Dirk ",
+            "cleaned": "COLGOOD_DIRK ",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_tess",
+            "cleaned": "COLGOOD_TESS",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Olaf",
+            "cleaned": "COLGOOD_OLAF",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_anna ",
+            "cleaned": "COLGOOD_ANNA ",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_noor",
+            "cleaned": "COLGOOD_NOOR",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_gijs",
+            "cleaned": "COLGOOD_GIJS",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Joost",
+            "cleaned": "COLGOOD_JOOST",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_pim",
+            "cleaned": "COLGOOD_PIM",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Bram",
+            "cleaned": "COLGOOD_BRAM",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_eva",
+            "cleaned": "COLGOOD_EVA",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Femke",
+            "cleaned": "COLGOOD_FEMKE",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_roos",
+            "cleaned": "COLGOOD_ROOS",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_ivo",
+            "cleaned": "COLGOOD_IVO",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Quinn",
+            "cleaned": "COLGOOD_QUINN",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_cees",
+            "cleaned": "COLGOOD_CEES",
+            "changed": "1"
+          },
+          {
+            "original": "colgood_Mila",
+            "cleaned": "COLGOOD_MILA",
+            "changed": "1"
+          }
+        ],
+        "modified_count": 20
+      }
+    ],
+    "validation_review::colbad": [
+      {
+        "kind": "validation_review",
+        "column": "colbad",
+        "attempt": 1,
+        "llm_needs_correction": false,
+        "llm_feedback_target": "",
+        "llm_correction_instructions": "",
+        "validator_output": "{\"needs_correction\": false, \"feedback_target\": null, \"correction_instructions\": \"\"}",
+        "sample_rows": [
+          {
+            "original": "colbad_Hanna",
+            "cleaned": "colbad_Hanna",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_Olaf",
+            "cleaned": "colbad_Olaf",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_Femke",
+            "cleaned": "colbad_Femke",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_gijs",
+            "cleaned": "colbad_gijs",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_Mila",
+            "cleaned": "colbad_Mila",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_roos",
+            "cleaned": "colbad_roos",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_pim",
+            "cleaned": "colbad_pim",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_Bram",
+            "cleaned": "colbad_Bram",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_cees",
+            "cleaned": "colbad_cees",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_eva",
+            "cleaned": "colbad_eva",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_Quinn",
+            "cleaned": "colbad_Quinn",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_Sam",
+            "cleaned": "colbad_Sam",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_Kim ",
+            "cleaned": "colbad_Kim ",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_anna ",
+            "cleaned": "colbad_anna ",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_tess",
+            "cleaned": "colbad_tess",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_ivo",
+            "cleaned": "colbad_ivo",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_Joost",
+            "cleaned": "colbad_Joost",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_Dirk ",
+            "cleaned": "colbad_Dirk ",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_lars",
+            "cleaned": "colbad_lars",
+            "changed": "0"
+          },
+          {
+            "original": "colbad_noor",
+            "cleaned": "colbad_noor",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 0
+      }
+    ],
+    "validation_review::coldisagree": [
+      {
+        "kind": "validation_review",
+        "column": "coldisagree",
+        "attempt": 1,
+        "llm_needs_correction": false,
+        "llm_feedback_target": "",
+        "llm_correction_instructions": "",
+        "validator_output": "{\"needs_correction\": false, \"feedback_target\": null, \"correction_instructions\": \"\"}",
+        "sample_rows": [
+          {
+            "original": "coldisagree_ivo",
+            "cleaned": "coldisagree_ivo",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Kim ",
+            "cleaned": "coldisagree_Kim ",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_roos",
+            "cleaned": "coldisagree_roos",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_cees",
+            "cleaned": "coldisagree_cees",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_eva",
+            "cleaned": "coldisagree_eva",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Quinn",
+            "cleaned": "coldisagree_Quinn",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_anna ",
+            "cleaned": "coldisagree_anna ",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_noor",
+            "cleaned": "coldisagree_noor",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Mila",
+            "cleaned": "coldisagree_Mila",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_lars",
+            "cleaned": "coldisagree_lars",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Dirk ",
+            "cleaned": "coldisagree_Dirk ",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Bram",
+            "cleaned": "coldisagree_Bram",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Olaf",
+            "cleaned": "coldisagree_Olaf",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Hanna",
+            "cleaned": "coldisagree_Hanna",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_pim",
+            "cleaned": "coldisagree_pim",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_gijs",
+            "cleaned": "coldisagree_gijs",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Sam",
+            "cleaned": "coldisagree_Sam",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_tess",
+            "cleaned": "coldisagree_tess",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Joost",
+            "cleaned": "coldisagree_Joost",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Femke",
+            "cleaned": "coldisagree_Femke",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 0
+      },
+      {
+        "kind": "validation_review",
+        "column": "coldisagree",
+        "attempt": 2,
+        "llm_needs_correction": false,
+        "llm_feedback_target": "",
+        "llm_correction_instructions": "",
+        "validator_output": "{\"needs_correction\": false, \"feedback_target\": null, \"correction_instructions\": \"\"}",
+        "sample_rows": [
+          {
+            "original": "coldisagree_anna ",
+            "cleaned": "coldisagree_anna ",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Dirk ",
+            "cleaned": "coldisagree_Dirk ",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Femke",
+            "cleaned": "coldisagree_Femke",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Bram",
+            "cleaned": "coldisagree_Bram",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Hanna",
+            "cleaned": "coldisagree_Hanna",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Sam",
+            "cleaned": "coldisagree_Sam",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_noor",
+            "cleaned": "coldisagree_noor",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_lars",
+            "cleaned": "coldisagree_lars",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Joost",
+            "cleaned": "coldisagree_Joost",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_pim",
+            "cleaned": "coldisagree_pim",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_eva",
+            "cleaned": "coldisagree_eva",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_ivo",
+            "cleaned": "coldisagree_ivo",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_tess",
+            "cleaned": "coldisagree_tess",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Kim ",
+            "cleaned": "coldisagree_Kim ",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Olaf",
+            "cleaned": "coldisagree_Olaf",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_cees",
+            "cleaned": "coldisagree_cees",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_gijs",
+            "cleaned": "coldisagree_gijs",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_roos",
+            "cleaned": "coldisagree_roos",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Mila",
+            "cleaned": "coldisagree_Mila",
+            "changed": "0"
+          },
+          {
+            "original": "coldisagree_Quinn",
+            "cleaned": "coldisagree_Quinn",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 0
+      }
+    ],
+    "validation_review::colrejected": [
+      {
+        "kind": "validation_review",
+        "column": "colrejected",
+        "attempt": 1,
+        "llm_needs_correction": true,
+        "llm_feedback_target": "RECOMMENDER",
+        "llm_correction_instructions": "Trailing spaces remain.",
+        "validator_output": "{\"needs_correction\": true, \"feedback_target\": \"RECOMMENDER\", \"correction_instructions\": \"Trailing spaces remain.\"}",
+        "sample_rows": [
+          {
+            "original": "colrejected_lars",
+            "cleaned": "colrejected_lars",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Kim ",
+            "cleaned": "colrejected_Kim ",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_gijs",
+            "cleaned": "colrejected_gijs",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_tess",
+            "cleaned": "colrejected_tess",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Dirk ",
+            "cleaned": "colrejected_Dirk ",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Quinn",
+            "cleaned": "colrejected_Quinn",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Mila",
+            "cleaned": "colrejected_Mila",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Hanna",
+            "cleaned": "colrejected_Hanna",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Femke",
+            "cleaned": "colrejected_Femke",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_pim",
+            "cleaned": "colrejected_pim",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Sam",
+            "cleaned": "colrejected_Sam",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_noor",
+            "cleaned": "colrejected_noor",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_eva",
+            "cleaned": "colrejected_eva",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_ivo",
+            "cleaned": "colrejected_ivo",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_roos",
+            "cleaned": "colrejected_roos",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_cees",
+            "cleaned": "colrejected_cees",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Olaf",
+            "cleaned": "colrejected_Olaf",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Joost",
+            "cleaned": "colrejected_Joost",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Bram",
+            "cleaned": "colrejected_Bram",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_anna ",
+            "cleaned": "colrejected_anna ",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 0
+      }
+    ]
+  }
+}

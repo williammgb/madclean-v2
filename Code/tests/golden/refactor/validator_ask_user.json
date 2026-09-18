@@ -1,0 +1,226 @@
+{
+  "table": {
+    "csv": "colstr\r\nCOLSTR_ANNA \r\nCOLSTR_BRAM\r\nCOLSTR_CEES\r\nCOLSTR_DIRK \r\nCOLSTR_EVA\r\nCOLSTR_FEMKE\r\nCOLSTR_GIJS\r\nCOLSTR_HANNA\r\nCOLSTR_IVO\r\nCOLSTR_JOOST\r\nCOLSTR_KIM \r\nCOLSTR_LARS\r\nCOLSTR_MILA\r\nCOLSTR_NOOR\r\nCOLSTR_OLAF\r\nCOLSTR_PIM\r\nCOLSTR_QUINN\r\nCOLSTR_ROOS\r\nCOLSTR_SAM\r\nCOLSTR_TESS\r\n",
+    "dtypes": {
+      "colstr": "object"
+    }
+  },
+  "report": {
+    "colstr": {
+      "datatype": "DISCRETE_STRING",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "token_usage": {
+      "recommender": {
+        "input_tokens": 11561,
+        "output_tokens": 188,
+        "total_tokens": 11749
+      },
+      "coding": {
+        "input_tokens": 2548,
+        "output_tokens": 238,
+        "total_tokens": 2786
+      },
+      "validation": {
+        "input_tokens": 23904,
+        "output_tokens": 99,
+        "total_tokens": 24003
+      }
+    },
+    "total_usage": {
+      "input_tokens": 38013,
+      "output_tokens": 525,
+      "total_tokens": 38538
+    }
+  },
+  "traces": {
+    "colstr": [
+      {
+        "column": "colstr",
+        "step_id": "recommender_1",
+        "title": "Recommender (attempt 1)",
+        "status": "ok",
+        "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+      },
+      {
+        "column": "colstr",
+        "step_id": "coder_1",
+        "title": "Coder (attempt 1)",
+        "status": "ok",
+        "output": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data"
+      },
+      {
+        "column": "colstr",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "needs_user_validation",
+        "output": "Validator failed. User feedback is required."
+      },
+      {
+        "column": "colstr",
+        "step_id": "validator_1",
+        "title": "Validator (attempt 1)",
+        "status": "approved",
+        "output": "Validator Agent has determined the cleaning operations are valid."
+      },
+      {
+        "column": "colstr",
+        "step_id": "finished",
+        "title": "Finished",
+        "status": "completed",
+        "output": "Column cleaned and validated."
+      }
+    ]
+  },
+  "prompts": {
+    "coder": [
+      "779ea69d15229470fdc977f1cde713143157d48921b14f2d0825726ce75d0631"
+    ],
+    "recommender": [
+      "7fea477fe6d1f3a707781c0fb82ce1a65b5196c65fdcfbe7959148c8245671f4"
+    ],
+    "validator": [
+      "4e4ba900da4fc5b12b19bc5b4d956b8ccee1e939c0c382882f4479159ada34d9",
+      "918f4ce2c6562d2b8dafc1fb38e0502b5db881924fd67a0ea2039625fb9e2f7e",
+      "a36c9bce8c0d5efe3d74823ac2cb03ca2c6c1c53cb9f9e33510cb4ed99e7d2a4"
+    ]
+  },
+  "reviews": {
+    "user_validation::colstr": [
+      {
+        "column": "colstr",
+        "attempt": 1,
+        "default_needs_correction": true,
+        "default_target": "RECOMMENDER",
+        "default_feedback": "Validator failed to validate. Please provide final feedback.",
+        "sample_rows": [
+          {
+            "original": "colstr_Mila",
+            "cleaned": "COLSTR_MILA",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_pim",
+            "cleaned": "COLSTR_PIM",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_gijs",
+            "cleaned": "COLSTR_GIJS",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_roos",
+            "cleaned": "COLSTR_ROOS",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_Sam",
+            "cleaned": "COLSTR_SAM",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_ivo",
+            "cleaned": "COLSTR_IVO",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_Femke",
+            "cleaned": "COLSTR_FEMKE",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_Quinn",
+            "cleaned": "COLSTR_QUINN",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_noor",
+            "cleaned": "COLSTR_NOOR",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_Kim ",
+            "cleaned": "COLSTR_KIM ",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_anna ",
+            "cleaned": "COLSTR_ANNA ",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_Bram",
+            "cleaned": "COLSTR_BRAM",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_tess",
+            "cleaned": "COLSTR_TESS",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_eva",
+            "cleaned": "COLSTR_EVA",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_Hanna",
+            "cleaned": "COLSTR_HANNA",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_cees",
+            "cleaned": "COLSTR_CEES",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_Dirk ",
+            "cleaned": "COLSTR_DIRK ",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_Joost",
+            "cleaned": "COLSTR_JOOST",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_Olaf",
+            "cleaned": "COLSTR_OLAF",
+            "changed": "1"
+          },
+          {
+            "original": "colstr_lars",
+            "cleaned": "COLSTR_LARS",
+            "changed": "1"
+          }
+        ],
+        "modified_count": 20
+      }
+    ]
+  }
+}

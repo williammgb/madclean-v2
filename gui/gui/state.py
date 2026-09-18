@@ -4,10 +4,10 @@ import asyncio
 import os
 import time
 import json
-import threading
 import math
 import re
 import random
+from functools import partial
 from dataclasses import asdict
 from typing import Optional, List, Dict, Any, Callable, Tuple
 from madclean.config.settings import CleaningConfig
@@ -24,17 +24,19 @@ from madclean.evaluation import (
     format_pct,
 )
 
-_CANCEL_EVENT: threading.Event | None = None
-_USER_VALIDATION_CONDITION = threading.Condition()
-_PENDING_USER_VALIDATIONS: Dict[str, Dict[str, Any]] = {}
-_USER_VALIDATION_RESULTS: Dict[str, Dict[str, Any]] = {}
-_HITL_CONDITION = threading.Condition()
-_HITL_PENDING: Dict[str, Dict[str, Any]] = {}
-_HITL_RESULTS: Dict[str, Dict[str, Any]] = {}
+from .session import SessionRun, session_run
 
 class State(rx.State):
     """Bridge between MADClean system and the UI."""
     _default_config = load_default_cleaning_config()
+
+    def _run(self) -> SessionRun:
+        """This browser session's run: its stop flag and its two queues of waiting questions.
+
+        Everything a run shares with its worker thread hangs off here, so a second tab gets its
+        own run instead of stopping and answering the first tab's.
+        """
+        return session_run(self.router.session.client_token)
 
     # Configuration State
     verbose: bool = _default_config.verbose
@@ -516,8 +518,9 @@ class State(rx.State):
             expanded[column] = step_id
         self.expanded_trace_step_by_column = expanded
         req_id = (self.pending_validation_request_id_by_column or {}).get(column, "")
-        if req_id and req_id in _PENDING_USER_VALIDATIONS:
-            pending = _PENDING_USER_VALIDATIONS.get(req_id, {})
+        waiting = self._run().validation_pending
+        if req_id and req_id in waiting:
+            pending = waiting.get(req_id, {})
             self.pending_validation_column = column
             self.pending_validation_attempt = int(pending.get("attempt", 0) or 0)
             self.pending_validation_default_target = str(pending.get("default_target", "RECOMMENDER"))
@@ -536,33 +539,32 @@ class State(rx.State):
 
     @rx.event
     def stop_pipeline(self):
-        """Request cooperative cancellation for the currently running pipeline."""
-        global _CANCEL_EVENT
-        if _CANCEL_EVENT is not None:
-            _CANCEL_EVENT.set()
+        """Request cooperative cancellation for this session's running pipeline."""
+        run = self._run()
+        run.cancel.set()
         # Unblock any callbacks waiting on manual user/HITL responses.
-        with _USER_VALIDATION_CONDITION:
-            for rid, pending in list(_PENDING_USER_VALIDATIONS.items()):
-                _USER_VALIDATION_RESULTS[rid] = {
+        with run.validation_condition:
+            for rid, pending in list(run.validation_pending.items()):
+                run.validation_results[rid] = {
                     "needs_correction": False,
                     "feedback_target": str(pending.get("default_target", "RECOMMENDER")),
                     "feedback": str(pending.get("default_feedback", "")),
                 }
-                _PENDING_USER_VALIDATIONS.pop(rid, None)
-            _USER_VALIDATION_CONDITION.notify_all()
-        with _HITL_CONDITION:
-            for rid, pending in list(_HITL_PENDING.items()):
+                run.validation_pending.pop(rid, None)
+            run.validation_condition.notify_all()
+        with run.hitl_condition:
+            for rid, pending in list(run.hitl_pending.items()):
                 kind = str(pending.get("kind", "") or "")
                 if kind == "code_review":
-                    _HITL_RESULTS[rid] = {"code": str(pending.get("code", "") or "")}
+                    run.hitl_results[rid] = {"code": str(pending.get("code", "") or "")}
                 elif kind == "validation_review":
-                    _HITL_RESULTS[rid] = {"decision": "feedback_accept"}
+                    run.hitl_results[rid] = {"decision": "feedback_accept"}
                 elif kind == "already_clean_review":
-                    _HITL_RESULTS[rid] = {"decision": "confirm"}
+                    run.hitl_results[rid] = {"decision": "confirm"}
                 else:
-                    _HITL_RESULTS[rid] = {}
-                _HITL_PENDING.pop(rid, None)
-            _HITL_CONDITION.notify_all()
+                    run.hitl_results[rid] = {}
+                run.hitl_pending.pop(rid, None)
+            run.hitl_condition.notify_all()
         # UI feedback (actual stop may take a bit while LLM calls finish).
         self.status_msg = "Stopping pipeline..."
 
@@ -787,10 +789,11 @@ class State(rx.State):
             "feedback_target": self.user_validation_feedback_target,
             "correction_instructions": self.user_validation_feedback_message,
         }
-        with _USER_VALIDATION_CONDITION:
-            _USER_VALIDATION_RESULTS[request_id] = payload
-            _PENDING_USER_VALIDATIONS.pop(request_id, None)
-            _USER_VALIDATION_CONDITION.notify_all()
+        run = self._run()
+        with run.validation_condition:
+            run.validation_results[request_id] = payload
+            run.validation_pending.pop(request_id, None)
+            run.validation_condition.notify_all()
         self.pending_validation_request_id_by_column = {
             k: v for k, v in (self.pending_validation_request_id_by_column or {}).items() if v != request_id
         }
@@ -800,7 +803,7 @@ class State(rx.State):
         self.pending_user_validation = len(self.pending_validation_request_ids) > 0
         if self.pending_user_validation:
             next_req_id = self.pending_validation_request_ids[0]
-            next_pending = _PENDING_USER_VALIDATIONS.get(next_req_id, {})
+            next_pending = run.validation_pending.get(next_req_id, {})
             self.pending_validation_column = str(next_pending.get("column", ""))
             self.pending_validation_sample_rows = [
                 self._normalize_sample_row(r)
@@ -1470,9 +1473,10 @@ class State(rx.State):
         return empty
 
     def _sync_hitl_editing_state_from_global_pending(self) -> Dict[str, Tuple[str, Dict[str, Any]]]:
-        with _HITL_CONDITION:
+        run = self._run()
+        with run.hitl_condition:
             pending_by_col: Dict[str, Tuple[str, Dict[str, Any]]] = {}
-            for rid, p in _HITL_PENDING.items():
+            for rid, p in run.hitl_pending.items():
                 c = str(p.get("column", "") or "").strip()
                 if c:
                     pending_by_col[c] = (rid, dict(p))
@@ -1768,7 +1772,7 @@ class State(rx.State):
                 continue
         if not events:
             async with self:
-                pending_map = dict(_PENDING_USER_VALIDATIONS or {})
+                pending_map = dict(self._run().validation_pending)
                 if pending_map:
                     self.pending_user_validation = True
                     self.pending_validation_request_ids = list(pending_map.keys())
@@ -1807,7 +1811,7 @@ class State(rx.State):
             for event in events:
                 self._apply_trace_event(event)
             self._trace_file_offset = new_offset
-            pending_map = dict(_PENDING_USER_VALIDATIONS or {})
+            pending_map = dict(self._run().validation_pending)
             if pending_map:
                 self.pending_user_validation = True
                 self.pending_validation_request_ids = list(pending_map.keys())
@@ -2093,44 +2097,46 @@ class State(rx.State):
         if not self.selected_profile_column and rows:
             self.selected_profile_column = str(rows[0]["column"])
 
-    def _user_validation_callback(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    # The two callbacks below are called from the run's worker thread, which must not touch the
+    # page's state, so the session's run is handed to them when the run is wired up instead of
+    # being looked up here.
+    @staticmethod
+    def _user_validation_callback(run: SessionRun, payload: Dict[str, Any]) -> Dict[str, Any]:
         request_id = str(payload.get("request_id", "") or f"{payload.get('column', '')}::{payload.get('attempt', 0)}::{int(time.time() * 1000)}")
         payload = dict(payload)
         payload["request_id"] = request_id
-        with _USER_VALIDATION_CONDITION:
-            _USER_VALIDATION_RESULTS.pop(request_id, None)
-            _PENDING_USER_VALIDATIONS[request_id] = payload
+        with run.validation_condition:
+            run.validation_results.pop(request_id, None)
+            run.validation_pending[request_id] = payload
         # Busy-wait with short sleeps to keep implementation thread-safe.
         while True:
-            with _USER_VALIDATION_CONDITION:
-                if request_id in _USER_VALIDATION_RESULTS:
-                    result = dict(_USER_VALIDATION_RESULTS.pop(request_id))
+            with run.validation_condition:
+                if request_id in run.validation_results:
+                    result = dict(run.validation_results.pop(request_id))
                     return result
-            global _CANCEL_EVENT
-            if _CANCEL_EVENT is not None and _CANCEL_EVENT.is_set():
-                with _USER_VALIDATION_CONDITION:
-                    _PENDING_USER_VALIDATIONS.pop(request_id, None)
+            if run.is_cancelled():
+                with run.validation_condition:
+                    run.validation_pending.pop(request_id, None)
                 return {"needs_correction": False, "feedback_target": "RECOMMENDER", "feedback": ""}
             time.sleep(0.25)
 
-    def _hitl_callback_blocking(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    @staticmethod
+    def _hitl_callback_blocking(run: SessionRun, payload: Dict[str, Any]) -> Dict[str, Any]:
         request_id = str(payload.get("request_id", "") or f"hitl::{int(time.time() * 1000)}")
         payload = dict(payload)
         payload["request_id"] = request_id
         kind = str(payload.get("kind", "") or "")
-        col = str(payload.get("column", "") or "")
-        with _HITL_CONDITION:
-            _HITL_RESULTS.pop(request_id, None)
-            _HITL_PENDING[request_id] = payload
+        with run.hitl_condition:
+            run.hitl_results.pop(request_id, None)
+            run.hitl_pending[request_id] = payload
         while True:
-            with _HITL_CONDITION:
-                if request_id in _HITL_RESULTS:
-                    result = dict(_HITL_RESULTS.pop(request_id))
+            with run.hitl_condition:
+                if request_id in run.hitl_results:
+                    result = dict(run.hitl_results.pop(request_id))
                     return result
-            global _CANCEL_EVENT
-            if _CANCEL_EVENT is not None and _CANCEL_EVENT.is_set():
-                with _HITL_CONDITION:
-                    _HITL_PENDING.pop(request_id, None)
+            if run.is_cancelled():
+                with run.hitl_condition:
+                    run.hitl_pending.pop(request_id, None)
                 if kind == "code_review":
                     return {"code": str(payload.get("code", "") or "")}
                 if kind == "validation_review":
@@ -2166,8 +2172,9 @@ class State(rx.State):
         self.hitl_validation_feedback_message_by_column = {}
 
     def _hitl_rid_for_column_kind(self, column: str, kind: str) -> str:
-        with _HITL_CONDITION:
-            for rid, p in _HITL_PENDING.items():
+        run = self._run()
+        with run.hitl_condition:
+            for rid, p in run.hitl_pending.items():
                 if str(p.get("column", "") or "") == column and str(p.get("kind", "") or "") == kind:
                     return str(rid)
         return ""
@@ -2175,8 +2182,9 @@ class State(rx.State):
     def _resolve_hitl_request_id(self, request_id: str, column: str, kind: str) -> str:
         rid = str(request_id or "").strip()
         if rid:
-            with _HITL_CONDITION:
-                if rid in _HITL_PENDING:
+            run = self._run()
+            with run.hitl_condition:
+                if rid in run.hitl_pending:
                     return rid
             # In parallel HITL mode, silently remapping a missing request_id can resolve
             # a different pending request while leaving the intended request blocked.
@@ -2187,13 +2195,11 @@ class State(rx.State):
     def _finish_hitl_for_request(self, rid: str, payload: Dict[str, Any], status_msg: str) -> None:
         if not rid:
             return
-        with _HITL_CONDITION:
-            pending = _HITL_PENDING.get(rid, {})
-            kind = str(pending.get("kind", "") or "")
-            col = str(pending.get("column", "") or "")
-            _HITL_RESULTS[rid] = payload
-            _HITL_PENDING.pop(rid, None)
-            _HITL_CONDITION.notify_all()
+        run = self._run()
+        with run.hitl_condition:
+            run.hitl_results[rid] = payload
+            run.hitl_pending.pop(rid, None)
+            run.hitl_condition.notify_all()
         self._rebuild_pipeline_flow_rows()
         self.selected_trace_status = status_msg
 
@@ -2689,9 +2695,8 @@ class State(rx.State):
             self.user_validation_feedback_message = ""
             self._update_pending_validation_widths()
             self._reset_hitl_session_state()
-            with _HITL_CONDITION:
-                _HITL_PENDING.clear()
-                _HITL_RESULTS.clear()
+            # A new run starts with nothing waiting and a fresh stop flag, for this session only.
+            self._run().start()
             # Reset log file at the start of each run.
             try:
                 with open(self._log_file_path, "w", encoding="utf-8") as f:
@@ -2703,8 +2708,7 @@ class State(rx.State):
                     f.write("")
             except Exception:
                 self._trace_file_path = ""
-            global _CANCEL_EVENT
-            _CANCEL_EVENT = threading.Event()
+            run = self._run()
 
         config = CleaningConfig(
             verbose=self.verbose,
@@ -2754,19 +2758,17 @@ class State(rx.State):
                 else LLM_CLIENT_MAP[self.selected_llm_key_coding]
             ),
         }
-        def _cancel_check():
-            global _CANCEL_EVENT
-            return _CANCEL_EVENT is not None and _CANCEL_EVENT.is_set()
-
+        # Everything the worker thread touches is this session's run, captured here: the thread
+        # never reaches back into the page's state to find out whose run it is.
         pipeline = Pipeline(
             llm_config=llm_configs["coding"],
             agent_llm_configs=llm_configs,
             config=config,
             log_callback=self._enqueue_log,
             trace_callback=self._enqueue_trace_event,
-            user_validation_callback=self._user_validation_callback,
-            hitl_callback=self._hitl_callback_blocking,
-            cancel_check=_cancel_check,
+            user_validation_callback=partial(self._user_validation_callback, run),
+            hitl_callback=partial(self._hitl_callback_blocking, run),
+            cancel_check=run.is_cancelled,
         )
         coordinator = pipeline.cleaning_coordinator
         

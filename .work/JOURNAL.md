@@ -207,3 +207,12 @@ while its section has no `built:` line.
 - noted: the scoring helper that turns hits, claims and wants into precision, recall and F1 is now `precision_recall_f1` rather than private, because the detection-only path needs the same arithmetic and must not grow a second copy of it.
 - full gate passed (125s): 148 passed, 2 warnings in 124.08s (0:02:04)
 - smoke gate passed (27s): gui: page rendered in the browser with no console errors; backend /ping answered
+
+## Slice 4 — GUI rebuild
+- you decided: the approved preview's stylesheet is ported as it is and the pages are rebuilt on it with plain HTML elements carrying its class names, rather than restyling the current Reflex widgets, so what ships is the design that was approved.
+- you decided: all eight views (Table, Profile, Pipeline, Review, Logs, Report, Evaluation, Guide) land in this slice rather than the demo path first.
+- built: `gui/assets/madclean.css` is the preview's stylesheet from the artifact, with only its preview-only control panel left out.
+- built: `gui/gui/session.py` gives every browser session its own run — a stop flag and the two queues of questions waiting for an answer. They were module-level globals, so a second tab's stop button stopped the first tab's run and its review queue showed the first tab's questions.
+- decided: the run's worker thread is handed its session's run object when the run is wired up, through `partial`, instead of looking the session up while it works. A thread that reached back into the page's state to find out whose run it is would be reading state it does not own.
+- proved: `tests/test_gui_sessions.py` holds two sessions at once — stopping one leaves the other running, a question queued in one is invisible in the other, starting a new run clears only its own session, and a worker thread blocked on an answer ignores the other tab's answer and takes its own.
+- fast gate passed (90s): 125 passed, 30 deselected, 1 warning in 87.32s (0:01:27)

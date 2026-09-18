@@ -6,7 +6,7 @@
       "id": 0,
       "name": "skeleton",
       "state": "done",
-      "commit": "97d2dbd",
+      "commit": "40a5586",
       "checks": [
         {"claim": "./run setup creates the uv environment on Python 3.12 from uv.lock (frozen), including the spaCy model", "passes": true, "evidence": "./run setup printed 'Checked 98 packages'; uv run python printed CPython 3.12.14, spacy 3.8.7, en_core_web_sm model 3.8.0 loaded"},
         {"claim": ".gitattributes is in place and all 14 benchmark CSVs are committed byte-identical to their source repos", "passes": true, "evidence": "git hash-object over Code/data/benchmark_datasets/*.csv: 14 of 14 match the blob hashes in hqahtan/COSC-Thesis-William, 0 differ"},
@@ -37,15 +37,15 @@
     {
       "id": 2,
       "name": "dataclasses instead of dicts",
-      "state": "in-progress",
-      "commit": null,
+      "state": "done",
+      "commit": "a01b297",
       "checks": [
         {"claim": "report, trace steps, token usage, model registry and scores are dataclasses", "passes": true, "evidence": "./run fast -k dataclasses: 1 passed (a fake run's report, entries, trace steps, emitted events, per-agent and total token usage, every LLM_CLIENT_MAP value and both CleaningEvaluation.evaluate results are dataclass instances)"},
         {"claim": "the duplicated report and trace blocks in multi_agent_cleaning.py are removed", "passes": true, "evidence": "grep -c in multi_agent_cleaning.py: 'trace_steps.append(' 0, '\"step_id\"' 0, 'self.cleaning_report[' 2; file went from 1373 to 1105 lines; the two identical review-sampling blocks are now one _review_sample helper"},
-        {"claim": "fake-LLM pipeline output is identical before and after the refactor", "passes": true, "evidence": "8 reference files captured at 78b3437 while git diff --stat 59f6b1c -- Code/madclean Code/evaluation Code/gui was empty; after the refactor ./run fast -k equivalence: 7 passed and ./run full: 112 passed, including the beers scenario and all 16 golden-score tests through Scores"},
+        {"claim": "fake-LLM pipeline output is identical before and after the refactor", "passes": true, "evidence": "8 reference files captured at 2380e65 while git diff --stat c2ee9f5 -- Code/madclean Code/evaluation Code/gui was empty; after the refactor ./run fast -k equivalence: 7 passed and ./run full: 112 passed, including the beers scenario and all 16 golden-score tests through Scores"},
         {"claim": "the report keeps the thesis's dictionary shape, and the token counters and scores keep their types", "passes": true, "evidence": "./run fast -k records: 4 passed (P1 report dict: key order, JSON round trip, reason only when set, no generated_code/trace_steps on skipped entries; P2 token sums; P3 score key structure with int and float leaves; plus the dataclass-types check in the same file)"},
         {"claim": "the GUI converts records at exactly two places and still starts", "passes": true, "evidence": "grep -n 'to_dict()\\|asdict(' gui/gui/state.py: line 1710 asdict(event) and line 2793 report.to_dict(); ./run smoke: 'gui: page rendered in the browser with no console errors; backend /ping answered'"},
-        {"claim": "all three gates pass", "passes": true, "evidence": "./run fast at cedbf4f: 88 passed, 24 deselected, 1 warning in 29.03s; ./run full: 112 passed in 110.06s; ./run smoke: page rendered with no console errors, backend /ping answered"}
+        {"claim": "all three gates pass", "passes": true, "evidence": "./run fast at 1d26244: 88 passed, 24 deselected, 1 warning in 29.03s; ./run full: 112 passed in 110.06s; ./run smoke: page rendered with no console errors, backend /ping answered"}
       ]
     },
     {

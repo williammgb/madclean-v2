@@ -163,3 +163,4 @@ while its section has no `built:` line.
 - F20 fixed: the user-validation scenario's callback raises for the two dependency columns, which the pipeline swallows and treats as "needs correction"; that was accidental and is now spelled out in a comment, rather than re-captured, so the reference keeps its provenance on pre-refactor code.
 - you decided: commits carry no assistant attribution at all, in this repo or any other.
 - done: the nine commits made in this repo were rewritten to drop their attribution trailers, and every hash recorded in .work/ was updated to match. The trees are byte-identical to before, and the thesis history is untouched — the rewrite was limited to commits after the thesis-final tag, because the imported thesis commits are signed and rewriting them would have dropped the signatures and broken the tag.
+- fast gate passed (83s): 88 passed, 24 deselected, 1 warning in 80.36s (0:01:20)

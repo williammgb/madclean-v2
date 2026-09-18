@@ -1,114 +1,129 @@
-# MADClean - Multi-Agent Data Cleaning
-High-quality data is essential for effective decision-making, data analytics and the training of machine learning models. However, real-world tabular datasets frequently contain errors, inconsistencies and missing values that degrade data quality and hinder downstream tasks. This thesis presents an automated tabular data cleaning framework that integrates statistical data profiling with the semantic reasoning and code generation capabilities of LLMs. Statistical profiling is used to extract dataset characteristics and relationships that guide the LLM in selecting appropriate cleaning operations. A multi-agent LLM architecture generates executable cleaning logic to ensure scalable and consistent data cleaning, while validation mechanisms are employed to verify correctness and improve reliability. Experimental results demonstrate that the framework achieves strong cleaning performance with competitive runtime, enabling automated and adaptive data cleaning and producing high-quality tabular data suitable for downstream analytical and machine learning tasks.
+# MADClean — Multi-Agent Data Cleaning
+
+MADClean is an automated tabular data cleaning framework that combines statistical data
+profiling with the semantic reasoning and code generation abilities of large language models.
+The profiler extracts column types, outliers and functional dependencies; a multi-agent LLM
+loop (Recommender → Coder → Validator) turns those findings into executable cleaning code and
+validates the result before it is applied.
+
+```
+madclean/          the framework: profiler, coordinator, multi-agent cleaner, LLM clients
+evaluation/        the benchmark runner, the scorer, baselines and their stored results
+gui/               the Reflex web interface
+tests/             the test suite (fast tests, plus real-size tests marked slow)
+data/              the seven benchmark datasets, dirty and ground truth
+docs/              screenshots used by this README
+run                the single entrypoint: setup, fast, full, smoke, check, live
+```
+
+## Requirements
+
+- Python 3.12
+- [uv](https://docs.astral.sh/uv/) for dependency management
 
 ## Installation
-This framework was tested on Python version 3.11.
-### 1. Clone the repository
+
 ```bash
-git clone https://github.com/williammgb/msc-thesis-cosc.git
-msc-thesis-cosc
-```
-### 2. (Optional but recommended) Create a virtual environment
-Example using Python 3.11 (Windows):
-```bash
-py -3.11 -m venv my_env
-my_env\Scripts\activate
+git clone https://github.com/williammgb/madclean-v2.git
+cd madclean-v2
+./run setup
 ```
 
-### 3. Install dependencies
-```bash
-cd Code
-pip install -r requirements.txt
-```
+`./run setup` installs the locked dependency set from `uv.lock`, including the spaCy model
+`en_core_web_sm`. Nothing else needs to be installed by hand.
 
-### 4. Install the spaCy NER model
+<details>
+<summary>Installing with pip instead</summary>
+
 ```bash
+python -m venv .venv && .venv/Scripts/activate   # Windows; use bin/activate elsewhere
+pip install .
 python -m spacy download en_core_web_sm
 ```
+</details>
 
-### 5. Install the framework
-From the `Code` directory (same place as `pyproject.toml`), run:
-```bash
-pip install .
+## Configuring an LLM
+
+Create a `.env` file in the repository root with the key for the provider you want to use:
+
 ```
-
-## LLM configuration
-You must configure an LLM provider to use the framework's features.
-
-#### Using OpenAI, Gemini or OpenRouter
-Create a `.env` file in the project root and add your API key:
-```
-OPENAI_API_KEY="your_api_key_here"
-# OR
 GEMINI_API_KEY="your_api_key_here"
-# OR
+# or
+OPENAI_API_KEY="your_api_key_here"
+# or
 OPENROUTER_API_KEY="your_api_key_here"
 ```
-Update the `LLM_CLIENT_NAME` entry in the llm_settings.py to point to your LLM provider.
 
-#### Using a custom LLM API
-To add support for a new LLM provider:
-1. Add a new client class in `Code/madclean/llm/llm_clients.py` following `BaseLLMClient`.
-2. Register it in `Code/madclean/llm/llm_registry.py` (API keys via `.env` as documented there).
-3. Use the new key from the registry in the UI or update the `LLM_CLIENT_NAME` entry in `llm/settings.py` to point to your new implementation.
+`.env` is git-ignored: keys never enter the repository. The default provider is the
+`LLM_CLIENT_NAME` entry in `madclean/llm/llm_settings.py`; every model MADClean knows about is
+listed in `madclean/llm/llm_registry.py`.
+
+### Adding a provider
+
+1. Add a client class in `madclean/llm/llm_clients.py`, following `BaseLLMClient`.
+2. Register it in `madclean/llm/llm_registry.py` as an `LLMSpec` with its API key name.
+3. Select it in the UI, per agent on the command line, or as the new `LLM_CLIENT_NAME`.
 
 ## Usage
-After installation, the framework can be run using the CLI command:
+
 ```bash
 madclean path/to/file.csv [OPTIONS]
 ```
-#### Available options
-`-v`, `--verbose`: Enable verbose output.  
-`--save-cleaned`: Save the resulting cleaned dataset in the `data/cleaned` folder.  
-`--llm-recommender`: Select LLM client for the Recommender agent (e.g., `OpenAI` or `Gemini`).  
-`--llm-coding`: Select LLM client for the Coding agent.  
-`--llm-validation`: Select LLM client for the Validation agent. 
-`--help`: View full usage instructions.
 
-If any of these `--llm-*` options are omitted, that agent falls back to `LLM_CLIENT_NAME` (`llm/settings.py`).
+| Option | Effect |
+| --- | --- |
+| `-v`, `--verbose` | print profiling and per-agent progress |
+| `--save-cleaned` | write the cleaned dataset to `data/cleaned` |
+| `--llm-recommender` | LLM client for the Recommender agent |
+| `--llm-coding` | LLM client for the Coder agent |
+| `--llm-validation` | LLM client for the Validator agent |
+| `--help` | full usage |
 
-### Example
-```bash
-madclean data\benchmark_datasets\beers_dirty.csv --verbose --save-cleaned
-```
-
-Per-agent LLM selection example:
+An omitted `--llm-*` option falls back to `LLM_CLIENT_NAME`.
 
 ```bash
-madclean data\benchmark_datasets\beers_dirty.csv --llm-recommender Gemini --llm-coding OpenAI --llm-validation Gemini
-```
-## Running the UI
-MADClean also includes an interactive web UI.
-
-### 1. Configure API keys
-Create a `.env` file in the project root (same as CLI) and add your API key(s), e.g.:
-
-```
-OPENAI_API_KEY="your_api_key_here"
-# OR
-GEMINI_API_KEY="your_api_key_here"
+madclean data/benchmark_datasets/beers_dirty.csv --verbose --save-cleaned
+madclean data/benchmark_datasets/beers_dirty.csv --llm-recommender Gemini --llm-coding OpenAI
 ```
 
-### 2. Start the UI
-From the repository root, activate your environment and run:
+## The web interface
 
 ```bash
 madclean-ui
 ```
 
-Reflex will print the URLs in the terminal (typically a frontend on `http://localhost:300x/` and a backend on `http://0.0.0.0:8000`).
+Reflex prints the URLs it serves on, normally a frontend on `http://localhost:3000/` and a
+backend on `http://localhost:8000`.
 
-### 3. Use the UI
-- **Upload Data**: upload a CSV (or Excel) to preview the table.
-- **Model selection**: choose an LLM **per agent** (Recommender / Coding / Validation), or **USER** for manual validation.
-- **Advanced Configuration**: adjust cleaning/validation settings, sample sizes, HITL, etc.
-- **Run Pipeline**: watch logs + progress; use **Pipeline** for step-level detail when HITL or user validation is active.
-- **Usage** / **Report**: tokens, runtime, and generated cleaning code.
-- **Evaluation** (optional): upload a **ground-truth** file with the same columns and row count as the dirty dataset to score cleaning after a successful run.
-- **Edit + Download**: edit cells in the cleaned table and export the edited CSV.
+- **Upload data** — load a CSV or Excel file and preview the table.
+- **Model selection** — pick an LLM per agent, or `USER` to validate by hand.
+- **Advanced configuration** — cleaning and validation settings, sample sizes, human-in-the-loop.
+- **Run pipeline** — live logs and progress, with step-level detail per column.
+- **Usage and report** — tokens, runtime and the generated cleaning code.
+- **Evaluation** — upload a ground-truth file with the same columns and row count to score a run.
+- **Edit and download** — correct cells in the cleaned table and export the result.
 
-![UI](assets/main_window.png)
+![The MADClean interface](docs/main_window.png)
 
-## Security Note
-This framework does **not** provide strong sandboxing guarantees for LLM-generated code.
-Executing LLM-generated code should only be done with **trusted models and environments**.
+## Development
+
+| Command | What it does |
+| --- | --- |
+| `./run setup` | install Python 3.12 and the locked dependencies |
+| `./run fast` | lint, then every test not marked slow (no network) |
+| `./run full` | lint, then the whole suite at real size |
+| `./run smoke` | start the CLI and the UI and check that both answer |
+| `./run check <file.py>` | lint one file |
+| `./run live <dataset>` | one real-model benchmark run — this costs API tokens |
+
+No test in `./run fast` or `./run full` calls a real model; they all run against a scripted fake
+client, so the suite is free to run and deterministic.
+
+## Security note
+
+MADClean executes code written by a language model. It does **not** sandbox that code. Run it
+only with models and in environments you trust.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

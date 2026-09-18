@@ -2170,8 +2170,8 @@ def main_content() -> rx.Component:
                                                 rx.text("Advanced Configuration overrides that per agent (e.g. select different model for Coding Agent).", size="1", color_scheme="gray"),
                                                 rx.text("Set Validation to USER for fully manual validation.", size="1", color_scheme="gray"),
                                                 rx.text("3) Add or customize models", font_weight="bold"),
-                                                rx.text("Clients: Code/madclean/llm/llm_clients.py", size="1", color_scheme="gray"),
-                                                rx.text("Registry: Code/madclean/llm/llm_registry.py", size="1", color_scheme="gray"),
+                                                rx.text("Clients: madclean/llm/llm_clients.py", size="1", color_scheme="gray"),
+                                                rx.text("Registry: madclean/llm/llm_registry.py", size="1", color_scheme="gray"),
                                                 rx.text("Match api_key_name and add the key in .env", size="1", color_scheme="gray"),
                                                 rx.text("4) LLM settings (temperature / top_p)", font_weight="bold"),
                                                 rx.text(

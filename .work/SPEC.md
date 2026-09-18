@@ -18,16 +18,16 @@ Measured by env-doctor on 2026-09-16.
 - Node v24.18.0 on PATH; bun not installed; Docker Desktop 29.6.1 installed, daemon not running
 - git 2.54.0, gh 2.98.0, git-lfs 3.7.1; git core.autocrlf=true
 - ports 3000 and 8000 free
-- pinned by: uv (`Code/.python-version` = 3.12, `Code/uv.lock`, `uv sync --frozen`)
+- pinned by: uv (`.python-version` = 3.12, `uv.lock`, `uv sync --frozen`)
 - known blocker: uv's CPython 3.11 is blocked by Windows Smart App Control — worked around by using 3.12
 - known blocker: Smart App Control blocks the venv's pytest.exe and hypothesis >= 6.156 — worked around by `python -m pytest` and hypothesis < 6.156
 - known blocker (slice 2): Smart App Control also blocks `_ssl.pyd` in uv's own CPython 3.12 — worked around by running on the signed python.org CPython 3.12.10 with `[tool.uv] python-preference = "only-system"`
 - Reflex downloads bun to %LOCALAPPDATA%\reflex\bun and it runs under Smart App Control (proved in slice 0)
 
 ## Stack
-- package: `Code/madclean` — pandas 2.3.2, numpy 2.3.2, spaCy 3.8.7, openai 1.102.0, google-genai 1.39.1, pydantic 2.11.7, rapidfuzz 3.14.3, fuzzywuzzy 0.18.0 (existing pins)
+- package: `madclean` — pandas 2.3.2, numpy 2.3.2, spaCy 3.8.7, openai 1.102.0, google-genai 1.39.1, pydantic 2.11.7, rapidfuzz 3.14.3, fuzzywuzzy 0.18.0 (existing pins)
 - spaCy model: en_core_web_sm 3.8.0 pinned by wheel URL in the lock (no runtime download)
-- GUI: Reflex 0.8.28.post1 (`Code/gui`)
+- GUI: Reflex 0.8.28.post1 (`gui`)
 - toolchain: uv + Python 3.12
 - tests: pytest + hypothesis (< 6.156, see Environment)
 - lint: ruff (check only, no reformatting of existing files; rules E9, F63, F7, F82 — a slice that fixes a rule's findings adds that rule)
@@ -36,7 +36,7 @@ Measured by env-doctor on 2026-09-16.
 - base: thesis repo msc-thesis-cosc (tag `thesis-final`) + three fixes ported from hqahtan/COSC-Thesis-William: `format_prompt_template` safe prompt filling, OpenAI structured-output handling in `llm_clients.py`, Qwen 9B model id `qwen/qwen3.5-9b`
 - NOT ported from hqahtan: recommender returning `None` history for already-clean columns
 - data files: `.gitattributes` marks `*.csv` as `-text` (byte-identical everywhere); tax, adult, restaurants committed with plain git
-- layout: keep `Code/madclean`, `Code/gui`, `Code/evaluation`; tests in `Code/tests`; `./run` at repo root
+- layout: the Python project is the repository root — `madclean`, `gui`, `evaluation`, `tests`, `data`, `docs`, with `pyproject.toml` and `./run` beside them. The thesis-era `Code/` wrapper and the `Paper/` folder were removed after slice 2, so this repository is only the code; the paper stays in msc-thesis-cosc.
 - internal records: stdlib `@dataclass`; pydantic only for parsing model JSON; records are converted back to plain dicts at the GUI edge — `asdict` for trace events, and `CleaningReport.to_dict()` for the run report, because the GUI prints that dict and it must keep the thesis's flat shape, key order and absent-when-unset keys
 - offline tests: scripted fake LLM client implementing `BaseLLMClient`
 - one failing column: marked failed in the report, keeps original values, other columns continue

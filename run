@@ -3,7 +3,7 @@
 # through here: one place to look, one thing to allowlist, one thing that can't
 # drift from what SPEC.md claims the commands are.
 #
-# The Python project lives in Code/; this script stays at the repo root so the
+# The Python project is the repository root, so every task runs from here and the
 # gate stamps and the journal land in .work/.
 set -eu
 cd "$(dirname "$0")"
@@ -51,7 +51,7 @@ gate() {
 }
 
 py() {
-  uv --directory Code run --frozen "$@"
+  uv run --frozen "$@"
 }
 
 # pytest goes through `python -m`: Windows Application Control blocks the
@@ -159,7 +159,7 @@ task="${1:-}"
 filtered=$#
 
 case "$task" in
-  setup) uv --directory Code sync --frozen ;;
+  setup) uv sync --frozen ;;
   fast)  gate fast fast_gate "$@" ;;
   full)  gate full full_gate "$@" ;;
   smoke) gate smoke smoke_gate ;;
@@ -168,7 +168,7 @@ case "$task" in
     live_run "$1" ;;
   check)
     case "${1:-}" in
-      *.py) uv run --project Code --frozen ruff check "$1" ;;
+      *.py) uv run --frozen ruff check "$1" ;;
       *) exit 0 ;;
     esac ;;
   ""|-h|--help|help) usage ;;

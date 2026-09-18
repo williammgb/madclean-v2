@@ -1,9 +1,0 @@
-# Virtual environment
-.env
-.DCvenv/
-test_env/
-build/
-
-# Bytecode
-__pycache__/
-*.py[cod]

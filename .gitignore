@@ -6,10 +6,10 @@ __pycache__/
 *.py[cod]
 
 # Local project/runtime artifacts
-Code/gui/uploaded_files/
-Code/gui/.web/
-Code/gui/.states/
-Code/data/cleaned/
+gui/uploaded_files/
+gui/.web/
+gui/.states/
+data/cleaned/
 
 # Tooling caches and build output
 .pytest_cache/

@@ -20,8 +20,8 @@
     {
       "id": 1,
       "name": "bug fixes and offline end-to-end test",
-      "state": "in-progress",
-      "commit": null,
+      "state": "done",
+      "commit": "c2ee9f5",
       "checks": [
         {"claim": "a column typed COLLECTION no longer crashes prompt creation, checked by a property test with random braces", "passes": true, "evidence": "./run fast: 77 passed, 23 deselected in 47.16s, including test_prompt_filling.py (never-raises property over all 22 templates with brace-heavy text, and the COLLECTION example)"},
         {"claim": "one column raising an exception leaves the other columns cleaned and that column marked failed", "passes": true, "evidence": "./run fast -k marked_failed: 2 passed; the same 2 tests failed with the thesis cleaning_coordinator.py stashed back in"},
@@ -31,7 +31,7 @@
         {"claim": "FD counts are stored under violations_count and imputables_count", "passes": true, "evidence": "./run fast -k fresh_counts: 1 passed (counts 1 and 1, no violation_count or imputable_count attribute)"},
         {"claim": "sampling takes a seed from config and two fake-LLM runs with the same seed give identical output", "passes": true, "evidence": "./run fast: test_sampling_seed.py and the 300-row beers slice pair passed; ./run full: 100 passed including the two full same-seed beers runs (equal table, report and prompts)"},
         {"claim": "the three hqahtan fixes are in, each with a test", "passes": true, "evidence": "prompt filling: test_prompt_filling.py; OpenAI structured output: test_llm_clients.py 5 cases; Qwen 9B id: test_qwen_9b_uses_the_real_openrouter_model_id — ./run fast -k 'openai or openrouter or plain_text or unparseable or parse_errors or qwen': 6 passed"},
-        {"claim": "one live beers run with Gemini completes and its paper-mode scores are recorded in the journal", "passes": false, "evidence": null}
+        {"claim": "one live beers run with Gemini completes and its paper-mode scores are recorded in the journal", "passes": true, "evidence": "./run live beers (207s): det P 0.999 R 0.996 F1 0.998 | cor P 0.999 R 0.996 F1 0.997 | 186,954 tokens; .work/gates/live.log has no FAILED lines, all 9 columns finished and all 3 dependency tasks ran"}
       ]
     },
     {

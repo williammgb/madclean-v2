@@ -178,3 +178,8 @@ while its section has no `built:` line.
 - proved: with the environment rebuilt at the new root, all three gates pass — fast 91, full 115, smoke renders the page — so the move changed no behaviour.
 - full gate passed (285s): 115 passed, 2 warnings in 282.83s (0:04:42)
 - smoke gate passed (134s): gui: page rendered in the browser with no console errors; backend /ping answered
+- live beers passed (212s): live beers: det P 0.999 R 0.996 F1 0.998 | cor P 0.999 R 0.996 F1 0.997 | 207s | 186,954 tok
+- proved: the second live beers run went through end to end, including the dependency stage that killed the first one — the log prints "[brewery_name → brewery_id] Succesfully cleaned" with the arrow intact, so the console fix holds against the real thing.
+- F12 answered by that run: the log has no "FAILED" line anywhere, all nine columns finished and all three dependency tasks ran, and the token count is 186,954 — so the score line is reporting a genuinely complete run, which was the condition the finding was deferred on.
+- measured: this run scores det F1 0.998 and cor F1 0.997 against the thesis's committed four-run average of 0.991 and 0.990, in 207s against 303s, using 186,954 tokens against 197,752. It is one run against an average of four, so the gap is within what run-to-run variation can explain; what it does establish is that nothing in slices 1 and 2 made the cleaning worse.
+- built: slice 1 — the COLLECTION prompt crash, the failing-column isolation, the two broken evaluation scripts, blocking code execution, --save-cleaned, the FD count fields, seeded sampling and the three hqahtan fixes, each with a test, plus the offline end-to-end fake run and `./run live`.

@@ -108,3 +108,11 @@ while its section has no `built:` line.
 - F12 deferred: until `./run live beers` runs; its log is then read for "FAILED cleaning" lines and a non-trivial token count before the live check is ticked.
 - [F13] final-check found: a "cleaner not configured" configuration error now shows up as one failed dependency task instead of stopping the run.
 - F13 rejected: the pipeline always registers the FD cleaner, so this error cannot happen through Pipeline, and if it did the failure is reported with its reason instead of discarding every cleaned column.
+- [F14] designer found: returned no journal lines (its reply was 3152 characters) — read the reply, or relaunch it if it died
+- F14 rejected: this is the slice 2 designer launched in the fan-out; it finished and its plan arrived as a hand-back message, saved to .work/PLAN.next.md for slice 2.
+
+## Slice 2 — dataclasses instead of dicts (not started)
+
+- you decided: the per-call token counts each model client returns stay a plain dict; only the totals per agent become a dataclass.
+- you decided: only the thesis scorer gets typed scores in slice 2; the GUI scorer waits for slice 3, which replaces it.
+- you decided: the two identical copies of the human-review sampling code are merged in slice 2; the third copy, which only dependency tasks would reach, stays as it is.

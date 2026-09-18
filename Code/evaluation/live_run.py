@@ -4,10 +4,12 @@ import sys
 from madclean.llm.llm_registry import LLM_CLIENT_MAP
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.main import setup_llm
+from madclean.utils.console import configure_console
 from .evaluation_pipeline import DATASETS, EvaluationPipeline
 
 
 def main(dataset: str) -> int:
+    configure_console()
     if dataset not in DATASETS:
         print(f"live: unknown dataset '{dataset}'. Choose one of: {', '.join(DATASETS)}")
         return 2

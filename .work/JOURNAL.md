@@ -164,3 +164,9 @@ while its section has no `built:` line.
 - you decided: commits carry no assistant attribution at all, in this repo or any other.
 - done: the nine commits made in this repo were rewritten to drop their attribution trailers, and every hash recorded in .work/ was updated to match. The trees are byte-identical to before, and the thesis history is untouched — the rewrite was limited to commits after the thesis-final tag, because the imported thesis commits are signed and rewriting them would have dropped the signatures and broken the tag.
 - fast gate passed (83s): 88 passed, 24 deselected, 1 warning in 80.36s (0:01:20)
+- live beers failed (139s): [brewery_name] Successfully cleaned and validated.
+
+## Slice 1 — the first live run
+- [F21] found by the first live beers run with Gemini: all nine columns were cleaned, and then the run died at the functional dependency stage with `UnicodeEncodeError: 'charmap' codec can't encode character '→'`. The progress line for a dependency task names it "left → right", and Windows gives a piped process a cp1252 console, which cannot encode that arrow. The whole run was paid for and then lost at its last step, and no scores were produced.
+- F21 fixed: `madclean/utils/console.py` switches stdout and stderr to UTF-8 and tells them to replace whatever they cannot encode, and it is called by the CLI, the UI launcher, the live runner and both evaluation scripts. Cleaning is untouched; a character the terminal cannot draw now costs a glyph instead of the run. `tests/test_console_encoding.py` prints the real dependency line through a cp1252 console, and its first test asserts that the same line without the fix still crashes, so the test cannot quietly stop proving anything.
+- fast gate passed (81s): 91 passed, 24 deselected, 1 warning in 78.65s (0:01:18)

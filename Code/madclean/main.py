@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from madclean.pipeline import Pipeline
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.llm.llm_registry import LLM_CLIENT_MAP, LLMSpec
+from madclean.utils.console import configure_console
 
 def run_ui() -> int:
     """Launch the Reflex UI from the repository GUI folder."""
@@ -22,6 +23,7 @@ def run_ui() -> int:
 
 def cli_ui() -> int:
     """Dedicated UI entry point for pyproject console script."""
+    configure_console()
     return run_ui()
 
 def main(file_path, 
@@ -77,6 +79,7 @@ def setup_llm(llm_client_name: str, llm_clients: dict[str, LLMSpec]) -> LLMSpec:
 
 def cli(argv=None) -> int:
     """CLI wrapper. Returns a process exit code."""
+    configure_console()
     argv = list(argv or [])
     if len(argv) == 0:
         import sys

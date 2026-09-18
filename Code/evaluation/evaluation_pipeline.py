@@ -10,6 +10,7 @@ import pandas as pd
 from madclean.llm.llm_registry import LLM_CLIENT_MAP
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.pipeline import Pipeline
+from madclean.utils.console import configure_console
 from .evaluation import CleaningEvaluation
 
 BASE_DIR = Path(__file__).resolve().parent.parent / "data" / "benchmark_datasets"
@@ -204,6 +205,7 @@ class EvaluationPipeline:
         if self.verbose: print(f"Saved evaluation results to {results_file_path}")
 
 if __name__ == "__main__":
+    configure_console()
     baselines_to_run = ["raha_baran", "holoclean", "retclean", "cocoon", "saged"]
 
     evaluation_pipeline = EvaluationPipeline(

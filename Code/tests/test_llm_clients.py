@@ -98,4 +98,4 @@ def test_other_parse_errors_are_raised():
 
 
 def test_qwen_9b_uses_the_real_openrouter_model_id():
-    assert LLM_CLIENT_MAP["Qwen_9B"]["default_model"] == "qwen/qwen3.5-9b"
+    assert LLM_CLIENT_MAP["Qwen_9B"].default_model == "qwen/qwen3.5-9b"

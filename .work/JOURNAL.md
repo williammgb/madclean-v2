@@ -111,7 +111,7 @@ while its section has no `built:` line.
 - [F14] designer found: returned no journal lines (its reply was 3152 characters) — read the reply, or relaunch it if it died
 - F14 rejected: this is the slice 2 designer launched in the fan-out; it finished and its plan arrived as a hand-back message, saved to .work/PLAN.next.md for slice 2.
 
-## Slice 2 — dataclasses instead of dicts (not started)
+## Before slice 2 started — the three answers it was planned with
 
 - you decided: the per-call token counts each model client returns stay a plain dict; only the totals per agent become a dataclass.
 - you decided: only the thesis scorer gets typed scores in slice 2; the GUI scorer waits for slice 3, which replaces it.
@@ -134,3 +134,13 @@ while its section has no `built:` line.
 - built: eight scenarios in `Code/tests/test_refactor_equivalence.py` that drive the pipeline into named branches and record everything a caller can see — the cleaned table, the run report, the trace events per column, a hash per prompt and every review request — against reference files in `Code/tests/golden/refactor/`.
 - proved: the references were captured while `git diff --stat 59f6b1c -- Code/madclean Code/evaluation Code/gui` was empty, so they describe the code as it was before the refactor; the seven fast scenarios then passed twice unchanged (4.0s and 4.0s) and the full beers scenario passed its second run too (7.9s).
 - measured: the fast gate now takes 28s for 84 tests, down from 50s for 77, because the python.org build starts faster than uv's; that leaves room for the refactor's own tests.
+- fast gate failed (30s): 7 failed, 79 passed, 24 deselected, 1 warning in 28.33s
+- fast gate passed (29s): 86 passed, 24 deselected, 1 warning in 27.83s
+- full gate passed (111s): 112 passed, 2 warnings in 110.06s (0:01:50)
+- smoke gate passed (51s): gui: page rendered in the browser with no console errors; backend /ping answered
+- built: the records the system passes around are now dataclasses instead of dictionaries — `CleaningReport` with one entry per column or dependency task, `TraceStep` and `TraceEvent` for the pipeline view, `TokenUsage` and `AgentTokenUsage` for the counters, `LLMSpec` for each model in the registry, and `Scores` for what the thesis scorer returns.
+- built: the twelve hand-written report dictionaries and the twenty append-then-emit pairs in the agent loop are now four small helpers, and the two identical copies of the review-sampling code are one; the file went from 1,373 lines to 1,105 with no change in behaviour.
+- proved: after the refactor, all eight reference scenarios still match the outputs captured before it — same cleaned table, same report, same trace events, same prompt hashes, same review payloads — and all 16 stored thesis runs still re-score to the committed JSON, now through the score records.
+- decided: the report is converted to the thesis's flat dictionary at exactly two points in the GUI, checked by grep and by the smoke launch, so the rest of the GUI keeps reading the shape it was written for.
+- found: the dependency-task failure entry used to list its generated code before its validation flag, unlike every other dependency entry; the record type fixes the order, which the references accept because they compare by key, not by position.
+- measured: the gates got much faster on the new interpreter — fast 28s for 87 tests, full 110s for 112 tests, smoke 51s.

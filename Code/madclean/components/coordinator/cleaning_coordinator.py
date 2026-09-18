@@ -4,6 +4,14 @@ import pandas as pd
 from madclean.components.multi_agent_cleaner.multi_agent_cleaning import MultiAgentCleaning
 from madclean.components.dataprofiler.dataprofiler import MultiColumnCleaner
 from madclean.components.domain.schema import MultiColumnTask, ColumnProfile
+from madclean.components.domain.report import (
+    CleaningReport,
+    ColumnReport,
+    FDReport,
+    SkippedColumnReport,
+    TraceEvent,
+    TraceStep,
+)
 from madclean.components.coordinator.task_scheduler import TaskScheduler
 from madclean.config.settings import CleaningConfig
 
@@ -37,9 +45,14 @@ class CleaningCoordinator:
         except Exception as exc:
             # One broken column must not end the run: report it failed and keep its original values.
             cleaned_series = None
-            status_msg = self._record_task_failure(
-                col, exc, {"datatype": profile.semantic_type, "already_clean": False}
-            )
+            status_msg = self._record_task_failure(col, exc, ColumnReport(
+                datatype=profile.semantic_type,
+                already_clean=False,
+                cleaned=False,
+                attempts=0,
+                generated_code="",
+                cleaning_validated=False,
+            ))
         self._update_progress(message=status_msg)
         return col, cleaned_series
 
@@ -50,26 +63,24 @@ class CleaningCoordinator:
             )
         except Exception as exc:
             target_cols, cleaned_df = task_info.target_columns, None
-            status_msg = self._record_task_failure(
-                task_info.verbose_key, exc, {"target_columns": task_info.target_columns}
-            )
+            status_msg = self._record_task_failure(task_info.verbose_key, exc, FDReport(
+                target_columns=task_info.target_columns,
+                cleaned=False,
+                attempts=0,
+                cleaning_validated=False,
+                generated_code="",
+            ))
         self._update_progress(message=status_msg)
         return target_cols, cleaned_df
 
-    def _record_task_failure(self, key: str, exc: Exception, identity: dict) -> str:
-        """Writes a FAILED report entry and trace event for a task that raised, and returns its log message."""
+    def _record_task_failure(self, key: str, exc: Exception, entry: ColumnReport | FDReport) -> str:
+        """Fills in why a task that raised failed, reports it, traces it, and returns its log message."""
         reason = f"{type(exc).__name__}: {exc}"
-        self.multi_agent_loop.cleaning_report[key] = {
-            **identity,
-            "cleaned": False,
-            "attempts": 0,
-            "generated_code": "",
-            "cleaning_validated": False,
-            "trace_steps": [{"id": "finished", "title": "Finished", "status": "failed", "output": reason}],
-            "reason": reason,
-        }
+        entry.reason = reason
+        entry.trace_steps = [TraceStep(id="finished", title="Finished", status="failed", output=reason)]
+        self.multi_agent_loop.cleaning_report[key] = entry
         self.multi_agent_loop._emit_trace(
-            {"column": key, "step_id": "finished", "title": "Finished", "status": "failed", "output": reason}
+            TraceEvent(column=key, step_id="finished", title="Finished", status="failed", output=reason)
         )
         return f"[{key}] FAILED cleaning: {reason}"
     
@@ -102,7 +113,7 @@ class CleaningCoordinator:
     def clean_dataset(self, 
                     df: pd.DataFrame, 
                     column_profiles: dict[str, ColumnProfile],
-                    multi_col_tasks: list[MultiColumnTask]) -> tuple[pd.DataFrame, dict]: # change fds
+                    multi_col_tasks: list[MultiColumnTask]) -> tuple[pd.DataFrame, CleaningReport]: # change fds
         """Function to run cleaning synchronous via pipeline."""
         try:
             # for normal scripts
@@ -121,8 +132,8 @@ class CleaningCoordinator:
     async def clean_dataset_async(self, 
                                 df: pd.DataFrame, 
                                 column_profiles: dict[str, ColumnProfile],
-                                multi_col_tasks: list[MultiColumnTask]) -> tuple[pd.DataFrame, dict]:
-        """Actual cleaning: makes sure all tasks are executed in correct order.""" 
+                                multi_col_tasks: list[MultiColumnTask]) -> tuple[pd.DataFrame, CleaningReport]:
+        """Actual cleaning: makes sure all tasks are executed in correct order."""
         df_cleaned = df.copy()
         try:
             self.multi_agent_loop.reset_token_usage()
@@ -144,32 +155,28 @@ class CleaningCoordinator:
                     raise asyncio.CancelledError()
                 if col in skip_cols:
                     # Respect GUI: user marked this column as already clean.
-                    self.multi_agent_loop.cleaning_report[col] = {
-                        "datatype": profile.semantic_type,
-                        "already_clean": True,
-                        "cleaned": False,
-                        "attempts": 0,
-                        "generated_code": "",
-                        "cleaning_validated": False,
-                        "trace_steps": [
-                            {
-                                "id": "finished",
-                                "title": "Finished",
-                                "status": "completed",
-                                "output": "User has determined this column is already clean.",
-                            }
+                    skipped_output = "User has determined this column is already clean."
+                    self.multi_agent_loop.cleaning_report[col] = ColumnReport(
+                        datatype=profile.semantic_type,
+                        already_clean=True,
+                        cleaned=False,
+                        attempts=0,
+                        generated_code="",
+                        cleaning_validated=False,
+                        trace_steps=[
+                            TraceStep(id="finished", title="Finished", status="completed", output=skipped_output)
                         ],
-                    }
+                    )
                     # Emit a trace event so the GUI pipeline view shows a Finished card.
                     try:
                         self.multi_agent_loop._emit_trace(
-                            {
-                                "column": col,
-                                "step_id": "finished",
-                                "title": "Finished",
-                                "status": "completed",
-                                "output": "User has determined this column is already clean.",
-                            }
+                            TraceEvent(
+                                column=col,
+                                step_id="finished",
+                                title="Finished",
+                                status="completed",
+                                output=skipped_output,
+                            )
                         )
                     except Exception:
                         # Tracing must never break cleaning.
@@ -178,14 +185,14 @@ class CleaningCoordinator:
                     self._update_progress(message=msg)
                     continue
                 if profile.semantic_type in ("EMPTY", "UNKNOWN"):
-                    self.multi_agent_loop.cleaning_report[col] = {
-                            "datatype": profile.semantic_type,
-                            "already_clean": False,
-                            "cleaned": False,
-                            "attempts": 0,
-                            "cleaning_validated": False,
-                            "reason": "Empty column or unknown data type"
-                        }
+                    self.multi_agent_loop.cleaning_report[col] = SkippedColumnReport(
+                        datatype=profile.semantic_type,
+                        already_clean=False,
+                        cleaned=False,
+                        attempts=0,
+                        cleaning_validated=False,
+                        reason="Empty column or unknown data type",
+                    )
                     msg = f"[{col}] Skipping empty column or unknown data type"
                     self._update_progress(message=msg) 
                     continue   
@@ -224,17 +231,19 @@ class CleaningCoordinator:
                     df_cleaned[col] = final_cleaned_column
                     successfully_applied_cols.add(col)
 
-            cleaning_report = self.multi_agent_loop.cleaning_report
-            cleaning_report["token_usage"] = self.multi_agent_loop.token_usage
             self.progress["status"] = "finished"
-            return df_cleaned, cleaning_report
+            return df_cleaned, CleaningReport(
+                entries=self.multi_agent_loop.cleaning_report,
+                token_usage=self.multi_agent_loop.token_usage,
+            )
         except asyncio.CancelledError:
             # Cooperative cancellation: return whatever progress we have so far.
-            cleaning_report = self.multi_agent_loop.cleaning_report
-            cleaning_report["token_usage"] = self.multi_agent_loop.token_usage
-            cleaning_report["cancelled"] = True
             self.progress["status"] = "cancelled"
-            return df_cleaned, cleaning_report
+            return df_cleaned, CleaningReport(
+                entries=self.multi_agent_loop.cleaning_report,
+                token_usage=self.multi_agent_loop.token_usage,
+                cancelled=True,
+            )
 
     async def _multi_col_task_wrapper(self, 
                                       df: pd.DataFrame, 

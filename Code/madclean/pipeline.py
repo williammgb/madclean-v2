@@ -1,4 +1,5 @@
 import pandas as pd
+from dataclasses import asdict
 from pathlib import Path
 import time
 import asyncio
@@ -10,16 +11,18 @@ from madclean.components.dataprofiler.outlier_detection import OutlierDetection
 from madclean.components.dataprofiler.functional_dependencies import FunctionalDependencies
 from madclean.components.multi_agent_cleaner.multi_agent_cleaning import MultiAgentCleaning
 from madclean.components.coordinator.cleaning_coordinator import CleaningCoordinator
+from madclean.components.domain.report import CleaningReport
 from madclean.utils.helpers import load_dataset, save_dataset
 from madclean.llm.llm_clients import OpenAIClient
+from madclean.llm.llm_registry import LLMSpec
 from madclean.config.settings import CleaningConfig
 from madclean.config.loader import load_default_cleaning_config
 
 class Pipeline:
     def __init__(
         self,
-        llm_config: dict,
-        agent_llm_configs: dict | None = None,
+        llm_config: LLMSpec,
+        agent_llm_configs: dict[str, LLMSpec] | None = None,
         config: CleaningConfig = None,
         log_callback=None,
         trace_callback=None,
@@ -50,14 +53,13 @@ class Pipeline:
             print(msg)
 
         self._log = _log
-        def _create_client(cfg: dict):
-            client_class = cfg["class"]
-            if client_class == OpenAIClient:
+        def _create_client(spec: LLMSpec):
+            if spec.client_class == OpenAIClient:
                 return OpenAIClient(
-                    model_name=cfg["default_model"],
-                    base_url=cfg.get("base_url"),
+                    model_name=spec.default_model,
+                    base_url=spec.base_url,
                 )
-            return client_class(model_name=cfg["default_model"])
+            return spec.client_class(model_name=spec.default_model)
 
         self.agent_llm_configs = agent_llm_configs
         # Default/single client (backwards compatible).
@@ -80,8 +82,8 @@ class Pipeline:
             agent_specs = {
                 k: {
                     "client": _create_client(v),
-                    "role": v["role"],
-                    "model": v.get("default_model"),
+                    "role": v.role,
+                    "model": v.default_model,
                 }
                 for k, v in self.agent_llm_configs.items()
             }
@@ -95,7 +97,7 @@ class Pipeline:
         else:
             self.multi_agent_loop = MultiAgentCleaning(
                 llm_client=self.client,
-                llm_role=llm_config["role"],
+                llm_role=llm_config.role,
                 config=self.config,
                 trace_callback=self._trace_callback,
                 user_validation_callback=self._user_validation_callback,
@@ -111,19 +113,11 @@ class Pipeline:
             log_callback=self._log,
             cancel_check=self._cancel_check,
         )
-        if self.verbose: 
+        if self.verbose:
             self._log("=" * 35)
-            self._log(f"Pipeline initialized with LLM: {llm_config['default_model']}")
-    
-    @staticmethod
-    def get_total_usage(token_usage):
-        return {
-            "input_tokens": sum(a["input_tokens"] for a in token_usage.values()),
-            "output_tokens": sum(a["output_tokens"] for a in token_usage.values()),
-            "total_tokens": sum(a["total_tokens"] for a in token_usage.values()),
-        }
-    
-    def run(self, file_path: str, save_cleaned: bool = False) -> tuple[pd.DataFrame | None, dict | None]:
+            self._log(f"Pipeline initialized with LLM: {llm_config.default_model}")
+
+    def run(self, file_path: str, save_cleaned: bool = False) -> tuple[pd.DataFrame | None, CleaningReport | None]:
         import sys
         old_stdout = None
         stream_to_log = None
@@ -195,36 +189,35 @@ class Pipeline:
             except asyncio.CancelledError:
                 # Cooperative cancellation from UI "Stop" button.
                 cleaned_df = None
-                cleaning_report = {
-                    "cancelled": True,
-                    "token_usage": getattr(self.multi_agent_loop, "token_usage", {}),
-                }
+                cleaning_report = CleaningReport(
+                    token_usage=self.multi_agent_loop.token_usage,
+                    cancelled=True,
+                )
             end_time = time.perf_counter()
             runtime = (end_time - start_time)
             if cleaning_report is None:
-                cleaning_report = {}
-            cleaning_report["runtime_seconds"] = runtime
+                cleaning_report = CleaningReport()
+            cleaning_report.runtime_seconds = runtime
 
             # 4. Print runtime and token usage --> UPDATE WITH AGENTS
-            token_usage = cleaning_report.get("token_usage", {})
-            if token_usage:
-                cleaning_report["total_usage"] = self.get_total_usage(token_usage)
+            token_usage = cleaning_report.token_usage
+            cleaning_report.total_usage = token_usage.total()
 
             # Only print usage details when running outside the UI.
             if self.verbose and not callable(self._log_callback):
                 self._log("-" * 35)
                 self._log(f"Runtime: {runtime}s")
                 self._log(f"Token usage for {file_path}:")
-                for agent, usage in token_usage.items():
+                for agent, usage in asdict(token_usage).items():
                     self._log(f"\n  {agent.capitalize()} agent:")
                     self._log(f"      Input tokens:   {usage['input_tokens']:>10,}")
                     self._log(f"      Output tokens:  {usage['output_tokens']:>10,}")
                     self._log(f"      Total tokens:   {usage['total_tokens']:>10,}")
-                total_usage = cleaning_report.get("total_usage", {})
+                total_usage = cleaning_report.total_usage
                 self._log("\n  TOTAL:")
-                self._log(f"      Input tokens:   {total_usage.get('input_tokens', 0):>10,}")
-                self._log(f"      Output tokens:  {total_usage.get('output_tokens', 0):>10,}")
-                self._log(f"      Total tokens:   {total_usage.get('total_tokens', 0):>10,}")
+                self._log(f"      Input tokens:   {total_usage.input_tokens:>10,}")
+                self._log(f"      Output tokens:  {total_usage.output_tokens:>10,}")
+                self._log(f"      Total tokens:   {total_usage.total_tokens:>10,}")
                 self._log("-" * 35)
 
             # 5. Save cleaned DataFrame

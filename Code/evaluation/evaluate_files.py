@@ -3,6 +3,7 @@ import json
 from pprint import pprint
 from dotenv import load_dotenv
 load_dotenv()
+from dataclasses import asdict
 from typing import Callable
 from pathlib import Path
 import pandas as pd
@@ -76,7 +77,7 @@ class EvaluationPipeline:
             try:
                 cleaned_df = pd.read_csv(file_path, encoding="utf-8")
                 eval_results, _, _ = evaluator.evaluate(cleaned_df)
-                return {**eval_results, 'runtime_seconds': runtime}
+                return {**asdict(eval_results), 'runtime_seconds': runtime}
             except Exception as e:
                 print(f"Error evaluating {baseline}: {e}")
                 return self._get_empty_metrics(error_msg='Error during evaluation')

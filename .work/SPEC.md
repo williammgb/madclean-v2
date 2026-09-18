@@ -21,6 +21,7 @@ Measured by env-doctor on 2026-09-16.
 - pinned by: uv (`Code/.python-version` = 3.12, `Code/uv.lock`, `uv sync --frozen`)
 - known blocker: uv's CPython 3.11 is blocked by Windows Smart App Control — worked around by using 3.12
 - known blocker: Smart App Control blocks the venv's pytest.exe and hypothesis >= 6.156 — worked around by `python -m pytest` and hypothesis < 6.156
+- known blocker (slice 2): Smart App Control also blocks `_ssl.pyd` in uv's own CPython 3.12 — worked around by running on the signed python.org CPython 3.12.10 with `[tool.uv] python-preference = "only-system"`
 - Reflex downloads bun to %LOCALAPPDATA%\reflex\bun and it runs under Smart App Control (proved in slice 0)
 
 ## Stack
@@ -55,8 +56,8 @@ Measured by env-doctor on 2026-09-16.
 - ask before adding any dependency not listed in Stack
 
 ## Verification
-Fast gate: ./run fast     # < 60s, no network — ruff (E9,F63,F7,F82); pytest -m "not slow": unit + property tests, fake-LLM pipeline on beers, re-score one stored beers run vs committed JSON — measured 12s warm (slice 0)
-Full gate: ./run full     # background, minutes — ruff; pytest incl. slow: re-score all stored MADClean/ablation/baseline outputs vs committed JSON, profile all 7 datasets — measured 236s cold, sharing the machine with the smoke gate (slice 0)
+Fast gate: ./run fast     # < 60s, no network — ruff (E9,F63,F7,F82,W605); pytest -m "not slow": unit + property tests, fake-LLM pipeline on beers, seven refactor-equivalence scenarios, re-score one stored beers run vs committed JSON — measured 28s warm (slice 2)
+Full gate: ./run full     # background, minutes — ruff; pytest incl. slow: re-score all stored MADClean/ablation/baseline outputs vs committed JSON, profile all 7 datasets, the full beers equivalence scenario — measured 110s (slice 2)
 Smoke:     ./run smoke    # `madclean --help`; start madclean-ui; wait for :3000 and :8000/ping; render in headless Edge, fail on console errors; stop and confirm nothing still answers (the GUI build is proved here) — measured 125s on first start (slice 0)
 Live:      ./run live beers  # manual only, real Gemini calls, once after slice 1
 Properties: scores in [0,1] or undefined; unchanged table → zero changes; cleaned == ground truth → P = R = 1; fast scorer == paper scorer; FD ordering respects dependencies; prompt filling never raises on braces in data
@@ -84,8 +85,16 @@ Proved by: both gates above, plus the smoke launch
 
 Proved by: both gates, plus the smoke launch and the live beers run
 
+## Slice 2 — done means
+- [x] report, trace steps, token usage, model registry entries and the thesis scorer's scores are dataclasses
+- [x] the duplicated report and trace blocks in `multi_agent_cleaning.py` are gone, and so is the second copy of the review-sampling code
+- [x] eight reference scenarios, captured on unchanged code, still pass after the refactor: cleaned table, report, trace events, prompt hashes and review payloads
+- [x] property tests for the report's dictionary form, the token counters and the score records
+- [x] the GUI converts records in exactly two places and still starts
+
+Proved by: both gates, plus the smoke launch
+
 ## Later slices
-- slice 2: dataclasses for report, trace steps, token usage, registry, scores; duplicate report/trace blocks in `multi_agent_cleaning.py` removed; fake-LLM output identical before and after
 - slice 3: evaluation module, strict mode, mean ± std, agent stats (attempts, validator rejections, tokens per column), one command re-scores all methods
 - slice 4: GUI rebuild from the preview, notebook export, per-session state
 

@@ -37,12 +37,15 @@
     {
       "id": 2,
       "name": "dataclasses instead of dicts",
-      "state": "planned",
+      "state": "in-progress",
       "commit": null,
       "checks": [
-        {"claim": "report, trace steps, token usage, model registry and scores are dataclasses", "passes": false, "evidence": null},
-        {"claim": "the duplicated report and trace blocks in multi_agent_cleaning.py are removed", "passes": false, "evidence": null},
-        {"claim": "fake-LLM pipeline output is identical before and after the refactor", "passes": false, "evidence": null}
+        {"claim": "report, trace steps, token usage, model registry and scores are dataclasses", "passes": true, "evidence": "./run fast -k dataclasses: 1 passed (a fake run's report, entries, trace steps, emitted events, per-agent and total token usage, every LLM_CLIENT_MAP value and both CleaningEvaluation.evaluate results are dataclass instances)"},
+        {"claim": "the duplicated report and trace blocks in multi_agent_cleaning.py are removed", "passes": true, "evidence": "grep -c in multi_agent_cleaning.py: 'trace_steps.append(' 0, '\"step_id\"' 0, 'self.cleaning_report[' 2; file went from 1373 to 1105 lines; the two identical review-sampling blocks are now one _review_sample helper"},
+        {"claim": "fake-LLM pipeline output is identical before and after the refactor", "passes": true, "evidence": "8 reference files captured at 78b3437 while git diff --stat 59f6b1c -- Code/madclean Code/evaluation Code/gui was empty; after the refactor ./run fast -k equivalence: 7 passed and ./run full: 112 passed, including the beers scenario and all 16 golden-score tests through Scores"},
+        {"claim": "the report keeps the thesis's dictionary shape, and the token counters and scores keep their types", "passes": true, "evidence": "./run fast -k records: 3 passed (P1 report dict: key order, JSON round trip, reason only when set, no generated_code/trace_steps on skipped entries; P2 token sums; P3 score key structure with int and float leaves)"},
+        {"claim": "the GUI converts records at exactly two places and still starts", "passes": true, "evidence": "grep -n 'to_dict()\\|asdict(' gui/gui/state.py: line 1710 asdict(event) and line 2793 report.to_dict(); ./run smoke: 'gui: page rendered in the browser with no console errors; backend /ping answered'"},
+        {"claim": "all three gates pass", "passes": true, "evidence": "./run fast: 87 passed, 24 deselected in 28.00s; ./run full: 112 passed in 110.06s; ./run smoke passed"}
       ]
     },
     {

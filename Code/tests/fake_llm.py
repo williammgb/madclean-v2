@@ -7,6 +7,7 @@ from madclean.components.multi_agent_cleaner.llm_recommending import (
 )
 from madclean.components.multi_agent_cleaner.llm_validation import CodeOutputValidation
 from madclean.llm.llm_clients import BaseLLMClient
+from madclean.llm.llm_registry import LLMSpec
 
 IDENTITY_CODE = "def clean_column(data):\n    return data\n"
 
@@ -83,6 +84,11 @@ class FakeLLMClient(BaseLLMClient):
     def calls_for(self, kind: str) -> list[list[dict]]:
         return [messages for call_kind, messages in self.calls if call_kind == kind]
 
-    def llm_config(self) -> dict:
-        """A registry-shaped entry, as Pipeline expects from LLM_CLIENT_MAP."""
-        return {"class": lambda model_name: self, "default_model": "fake", "role": "assistant"}
+    def llm_config(self) -> LLMSpec:
+        """A registry entry, as Pipeline expects from LLM_CLIENT_MAP."""
+        return LLMSpec(
+            client_class=lambda model_name: self,
+            default_model="fake",
+            role="assistant",
+            api_key_name="FAKE_API_KEY",
+        )

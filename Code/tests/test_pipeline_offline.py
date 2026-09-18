@@ -9,6 +9,7 @@ import pytest
 from fake_llm import FakeLLMClient
 from madclean.components.coordinator.cleaning_coordinator import CleaningCoordinator
 from madclean.components.coordinator.prompt_generation import PromptGeneration
+from madclean.components.domain.report import AgentTokenUsage, CleaningReport
 from madclean.components.domain.schema import ColumnProfile, FDResult, MultiColumnTask
 from madclean.components.multi_agent_cleaner.llm_coding import LLMCodingAgent
 from madclean.config.loader import load_default_cleaning_config
@@ -22,7 +23,7 @@ BEERS = Path(__file__).resolve().parents[1] / "data" / "benchmark_datasets" / "b
 class OfflineRun:
     fake: FakeLLMClient
     cleaned: pd.DataFrame | None
-    report: dict | None
+    report: CleaningReport | None
     saved: list[Path]
     seconds: float
 
@@ -71,7 +72,9 @@ def _prompts_by_agent(fake: FakeLLMClient) -> dict[str, list[str]]:
 
 def _assert_same_run(first: OfflineRun, second: OfflineRun):
     pd.testing.assert_frame_equal(first.cleaned, second.cleaned)
-    without_runtime = [{k: v for k, v in run.report.items() if k != "runtime_seconds"} for run in (first, second)]
+    without_runtime = [
+        {k: v for k, v in run.report.to_dict().items() if k != "runtime_seconds"} for run in (first, second)
+    ]
     assert without_runtime[0] == without_runtime[1]
     assert first.fake.calls_for("validator")
     assert _prompts_by_agent(first.fake) == _prompts_by_agent(second.fake)
@@ -101,11 +104,11 @@ def test_fake_beers_run_cleans_every_column_and_keeps_the_data(beers_run):
 
     pd.testing.assert_frame_equal(cleaned, dirty)
     for column in dirty.columns:
-        entry = report[column]
-        if entry["datatype"] in ("EMPTY", "UNKNOWN"):
+        entry = report.entries[column]
+        if entry.datatype in ("EMPTY", "UNKNOWN"):
             continue
-        assert entry["cleaned"] is True, (column, entry)
-    assert report["total_usage"]["total_tokens"] > 0
+        assert entry.cleaned is True, (column, entry)
+    assert report.total_usage.total_tokens > 0
     assert beers_run.fake.calls_for("recommender")
     assert beers_run.fake.calls_for("coder")
     assert beers_run.fake.calls_for("validator")
@@ -141,10 +144,10 @@ def test_one_column_that_raises_is_marked_failed_and_the_others_are_cleaned(tmp_
     assert run.cleaned["a"].tolist() == [f"{v}_x" for v in dirty["a"]]
     assert run.cleaned["c"].tolist() == [f"{v}_x" for v in dirty["c"]]
     assert run.cleaned["b"].tolist() == dirty["b"].tolist()
-    assert run.report["a"]["cleaned"] is True
-    assert run.report["c"]["cleaned"] is True
-    assert run.report["b"]["cleaned"] is False
-    assert "RuntimeError: prompt creation broke for b" in run.report["b"]["reason"]
+    assert run.report.entries["a"].cleaned is True
+    assert run.report.entries["c"].cleaned is True
+    assert run.report.entries["b"].cleaned is False
+    assert "RuntimeError: prompt creation broke for b" in run.report.entries["b"].reason
 
 
 def test_a_stopped_run_returns_no_table_and_saves_nothing(tmp_path, monkeypatch):
@@ -157,7 +160,7 @@ def test_a_stopped_run_returns_no_table_and_saves_nothing(tmp_path, monkeypatch)
     run = run_offline(tmp_path, csv, enable_multi_col_cleaning=False)
 
     assert run.cleaned is None
-    assert run.report["cancelled"] is True
+    assert run.report.cancelled is True
     assert run.saved == []
 
 
@@ -180,7 +183,7 @@ def test_ten_columns_run_at_least_twice_as_fast_as_with_the_thesis_blocking_exec
     print(f"10 columns: {new.seconds:.1f}s with code off the event loop, {thesis.seconds:.1f}s with thesis blocking execution")
     assert len(new.fake.calls_for("coder")) >= 10
     assert len(thesis.fake.calls_for("coder")) >= 10
-    assert all(new.report[f"n{i}"]["cleaned"] for i in range(10))
+    assert all(new.report.entries[f"n{i}"].cleaned for i in range(10))
     assert new.seconds * 2 < thesis.seconds
 
 
@@ -189,11 +192,11 @@ class _StubLoop:
 
     def __init__(self):
         self.cleaning_report = {}
-        self.token_usage = {}
+        self.token_usage = AgentTokenUsage()
         self.traces = []
 
     def reset_token_usage(self):
-        self.token_usage = {}
+        self.token_usage = AgentTokenUsage()
 
     def _emit_trace(self, event):
         self.traces.append(event)
@@ -222,7 +225,7 @@ def test_a_dependency_task_that_raises_is_marked_failed_and_the_run_returns():
     cleaned, report = coordinator.clean_dataset(df, profiles, [task])
 
     pd.testing.assert_frame_equal(cleaned, df)
-    assert report["a → b"]["cleaned"] is False
-    assert report["a → b"]["target_columns"] == ["a", "b"]
-    assert "RuntimeError: dependency data broke" in report["a → b"]["reason"]
-    assert loop.traces[-1]["status"] == "failed"
+    assert report.entries["a → b"].cleaned is False
+    assert report.entries["a → b"].target_columns == ["a", "b"]
+    assert "RuntimeError: dependency data broke" in report.entries["a → b"].reason
+    assert loop.traces[-1].status == "failed"

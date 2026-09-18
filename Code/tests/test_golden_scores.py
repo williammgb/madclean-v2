@@ -1,5 +1,6 @@
 import json
 import math
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -65,5 +66,5 @@ def test_stored_cleaned_output_reproduces_committed_scores(evaluator_for, datase
 
     assert set(committed_overall) == {"detection_counts", "detection_metrics", "correction_counts", "correction_metrics"}
     assert set(committed_columns) == set(per_column)
-    assert _mismatches(overall, committed_overall) == []
-    assert _mismatches(per_column, committed_columns) == []
+    assert _mismatches(asdict(overall), committed_overall) == []
+    assert _mismatches({col: asdict(scores) for col, scores in per_column.items()}, committed_columns) == []

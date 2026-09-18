@@ -1,7 +1,8 @@
-import time 
+import time
 import json
 from dotenv import load_dotenv
 load_dotenv()
+from dataclasses import asdict
 from typing import Callable
 from pathlib import Path
 import pandas as pd
@@ -67,9 +68,10 @@ class EvaluationPipeline:
         if cleaned_df is None:
             return self._get_empty_metrics(error_msg="Pipeline returned None")
         
-        eval_results, _, _ = evaluator.evaluate(cleaned_df) 
-        performance_dict = {**eval_results,
-                            "token_usage": (report or {}).get("total_usage", {}),
+        eval_results, _, _ = evaluator.evaluate(cleaned_df)
+        total_usage = report.total_usage if report is not None else None
+        performance_dict = {**asdict(eval_results),
+                            "token_usage": asdict(total_usage) if total_usage is not None else {},
                             "runtime_seconds": runtime}
         return performance_dict
 
@@ -109,7 +111,7 @@ class EvaluationPipeline:
             try:
                 cleaned_df = pd.read_csv(file_path)
                 eval_results, _, _ = evaluator.evaluate(cleaned_df)
-                return {**eval_results, 'runtime_seconds': runtime}
+                return {**asdict(eval_results), 'runtime_seconds': runtime}
             except Exception as e:
                 print(f"Error evaluating {baseline}: {e}")
                 return self._get_empty_metrics(error_msg='Error during evaluation')

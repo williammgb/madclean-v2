@@ -1,8 +1,15 @@
 import pandas as pd
 import numpy as np
+from dataclasses import asdict
 from pathlib import Path
 # local imports
 from madclean.utils.helpers import load_dataset
+from madclean.evaluation.scores import (
+    CorrectionCounts,
+    DetectionCounts,
+    PrecisionRecallF1,
+    Scores,
+)
 
 class CleaningEvaluation:
     def __init__(self, 
@@ -23,7 +30,7 @@ class CleaningEvaluation:
             not self.dirty_df.columns.equals(self.ground_truth_df.columns):
             raise ValueError("Dirty and ground truth DataFrames must have the same index and columns.")
         
-    def evaluate(self, cleaned_df: pd.DataFrame) -> tuple[dict, dict, dict]:
+    def evaluate(self, cleaned_df: pd.DataFrame) -> tuple[Scores, dict[str, Scores], dict]:
         if self.dirty_df.shape != cleaned_df.shape:
             raise ValueError("Cleaned DataFrame must have the same shape as the initial dirty DataFrame.")
         # Boolean df that shows which changes the cleaning framework has made
@@ -34,19 +41,18 @@ class CleaningEvaluation:
    
     def _get_performance_metrics(self, 
                                 cleaned_df: pd.DataFrame, 
-                                changes_mask: pd.DataFrame) -> tuple[dict, dict]:
+                                changes_mask: pd.DataFrame) -> tuple[Scores, dict[str, Scores]]:
         """Calculate metrics for evaluation of error detection and correction."""
         # 1. Create mask that compares cleaned dataset with ground truth
         equal_mask = self._compare_dataframes(cleaned_df, self.ground_truth_df)
-        overall_metrics = {}
         column_metrics = {}
-        # 2. Add to results dictionary
-        overall_metrics.update(self._compute_metrics(
+        # 2. Score the whole table
+        overall_metrics = self._compute_metrics(
             errors_mask=self._errors_mask,
             changes_mask=changes_mask,
             equal_mask=equal_mask,
             total_size=self.dirty_df.size
-        ))
+        )
         # 3. Compute column-level results
         for col in self.dirty_df.columns:
             column_metrics[col] = self._compute_metrics(
@@ -61,7 +67,7 @@ class CleaningEvaluation:
                         errors_mask: pd.DataFrame | pd.Series,
                         changes_mask: pd.DataFrame | pd.Series,
                         equal_mask: pd.DataFrame | pd.Series,
-                        total_size: int) -> dict:
+                        total_size: int) -> Scores:
         # 1. Convert masks to numpy for better operations
         errors_mask = errors_mask.to_numpy(dtype=bool)
         changes_mask = changes_mask.to_numpy(dtype=bool)
@@ -85,31 +91,31 @@ class CleaningEvaluation:
         repair_f1 = (2 * (repair_precision * repair_recall) / (repair_precision + repair_recall)
                         if (repair_precision + repair_recall) > 0 else 0.0)
         
-        return {
-            "detection_counts": {
-                "true_positives": int(tp),
-                "false_positives": int(fp),
-                "false_negatives": int(fn),
-                "true_negatives": int(tn),
-                "total_errors": int(total_errors),
-                "total_changes": int(total_changes)
-            },
-            "detection_metrics": {
-                "precision": float(precision),
-                "recall": float(recall),
-                "f1_score": float(f1)
-            },
-            "correction_counts": {
-            "correctly_repaired_cells": int(tp_correct), 
-            "incorrectly_repaired_cells": int(tp - tp_correct),
-            "repaired_clean_cells": int(fp)
-            },
-            "correction_metrics": {
-                "precision": float(repair_precision),
-                "recall": float(repair_recall),
-                "f1_score": float(repair_f1)
-            }
-        }
+        return Scores(
+            detection_counts=DetectionCounts(
+                true_positives=int(tp),
+                false_positives=int(fp),
+                false_negatives=int(fn),
+                true_negatives=int(tn),
+                total_errors=int(total_errors),
+                total_changes=int(total_changes),
+            ),
+            detection_metrics=PrecisionRecallF1(
+                precision=float(precision),
+                recall=float(recall),
+                f1_score=float(f1),
+            ),
+            correction_counts=CorrectionCounts(
+                correctly_repaired_cells=int(tp_correct),
+                incorrectly_repaired_cells=int(tp - tp_correct),
+                repaired_clean_cells=int(fp),
+            ),
+            correction_metrics=PrecisionRecallF1(
+                precision=float(repair_precision),
+                recall=float(repair_recall),
+                f1_score=float(repair_f1),
+            ),
+        )
                 
 
     def _compare_dataframes(self, df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
@@ -226,9 +232,9 @@ class CleaningEvaluation:
                 pass
         return x == y
 
-    def display_results(self, results: dict):
+    def display_results(self, results: Scores):
         print('\n')
-        for section, values in results.items():
+        for section, values in asdict(results).items():
             print(f"--- {section.replace('_', ' ').upper()} ---")
             for k, v in values.items():
                 if isinstance(v, float):

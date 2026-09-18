@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 ### Local imports
 from madclean.pipeline import Pipeline
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
-from madclean.llm.llm_registry import LLM_CLIENT_MAP
+from madclean.llm.llm_registry import LLM_CLIENT_MAP, LLMSpec
 
 def run_ui() -> int:
     """Launch the Reflex UI from the repository GUI folder."""
@@ -52,7 +52,7 @@ def main(file_path,
     )
     pipeline.run(file_path=file_path, save_cleaned=save_cleaned)
 
-def setup_llm(llm_client_name: str, llm_clients: dict):
+def setup_llm(llm_client_name: str, llm_clients: dict[str, LLMSpec]) -> LLMSpec:
     load_dotenv()
     if llm_client_name not in llm_clients:
         raise ValueError(
@@ -61,7 +61,7 @@ def setup_llm(llm_client_name: str, llm_clients: dict):
             f"Or view README to add LLM API."
         )
     llm_config = llm_clients[llm_client_name]
-    api_key_name = llm_config.get("api_key_name")
+    api_key_name = llm_config.api_key_name
     if not api_key_name:
         raise ValueError(
             f"api_key_name not defined in registry for {llm_client_name}"

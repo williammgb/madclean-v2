@@ -8,6 +8,7 @@ import threading
 import math
 import re
 import random
+from dataclasses import asdict
 from typing import Optional, List, Dict, Any, Callable, Tuple
 from madclean.config.settings import CleaningConfig
 from madclean.config.loader import load_default_cleaning_config
@@ -1699,14 +1700,14 @@ class State(rx.State):
             self.logs = (self.logs + new_lines)[-self._max_logs :]
             self._log_file_offset = new_offset
 
-    def _enqueue_trace_event(self, event: Dict[str, Any]):
+    def _enqueue_trace_event(self, event):
         if not event:
             return
         try:
             if not self._trace_file_path:
                 return
             with open(self._trace_file_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps(event, default=str) + "\n")
+                f.write(json.dumps(asdict(event), default=str) + "\n")
         except Exception:
             return
 
@@ -2788,6 +2789,8 @@ class State(rx.State):
         async with self:
             if result is not None:
                 cleaned_df, report = result
+                # The GUI reads the report as the flat dictionary the thesis returned.
+                report = report.to_dict() if report is not None else None
                 cancelled = bool((report or {}).get("cancelled")) if isinstance(report, dict) else False
                 if cancelled or cleaned_df is None:
                     # Keep the currently loaded dataset; do not overwrite with None.

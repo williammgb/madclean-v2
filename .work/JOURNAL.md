@@ -200,3 +200,10 @@ while its section has no `built:` line.
 - full gate passed (327s): 144 passed, 2 warnings in 324.07s (0:05:24)
 - smoke gate passed (59s): gui: page rendered in the browser with no console errors; backend /ping answered
 - fast gate passed (104s): 117 passed, 30 deselected, 1 warning in 100.68s (0:01:40)
+- [F22] review by hand, plan-drift: `./run score` claimed to re-score "all baselines" but silently left SAGED out, because SAGED stores an error mask rather than a cleaned file and the command only looked for cleaned files.
+- F22 fixed: the command now scores a detection-only method from its stored mask, prints its detection score with a dash where a correction score would be, and says why underneath the table. SAGED scores detection F1 0.662 on hospital and on beers (different precision and recall, the F1s land close by chance), 0.596 on movies and 0.149 on rayyan.
+- [F23] review by hand, edge-hunter: `compute_cleaning_metrics` scored the frames twice — once inside `Evaluator` and once again for the accuracy mask — which the GUI would pay for on every evaluation of a large upload.
+- F23 fixed: it now builds the three masks once and counts the table and its columns from them. The pinned GUI numbers are unchanged.
+- noted: the scoring helper that turns hits, claims and wants into precision, recall and F1 is now `precision_recall_f1` rather than private, because the detection-only path needs the same arithmetic and must not grow a second copy of it.
+- full gate passed (125s): 148 passed, 2 warnings in 124.08s (0:02:04)
+- smoke gate passed (27s): gui: page rendered in the browser with no console errors; backend /ping answered

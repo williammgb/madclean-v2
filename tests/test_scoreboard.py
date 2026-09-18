@@ -28,6 +28,19 @@ def test_a_method_without_stored_output_is_left_out():
     assert scoreboard.score_method("madclean", BENCHMARKS["beers"], Mode.PAPER) is not None
 
 
+def test_a_method_that_only_detects_is_scored_from_its_mask():
+    """SAGED flags cells and never repairs them, so it stores a mask, not a cleaned file."""
+    assert scoreboard.cleaned_files("saged", "beers") == []
+    assert scoreboard.detection_file("saged", "beers") is not None
+
+    scored = scoreboard.score_method("saged", BENCHMARKS["beers"], Mode.PAPER)
+
+    assert scored["detection_only"] is True
+    assert 0.0 < scored["detection"]["mean"] < 1.0
+    assert scored["correction"]["mean"] == 0.0
+    assert 0.0 < scored["detection_recall"] <= 1.0
+
+
 def test_madclean_first_then_the_baselines():
     names = scoreboard.methods()
     assert names[0] == "madclean"

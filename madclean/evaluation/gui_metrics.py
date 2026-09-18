@@ -13,7 +13,7 @@ from typing import Any
 import pandas as pd
 
 from madclean.evaluation.comparison import Mode, equal_mask
-from madclean.evaluation.scoring import Evaluator
+from madclean.evaluation.scoring import count_scores
 
 
 def check_frames_compatible(
@@ -48,7 +48,9 @@ def compute_cleaning_metrics(
     - repair_recall: of the cells that needed a repair, the share that now match.
     - f1_repair: the harmonic mean of the two, when both are defined.
     """
-    evaluation = Evaluator(dirty, ground_truth, numeric_columns=None, mode=Mode.PAPER).evaluate(cleaned)
+    # The three masks each cell is judged by, built once and shared by the table and its columns.
+    errors = ~equal_mask(dirty, ground_truth, None, Mode.PAPER)
+    changes = ~equal_mask(dirty, cleaned, None, Mode.PAPER)
     correct = equal_mask(cleaned, ground_truth, None, Mode.PAPER)
 
     rows = len(dirty)
@@ -56,10 +58,16 @@ def compute_cleaning_metrics(
     cells = rows * len(columns)
 
     per_column = {
-        column: _view(evaluation.per_column[column], rows, int(correct[column].sum()))
+        column: _view(
+            count_scores(errors[column], changes[column], correct[column], rows),
+            rows,
+            int(correct[column].sum()),
+        )
         for column in columns
     }
-    metrics = _view(evaluation.overall, cells, int(correct.to_numpy().sum()))
+    metrics = _view(
+        count_scores(errors, changes, correct, cells), cells, int(correct.to_numpy().sum())
+    )
     metrics.update(
         {
             "n_rows": rows,

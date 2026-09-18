@@ -164,17 +164,19 @@ def count_scores(
             total_errors=total_errors,
             total_changes=total_changes,
         ),
-        detection_metrics=_scores(true_positives, true_positives + false_positives, true_positives + false_negatives),
+        detection_metrics=precision_recall_f1(
+            true_positives, true_positives + false_positives, true_positives + false_negatives
+        ),
         correction_counts=CorrectionCounts(
             correctly_repaired_cells=repaired,
             incorrectly_repaired_cells=true_positives - repaired,
             repaired_clean_cells=false_positives,
         ),
-        correction_metrics=_scores(repaired, total_changes, total_errors),
+        correction_metrics=precision_recall_f1(repaired, total_changes, total_errors),
     )
 
 
-def _scores(hits: int, claimed: int, wanted: int) -> PrecisionRecallF1:
+def precision_recall_f1(hits: int, claimed: int, wanted: int) -> PrecisionRecallF1:
     """Precision, recall and F1. Undefined counts as 0.0, as in the paper."""
     precision = hits / claimed if claimed > 0 else 0.0
     recall = hits / wanted if wanted > 0 else 0.0

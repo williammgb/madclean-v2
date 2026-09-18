@@ -15,10 +15,13 @@ import re
 from dataclasses import asdict
 from pathlib import Path
 
+import pandas as pd
+
 from madclean.evaluation.aggregate import aggregate
 from madclean.evaluation.comparison import Mode
 from madclean.evaluation.datasets import BENCHMARKS, Benchmark
-from madclean.evaluation.scoring import Evaluator
+from madclean.evaluation.scores import Spread
+from madclean.evaluation.scoring import Evaluator, precision_recall_f1
 from madclean.utils.console import configure_console
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -30,16 +33,29 @@ SCOREBOARD_PATH = RESULTS_DIR / "scoreboard.json"
 _RUN_NUMBER = re.compile(r"_cleaned(?:_(\d+))?\.csv$")
 
 
+# SAGED only flags cells, it never repairs them, so it stores a mask instead of a cleaned file.
+DETECTION_ONLY = "saged"
+
+
 def cleaned_files(method: str, dataset: str) -> list[Path]:
     """Every stored cleaned file for one method and dataset, in run order."""
-    if method == "madclean":
-        folder = RESULTS_DIR / dataset / "data"
-    else:
-        folder = BASELINES_DIR / method / "data"
+    folder = _folder(method, dataset)
     if not folder.is_dir():
         return []
     found = sorted(folder.glob(f"{dataset}_cleaned*.csv"), key=_run_number)
     return [path for path in found if _RUN_NUMBER.search(path.name)]
+
+
+def detection_file(method: str, dataset: str) -> Path | None:
+    """The stored error mask of a method that only detects, when it has one."""
+    path = _folder(method, dataset) / f"{dataset}_detection.csv"
+    return path if path.is_file() else None
+
+
+def _folder(method: str, dataset: str) -> Path:
+    if method == "madclean":
+        return RESULTS_DIR / dataset / "data"
+    return BASELINES_DIR / method / "data"
 
 
 def _run_number(path: Path) -> int:
@@ -57,7 +73,7 @@ def score_method(method: str, benchmark: Benchmark, mode: Mode) -> dict | None:
     """Scores every stored run of one method on one dataset, averaged. None when it has none."""
     files = cleaned_files(method, benchmark.name)
     if not files:
-        return None
+        return _score_detection_only(method, benchmark, mode)
     evaluator = Evaluator(
         benchmark.dirty_path,
         benchmark.ground_truth_path,
@@ -81,6 +97,42 @@ def score_method(method: str, benchmark: Benchmark, mode: Mode) -> dict | None:
         "detection_recall": averaged.detection_metrics["recall"].mean,
         "correction_precision": averaged.correction_metrics["precision"].mean,
         "correction_recall": averaged.correction_metrics["recall"].mean,
+    }
+
+
+def _score_detection_only(method: str, benchmark: Benchmark, mode: Mode) -> dict | None:
+    """Scores a method that only flags cells, from the mask it stored.
+
+    There is nothing to correct, so correction stays at zero and the row is honest about it: the
+    method was never asked to repair anything.
+    """
+    path = detection_file(method, benchmark.name)
+    if path is None:
+        return None
+    evaluator = Evaluator(
+        benchmark.dirty_path,
+        benchmark.ground_truth_path,
+        numeric_columns=set(benchmark.numeric_columns),
+        mode=mode,
+    )
+    flagged = pd.read_csv(path, encoding="utf-8").astype(bool).to_numpy()
+    errors = evaluator.errors.to_numpy()
+    if flagged.shape != errors.shape:
+        print(f"  {method:<12} {benchmark.name:<9} skipped {path.name}: mask is {flagged.shape}, dataset is {errors.shape}")
+        return None
+
+    true_positives = int((errors & flagged).sum())
+    detection = precision_recall_f1(true_positives, int(flagged.sum()), int(errors.sum()))
+    zero = Spread(mean=0.0, standard_deviation=0.0, runs=1)
+    return {
+        "runs": 1,
+        "detection_only": True,
+        "detection": asdict(Spread(mean=detection.f1_score, standard_deviation=0.0, runs=1)),
+        "correction": asdict(zero),
+        "detection_precision": detection.precision,
+        "detection_recall": detection.recall,
+        "correction_precision": 0.0,
+        "correction_recall": 0.0,
     }
 
 
@@ -113,9 +165,14 @@ def print_board(board: dict) -> None:
                 result = scored.get(method)
                 if result is None:
                     line += f"{'—':<16}"
+                elif result.get("detection_only"):
+                    # It only flags cells, so it has no correction score to show.
+                    line += f"{result['detection']['mean']:.3f}/{'—':<7} "
                 else:
                     line += f"{result['detection']['mean']:.3f}/{result['correction']['mean']:.3f}   "
             print(line)
+        if any(result.get("detection_only") for scored in datasets.values() for result in scored.values()):
+            print(f"\n  {DETECTION_ONLY} only detects errors, it never repairs them: no correction score.")
         print()
         for name, scored in datasets.items():
             madclean = scored.get("madclean")

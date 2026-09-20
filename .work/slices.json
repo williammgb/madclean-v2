@@ -65,8 +65,8 @@
     {
       "id": 4,
       "name": "GUI rebuild",
-      "state": "in-progress",
-      "commit": null,
+      "state": "done",
+      "commit": "b39004f",
       "checks": [
         {"claim": "the GUI matches the approved preview: top bar, workflow rail, colour-band headers, IBM Plex Sans", "passes": true, "evidence": "gui/assets/madclean.css is the artifact's own stylesheet and Reflex imports it into the page's global styles alongside the IBM Plex Sans and Mono fonts; ./run smoke rendered the page in headless Edge with 1 topbar, 8 nav-item entries, the run-setup card and a view head, no console errors; tests/test_gui_pages.py checks the views carry the preview's class names"},
         {"claim": "GUI code is split into page modules (the state split by area is deferred, see the journal)", "passes": true, "evidence": "gui.py is 60 lines of assembly; gui/gui/pages/ holds nine view modules and gui/gui/components/ the shell and icons; the 2,259-line legacy page file is deleted; ./run fast -k gui_pages: 13 passed, including that every view builds and every rail entry has a module behind it. The State class itself was deliberately left whole — you decided that on 2026-09-20, because splitting its 140 fields would rewire ~55 reads inside the cleaning run's own code path"},

@@ -105,8 +105,14 @@ Proved by: both gates, plus the smoke launch
 
 Proved by: both gates, plus the smoke launch and `./run score`
 
-## Later slices
-- slice 4: GUI rebuild from the preview, notebook export, per-session state
+## Slice 4 — done means
+- [x] the GUI matches the approved preview: top bar, workflow rail, colour-band headers, IBM Plex Sans
+- [x] GUI code is split into page modules, one per view, with the shell beside them
+- [~] state per area: the run's per-session state is split out; the `State` class itself stays whole, deferred deliberately
+- [x] stop and review state are per browser session, so two tabs do not interfere
+- [x] notebook export produces an `.ipynb` that runs top to bottom and reproduces the cleaned CSV
+
+Proved by: both gates, plus the smoke launch
 
 ## Open
 - mutation testing tool on Windows — needed after slice 3

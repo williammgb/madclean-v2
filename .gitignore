@@ -19,8 +19,6 @@ evaluation/results/scoreboard.json
 *.egg-info/
 build/
 
-# Workflow files: only the spec, the done ledger and the journal are kept
-.work/*
-!.work/SPEC.md
-!.work/slices.json
-!.work/JOURNAL.md
+# Workflow files stay local: the spec, the done ledger and the journal are how the
+# build was run, not part of the system, and the repository is only the code.
+.work/

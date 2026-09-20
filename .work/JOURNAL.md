@@ -216,3 +216,21 @@ while its section has no `built:` line.
 - decided: the run's worker thread is handed its session's run object when the run is wired up, through `partial`, instead of looking the session up while it works. A thread that reached back into the page's state to find out whose run it is would be reading state it does not own.
 - proved: `tests/test_gui_sessions.py` holds two sessions at once — stopping one leaves the other running, a question queued in one is invisible in the other, starting a new run clears only its own session, and a worker thread blocked on an answer ignores the other tab's answer and takes its own.
 - fast gate passed (90s): 125 passed, 30 deselected, 1 warning in 87.32s (0:01:27)
+- smoke gate passed (44s): gui: page rendered in the browser with no console errors; backend /ping answered
+- smoke gate failed (878s): Binary file .work/gates/smoke.log matches
+- found: that failure was the first attempt at the rebuilt page — Reflex cannot add a plain string to a value it reads out of a dictionary, so `row["missing_pct"] + "%"` stopped the whole app from compiling. Every such value is now typed on the way out with `.to(str)`.
+- built: `gui/gui/components/` holds the shell — the top bar, the workflow rail with the run-setup card, and the small pieces every view shares — plus the preview's icon set as one sprite.
+- built: `gui/gui/pages/` holds the eight views, one module each: Table with colour-band headers and changed cells shown old-above-new, Profile with the per-column statistics and the dependency table, Pipeline with a row per task and an inspector for the step you pick, Review with the queue of questions and the buttons that answer them, Logs, Report with the run's tiles and the code the agents wrote, Evaluation, and a Guide that explains the system in plain English.
+- built: `gui.py` is now 50 lines that assemble those modules; the old 2,259-line page file is deleted.
+- built: `madclean/notebook.py` turns a run into a notebook — load the dirty file, run the agents' functions in the order the run ran them, save the cleaned file — and the GUI's Report view and `madclean --export-notebook PATH` both use it. The GUI's own copy of the code-merging logic is gone; both now call the same function.
+- proved: `tests/test_notebook_export.py` executes the exported notebook's code cells in order in a fresh namespace and compares the CSV it writes against the run's cleaned table, at small size in the fast gate and on beers in the full gate. It also checks the notebook mentions no model, no key and no madclean import, so whoever opens it can run it for nothing.
+- proved: `tests/test_gui_pages.py` builds all eight views, which is what caught the string-concatenation bug above; before it, the only way to find that was to start the app and watch it fail.
+- fast gate passed (116s): 142 passed, 31 deselected, 1 warning in 112.34s (0:01:52)
+- full gate passed (328s): 173 passed, 2 warnings in 325.23s (0:05:25)
+- smoke gate passed (44s): Binary file .work/gates/smoke.log matches
+- smoke gate failed (17s): Binary file .work/gates/smoke.log matches
+- found: the rail's "All settings" link opened a view that did not exist, so the main area went blank. A ninth module, `pages/settings.py`, now holds what a run does, how hard it tries and what the validator sees; the page tests were extended so every entry the shell can open must have a module behind it, which is the check that would have caught it.
+- you decided: the `State` class stays whole for now. Splitting its 140 fields into substates would rewire about 55 reads inside the cleaning run's own code path — the part the gates cover least — the day before the demo. The page modules and the per-session run state are done; the ledger records the rest as deferred rather than claiming it.
+- built: slice 4 — the GUI is the approved preview: the preview's own stylesheet, a top bar that carries the dataset and the run, a workflow rail over nine view modules, per-session runs so two tabs never share a stop button, and a notebook export that reproduces a run without calling a model.
+- fast gate passed (52s): 143 passed, 31 deselected, 1 warning in 49.38s
+- smoke gate passed (31s): gui: page rendered in the browser with no console errors; backend /ping answered

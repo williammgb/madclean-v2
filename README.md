@@ -77,6 +77,7 @@ madclean path/to/file.csv [OPTIONS]
 | `--llm-recommender` | LLM client for the Recommender agent |
 | `--llm-coding` | LLM client for the Coder agent |
 | `--llm-validation` | LLM client for the Validator agent |
+| `--export-notebook PATH` | write the run as a notebook that reproduces it without a model |
 | `--help` | full usage |
 
 An omitted `--llm-*` option falls back to `LLM_CLIENT_NAME`.
@@ -102,6 +103,12 @@ backend on `http://localhost:8000`.
 - **Usage and report** — tokens, runtime and the generated cleaning code.
 - **Evaluation** — upload a ground-truth file with the same columns and row count to score a run.
 - **Edit and download** — correct cells in the cleaned table and export the result.
+- **Notebook export** — the run as an `.ipynb` that loads the dirty file, runs the code the agents
+  wrote, and saves the cleaned table. It calls no model, so it runs anywhere and costs nothing.
+
+The interface is eight views behind one workflow rail — Table, Profile, Pipeline, Review, Logs,
+Report, Evaluation, Guide — and each is a module under `gui/gui/pages/`. Every browser tab gets its
+own run: two tabs can clean two datasets without sharing a stop button or a review queue.
 
 ![The MADClean interface](docs/main_window.png)
 

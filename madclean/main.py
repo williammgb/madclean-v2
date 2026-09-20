@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from madclean.pipeline import Pipeline
 from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.llm.llm_registry import LLM_CLIENT_MAP, LLMSpec
+from madclean.notebook import notebook_json
 from madclean.utils.console import configure_console
 
 def run_ui() -> int:
@@ -26,8 +27,9 @@ def cli_ui() -> int:
     configure_console()
     return run_ui()
 
-def main(file_path, 
+def main(file_path,
          save_cleaned: bool = False,
+         export_notebook: str | None = None,
          verbose: bool = False,
          llm_client_name_recommender: str | None = None,
          llm_client_name_coding: str | None = None,
@@ -52,7 +54,16 @@ def main(file_path,
         agent_llm_configs=llm_configs,
         verbose=verbose,
     )
-    pipeline.run(file_path=file_path, save_cleaned=save_cleaned)
+    _cleaned, report = pipeline.run(file_path=file_path, save_cleaned=save_cleaned)
+    if export_notebook and report is not None:
+        # The run as a notebook: the agents' code, in the order it ran, with no model call left.
+        source = notebook_json(
+            report,
+            dataset_path=str(file_path),
+            output_path=str(Path(file_path).with_name(Path(file_path).stem + "_cleaned.csv")),
+        )
+        Path(export_notebook).write_text(source, encoding="utf-8")
+        print(f"Notebook written to {export_notebook}")
 
 def setup_llm(llm_client_name: str, llm_clients: dict[str, LLMSpec]) -> LLMSpec:
     load_dotenv()
@@ -109,6 +120,12 @@ def cli(argv=None) -> int:
         action="store_true",
         help="Save the cleaned dataset output."
     )
+    parser.add_argument(
+        "--export-notebook",
+        default=None,
+        metavar="PATH",
+        help="Write the run as a notebook (.ipynb) that reproduces it without calling a model.",
+    )
     # Optional per-agent LLM selection (falls back to LLM_CLIENT_NAME if omitted).
     parser.add_argument(
         "--llm-recommender",
@@ -130,6 +147,7 @@ def cli(argv=None) -> int:
     main(
         file_path=args.file_path,
         save_cleaned=args.save_cleaned,
+        export_notebook=args.export_notebook,
         verbose=args.verbose,
         llm_client_name_recommender=args.llm_recommender,
         llm_client_name_coding=args.llm_coding,

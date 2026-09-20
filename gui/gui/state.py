@@ -24,6 +24,8 @@ from madclean.evaluation import (
     format_pct,
 )
 
+from madclean.notebook import merged_cleaning_code, notebook_json
+
 from .session import SessionRun, session_run
 
 class State(rx.State):
@@ -173,6 +175,8 @@ class State(rx.State):
     pipeline_view_scale: int = 100
     pipeline_card_width: int = 340
     selected_main_tab: str = "table"
+    # Which of the rail's eight views the main area shows.
+    active_view: str = "table"
     selected_trace_status: str = "Run cleaning to view live column workflows."
     pending_user_validation: bool = False
     pending_validation_request_ids: List[str] = []
@@ -288,6 +292,128 @@ class State(rx.State):
 
     def set_selected_main_tab(self, val: str):
         self.selected_main_tab = val
+
+    # ---- the rail's eight views -------------------------------------------------------------
+    @rx.event
+    def show_view(self, name: str):
+        """Switches the main area to one of the rail's views."""
+        self.active_view = name
+
+    @rx.var
+    def dataset_meta(self) -> str:
+        """The line under the file name in the top bar: how much data is loaded."""
+        if not self.column_names:
+            return "no dataset loaded"
+        return f"{self.total_rows:,} rows · {len(self.column_names)} columns"
+
+    @rx.var
+    def run_finished(self) -> bool:
+        return self.last_run_status == "finished"
+
+    @rx.var
+    def run_chip_text(self) -> str:
+        """What the top bar says about the run, in the words the preview uses."""
+        if self.is_cleaning and self.pending_user_validation:
+            return "Waiting for your review"
+        if self.is_cleaning:
+            return f"Cleaning… {self.progress_percent}%"
+        if self.last_run_status == "finished":
+            return f"Finished in {self.runtime_seconds_display} s"
+        if self.last_run_status == "cancelled":
+            return "Run stopped"
+        if self.last_run_status == "error":
+            return "Run failed"
+        return "Ready"
+
+    @rx.var
+    def run_chip_class(self) -> str:
+        if self.is_cleaning and self.pending_user_validation:
+            return "chip chip-lg chip-orange"
+        if self.is_cleaning:
+            return "chip chip-lg chip-accent"
+        if self.last_run_status == "finished":
+            return "chip chip-lg chip-green"
+        if self.last_run_status in ("cancelled", "error"):
+            return "chip chip-lg chip-red"
+        return "chip chip-lg"
+
+    @rx.var
+    def progress_style(self) -> str:
+        return f"width:{self.progress_percent}%"
+
+    @rx.event
+    def accept_user_validation(self, column: str):
+        """Takes the cleaning as it is: the same answer as the validator approving it."""
+        self.user_validation_needs_correction = False
+        return State.submit_user_validation(column)
+
+    @rx.var
+    def total_tokens_display(self) -> str:
+        """Every token the run spent, for the report's tile."""
+        total = (self.token_usage or {}).get("total_usage", {}) or {}
+        count = int(total.get("total_tokens", 0) or 0)
+        if not count:
+            count = sum(
+                int((usage or {}).get("total_tokens", 0) or 0)
+                for key, usage in (self.token_usage or {}).items()
+                if isinstance(usage, dict) and key != "total_usage"
+            )
+        return f"{count:,}"
+
+    @rx.var
+    def waiting_review_rows(self) -> List[Dict[str, Any]]:
+        """The tasks that have stopped and are waiting for a person, for the Review view."""
+        waiting = []
+        for row in self.pipeline_flow_rows:
+            steps = row.get("steps") or []
+            if any(str(step.get("needs_blink", "0")) == "1" for step in steps):
+                waiting.append(row)
+        return waiting
+
+    @rx.var
+    def opened_pipeline_rows(self) -> List[Dict[str, Any]]:
+        """The tasks with a step opened, for the pipeline inspector to show."""
+        return [row for row in self.pipeline_flow_rows if str(row.get("show_details", "0")) == "1"]
+
+    @rx.var
+    def selected_profile_rows(self) -> List[Dict[str, Any]]:
+        """The selected column's profile, as a list of one, so a view can render it without indexing."""
+        wanted = self.selected_profile_column
+        for row in self.profiling_dashboard_rows:
+            if str(row.get("column", "")) == wanted:
+                return [row]
+        return self.profiling_dashboard_rows[:1]
+
+    @rx.var
+    def page_range_label(self) -> str:
+        """"Rows 1–100 of 2,410", as the pager reads in the preview."""
+        if not self.total_rows:
+            return "no rows"
+        first = self.page_offset + 1
+        last = min(self.page_offset + self.page_size, self.total_rows)
+        return f"Rows {first:,}–{last:,} of {self.total_rows:,}"
+
+    @rx.var
+    def table_window_label(self) -> str:
+        """How much of the current page is on screen."""
+        if not self.page_row_count:
+            return ""
+        shown = min(self.row_window_size, self.page_row_count - self.row_window_offset)
+        return f"Showing {shown} of the {self.page_row_count} rows on this page."
+
+    @rx.var
+    def changed_cells_label(self) -> str:
+        return f"{len(self.modified_cell_keys):,} cells changed · green cells differ from the original"
+
+    @rx.var
+    def pipeline_task_count(self) -> int:
+        return len(self.pipeline_trace_columns)
+
+    @rx.var
+    def review_waiting_count(self) -> int:
+        """How many questions are waiting for an answer, for the badge on the rail."""
+        # A task is waiting when one of its steps is marked as needing a person.
+        return len(self.waiting_review_rows)
 
     def _run_evaluation(self) -> None:
         """Refresh evaluation metrics when ground truth and/or cleaned data change."""
@@ -599,78 +725,8 @@ class State(rx.State):
 
     @staticmethod
     def _build_merged_generated_code(report: Dict[str, Any]) -> str:
-        import re
-
-        import_lines: List[str] = []
-        function_blocks: List[str] = []
-        apply_lines: List[str] = []
-
-        def _safe_name(key: str) -> str:
-            return re.sub(r"[^0-9a-zA-Z_]+", "_", key).strip("_").lower() or "task"
-
-        all_items = [(k, v) for k, v in (report or {}).items() if isinstance(v, dict)]
-        ordered_items: List[tuple[str, Dict[str, Any]]] = []
-        # Use report order but force single-column keys before FD tasks.
-        col_items = [(k, v) for (k, v) in all_items if isinstance(k, str) and v.get("target_columns") is None]
-        fd_items = [(k, v) for (k, v) in all_items if v.get("target_columns")]
-        ordered_items.extend(col_items)
-        ordered_items.extend(fd_items)
-
-        for key, entry in ordered_items:
-            if not isinstance(entry, dict):
-                continue
-            if str(key) == "ALL_MERGED_CODE":
-                continue
-            # Include only successful cleaned tasks that are not already clean.
-            if not bool(entry.get("cleaned")):
-                continue
-            if bool(entry.get("already_clean")):
-                continue
-            code = str(entry.get("generated_code", "") or "").strip()
-            if not code:
-                continue
-
-            lines = code.splitlines()
-            local_imports = [ln for ln in lines if ln.strip().startswith("import ") or ln.strip().startswith("from ")]
-            local_body_lines = [ln for ln in lines if ln not in local_imports]
-            local_body = "\n".join(local_body_lines).strip()
-            if not local_body:
-                continue
-            if "def clean_column" not in local_body:
-                continue
-
-            for ln in local_imports:
-                if ln not in import_lines:
-                    import_lines.append(ln)
-
-            task_fn = f"clean_column_{_safe_name(str(key))}"
-            renamed_body = re.sub(r"\bdef\s+clean_column\s*\(", f"def {task_fn}(", local_body, count=1)
-            function_blocks.append(f"# --- {key} ---\n{renamed_body}")
-
-            if key in (entry.get("target_columns") or []):
-                # Defensive no-op branch; normal column handling is below.
-                pass
-            if key in (entry.get("target_columns") or []) or entry.get("target_columns"):
-                apply_lines.append(f"    df = {task_fn}(df)")
-            else:
-                col_name = str(key)
-                apply_lines.append(f"    df[{col_name!r}] = {task_fn}(df[{col_name!r}])")
-
-        if not function_blocks:
-            return ""
-
-        if "import pandas as pd" not in import_lines:
-            import_lines.insert(0, "import pandas as pd")
-
-        wrapper_lines = [
-            "def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:",
-            "    df = df.copy()",
-            *apply_lines,
-            "    return df",
-        ]
-
-        merged = "\n".join(import_lines).strip() + "\n\n" + "\n\n".join(function_blocks) + "\n\n" + "\n".join(wrapper_lines)
-        return merged
+        """The run's cleaning code as one module. The notebook export builds it the same way."""
+        return merged_cleaning_code(report)
 
     # Helper for nested dict updates
     def update_sample_size(self, category: str, subkey: str, value: str):
@@ -1217,11 +1273,15 @@ class State(rx.State):
             if not lhs or not rhs:
                 continue
             key = f"{lhs}::{rhs}"
+            score = fd.get("score")
             rows.append(
                 {
                     "lhs": lhs,
                     "rhs": rhs,
                     "active": "1" if key in selected else "0",
+                    # What the chip in the table's dependency strip shows.
+                    "label": f"{lhs} → {rhs}",
+                    "score": f"{float(score):.3f}" if isinstance(score, (int, float)) else "",
                 }
             )
         self.fd_button_rows = rows
@@ -2987,3 +3047,19 @@ class State(rx.State):
             return
         base_name = self.file_name.rsplit(".", 1)[0] if self.file_name and "." in self.file_name else "dataset"
         return rx.download(data=code, filename=f"cleaning_code_{base_name}.py")
+
+    def download_notebook(self):
+        """The run as a notebook: load the dirty file, run the agents' code, save the result.
+
+        It reproduces the run without calling a model, so whoever opens it can see exactly what
+        was done to the data and run it again for nothing.
+        """
+        if not self.cleaning_summary:
+            return
+        base_name = self.file_name.rsplit(".", 1)[0] if self.file_name and "." in self.file_name else "dataset"
+        source = notebook_json(
+            self.cleaning_summary,
+            dataset_path=self.file_name or "dirty.csv",
+            output_path=f"{base_name}_cleaned.csv",
+        )
+        return rx.download(data=source, filename=f"{base_name}_cleaning.ipynb")

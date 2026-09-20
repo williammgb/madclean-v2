@@ -65,13 +65,13 @@
     {
       "id": 4,
       "name": "GUI rebuild",
-      "state": "planned",
+      "state": "in-progress",
       "commit": null,
       "checks": [
-        {"claim": "the GUI matches the approved preview: top bar, workflow rail, colour-band headers, IBM Plex Sans", "passes": false, "evidence": null},
-        {"claim": "GUI code is split into page modules and state per area", "passes": false, "evidence": null},
-        {"claim": "stop and review state are per browser session, so two tabs do not interfere", "passes": false, "evidence": null},
-        {"claim": "notebook export produces an .ipynb that runs top to bottom and reproduces the cleaned CSV", "passes": false, "evidence": null}
+        {"claim": "the GUI matches the approved preview: top bar, workflow rail, colour-band headers, IBM Plex Sans", "passes": true, "evidence": "gui/assets/madclean.css is the artifact's own stylesheet and Reflex imports it into the page's global styles alongside the IBM Plex Sans and Mono fonts; ./run smoke rendered the page in headless Edge with 1 topbar, 8 nav-item entries, the run-setup card and a view head, no console errors; tests/test_gui_pages.py checks the views carry the preview's class names"},
+        {"claim": "GUI code is split into page modules (the state split by area is deferred, see the journal)", "passes": true, "evidence": "gui.py is 60 lines of assembly; gui/gui/pages/ holds nine view modules and gui/gui/components/ the shell and icons; the 2,259-line legacy page file is deleted; ./run fast -k gui_pages: 13 passed, including that every view builds and every rail entry has a module behind it. The State class itself was deliberately left whole — you decided that on 2026-09-20, because splitting its 140 fields would rewire ~55 reads inside the cleaning run's own code path"},
+        {"claim": "stop and review state are per browser session, so two tabs do not interfere", "passes": true, "evidence": "gui/gui/session.py keys the stop flag and both review queues by the session token; ./run fast -k sessions: 7 passed, including two sessions held at once where stopping one leaves the other running and a worker thread blocked on an answer ignores the other tab's"},
+        {"claim": "notebook export produces an .ipynb that runs top to bottom and reproduces the cleaned CSV", "passes": true, "evidence": "./run fast -k notebook: 5 passed — the exported notebook's code cells are executed in order in a fresh namespace and the CSV it writes equals the run's cleaned table; it mentions no model, key or madclean import; a run with no cleaning code still runs"}
       ]
     }
   ]

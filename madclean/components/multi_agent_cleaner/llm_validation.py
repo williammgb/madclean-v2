@@ -130,7 +130,7 @@ class LLMValidationAgent:
             if parsed_response["needs_correction"]:
                 return True, parsed_response["feedback_target"] , parsed_response["correction_instructions"], messages, raw_response
             return False, None, None, messages, raw_response
-        except Exception as e:
+        except Exception:
             strategy = getattr(self.config, "validator_failure_strategy", "accept_cleaned")
             if strategy == "leave_uncleaned":
                 return True, "RECOMMENDER", "__VALIDATOR_FAILURE_LEAVE_UNCLEANED__", messages, ""
@@ -170,7 +170,7 @@ class LLMValidationAgent:
             if parsed_response["needs_correction"]:
                 return True, parsed_response["feedback_target"], parsed_response["correction_instructions"], messages, raw_response
             return False, None, None, messages, raw_response
-        except Exception as e:
+        except Exception:
             strategy = getattr(self.config, "validator_failure_strategy", "accept_cleaned")
             if strategy == "leave_uncleaned":
                 return True, "RECOMMENDER", "__VALIDATOR_FAILURE_LEAVE_UNCLEANED__", messages, ""

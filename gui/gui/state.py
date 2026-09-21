@@ -9,7 +9,7 @@ import re
 import random
 from functools import partial
 from dataclasses import asdict
-from typing import Optional, List, Dict, Any, Callable, Tuple
+from typing import Optional, List, Dict, Any, Tuple
 from madclean.config.settings import CleaningConfig
 from madclean.config.loader import load_default_cleaning_config
 from madclean.llm.llm_registry import LLM_CLIENT_MAP
@@ -23,6 +23,7 @@ from madclean.evaluation import (
     compute_cleaning_metrics,
     format_pct,
 )
+from madclean.evaluation.comparison import Mode, equal_mask
 
 from madclean.notebook import merged_cleaning_code, notebook_json
 
@@ -117,15 +118,11 @@ class State(rx.State):
     df_preview: List[Dict[str, Any]] = []
     df_preview_window: List[Dict[str, Any]] = []
     column_names: List[str] = []
-    # Per-column min width for the data table (e.g. "480px"), from longest string on the current page.
-    column_min_width: Dict[str, str] = {}
     _full_df: Optional[pd.DataFrame] = None
     _orig_df: Optional[pd.DataFrame] = None
     has_cleaned: bool = False
-    modified_cell_keys: List[str] = []  # debug/secondary: f"{row_id}::{col}"
+    changed_cell_count: int = 0
     token_usage: Dict[str, Any] = {}
-    token_usage_pretty: str = "{}"
-    token_usage_block: str = ""
     token_usage_donut_rows: List[Dict[str, str]] = []
     runtime_seconds: float = 0.0
     runtime_seconds_display: str = "0.0"
@@ -137,34 +134,24 @@ class State(rx.State):
     generated_code_lines_for_selected: List[str] = []
     merged_generated_code: str = ""
     selected_report_meta: Dict[str, Any] = {}
-    selected_report_meta_pretty: str = "{}"
     selected_report_meta_lines: List[str] = []
     selected_report_status: str = ""
 
     column_header_colors: Dict[str, str] = {}  # col -> hex color string
     display_column_header_colors: Dict[str, str] = {}
     user_marked_clean_columns: Dict[str, bool] = {}
-    column_profile_rows: List[Dict[str, str]] = []  # [{name, semantic_type, color}]
     profiling_dashboard_rows: List[Dict[str, Any]] = []
     selected_profile_column: str = ""
-    regex_pattern_input: str = ""
-    regex_results_rows: List[Dict[str, str]] = []
-    regex_status: str = "Enter a regex and run detection."
 
     # Profiling state (types + FDs)
     is_profiling: bool = False
     profiling_status: str = ""
     column_semantic_types: Dict[str, str] = {}  # col -> semantic type
     fd_results: List[Dict[str, Any]] = []  # list of {lhs,rhs,score,violations_count,imputables_count}
-    show_fd_graph: bool = False
     show_fds: bool = False
-    fd_graph_rows: List[Dict[str, Any]] = []  # grouped as [{"rhs": str, "lhs_values": str, "count": int}]
     selected_fd_keys: List[str] = []
     fd_button_rows: List[Dict[str, str]] = []
-    fd_header_badges: Dict[str, List[str]] = {}
     column_fd_markers: Dict[str, str] = {}
-    selected_fd_arrows: List[Dict[str, str]] = []
-    fd_svg_markup: str = ""
 
     # Interactive cleaning workflow trace (all columns, live updates).
     column_pipeline_traces: Dict[str, List[Dict[str, str]]] = {}
@@ -172,9 +159,6 @@ class State(rx.State):
     active_trace_step_by_column: Dict[str, str] = {}
     expanded_trace_step_by_column: Dict[str, str] = {}
     pipeline_flow_rows: List[Dict[str, Any]] = []
-    pipeline_view_scale: int = 100
-    pipeline_card_width: int = 340
-    selected_main_tab: str = "table"
     # Which of the rail's eight views the main area shows.
     active_view: str = "table"
     selected_trace_status: str = "Run cleaning to view live column workflows."
@@ -187,12 +171,9 @@ class State(rx.State):
     pending_validation_default_feedback: str = ""
     pending_validation_sample_rows: List[Dict[str, str]] = []
     pending_validation_modified_count: int = 0
-    pending_validation_width_original: str = "260px"
-    pending_validation_width_cleaned: str = "260px"
     user_validation_needs_correction: bool = True
     user_validation_feedback_target: str = "RECOMMENDER"
     user_validation_feedback_message: str = ""
-    selected_modified_cell_info: str = ""
 
     # Human-in-the-loop UI (blocking requests from pipeline thread; multiple columns can be pending at once)
     hitl_last_synced_rid_by_column: Dict[str, str] = {}
@@ -205,21 +186,17 @@ class State(rx.State):
     page_size: int = 100
     total_rows: int = 0
     page_row_count: int = 0
-    row_window_size: int = 25
+    # The whole page is on screen: the pager is the only way through the rows.
+    row_window_size: int = 100
     row_window_offset: int = 0
-
-    # Bottom panel sizing (px).
-    bottom_panel_height: int = 240
 
     # ============================================================
     # EXPLICIT SETTERS
     # ============================================================
     def set_verbose(self, val: bool): self.verbose = val
     def set_enable_validation(self, val: bool): self.enable_validation = val
-    def set_enable_user_validation(self, val: bool): self.enable_user_validation = val
     def set_enable_validation_multi(self, val: bool): self.enable_validation_multi = val
     def set_enable_multi_col_cleaning(self, val: bool): self.enable_multi_col_cleaning = val
-    def set_include_metadata(self, val: bool): self.include_metadata = val
     def set_selected_llm_key_recommender(self, val: str): self.selected_llm_key_recommender = val
     def set_selected_llm_key_coding(self, val: str): self.selected_llm_key_coding = val
     def set_selected_llm_key_validation(self, val: str):
@@ -233,7 +210,6 @@ class State(rx.State):
             self.generated_code_for_selected_pretty = self._pretty_python_code(self.generated_code_for_selected)
             self.generated_code_lines_for_selected = self.generated_code_for_selected_pretty.splitlines() or [""]
             self.selected_report_meta = {"datatype": "MERGED", "cleaned": True, "cleaning_validated": True}
-            self.selected_report_meta_pretty = json.dumps(self.selected_report_meta, indent=2)
             self.selected_report_meta_lines = [f"{k}: {v}" for k, v in self.selected_report_meta.items()]
             self.selected_report_status = "Merged validated code for one-pass dataset cleaning."
             return
@@ -243,7 +219,6 @@ class State(rx.State):
             self.generated_code_for_selected_pretty = ""
             self.generated_code_lines_for_selected = []
             self.selected_report_meta = {}
-            self.selected_report_meta_pretty = "{}"
             self.selected_report_meta_lines = []
             self.selected_report_status = ""
             return
@@ -265,10 +240,6 @@ class State(rx.State):
             self.selected_report_status = "Validated."
         else:
             self.selected_report_status = "Not cleaned / needs review."
-        try:
-            self.selected_report_meta_pretty = json.dumps(meta, indent=2, default=str)
-        except Exception:
-            self.selected_report_meta_pretty = str(meta)
         # One key-value per line (more compact than JSON).
         lines: List[str] = []
         for k, v in meta.items():
@@ -279,19 +250,12 @@ class State(rx.State):
             lines.append(f"{k}: {rendered}")
         self.selected_report_meta_lines = lines
 
-    def set_show_fd_graph(self, val: bool):
-        self.show_fd_graph = bool(val)
-
     def set_show_fds(self, val: bool):
         self.show_fds = bool(val)
         if not self.show_fds:
             self.selected_fd_keys = []
             self._rebuild_fd_button_rows()
             self._rebuild_column_fd_markers()
-            self._rebuild_selected_fd_arrows()
-
-    def set_selected_main_tab(self, val: str):
-        self.selected_main_tab = val
 
     # ---- the rail's eight views -------------------------------------------------------------
     @rx.event
@@ -305,10 +269,6 @@ class State(rx.State):
         if not self.column_names:
             return "no dataset loaded"
         return f"{self.total_rows:,} rows · {len(self.column_names)} columns"
-
-    @rx.var
-    def run_finished(self) -> bool:
-        return self.last_run_status == "finished"
 
     @rx.var
     def run_chip_text(self) -> str:
@@ -403,7 +363,7 @@ class State(rx.State):
 
     @rx.var
     def changed_cells_label(self) -> str:
-        return f"{len(self.modified_cell_keys):,} cells changed · green cells differ from the original"
+        return f"{self.changed_cell_count:,} cells changed · green cells differ from the original"
 
     @rx.var
     def pipeline_task_count(self) -> int:
@@ -612,28 +572,12 @@ class State(rx.State):
     def set_selected_profile_column(self, val: str):
         self.selected_profile_column = val
 
-    def set_regex_pattern_input(self, val: str):
-        self.regex_pattern_input = val
-
-    def set_user_validation_needs_correction(self, val: bool):
-        self.user_validation_needs_correction = bool(val)
-
     def set_user_validation_feedback_target(self, val: str):
         if val in ("CODER", "RECOMMENDER"):
             self.user_validation_feedback_target = val
 
     def set_user_validation_feedback_message(self, val: str):
         self.user_validation_feedback_message = val
-
-    def set_pipeline_view_scale(self, val: List[float]):
-        if not val:
-            return
-        self.pipeline_view_scale = max(60, min(140, int(val[0])))
-
-    def set_pipeline_card_width(self, val: List[float]):
-        if not val:
-            return
-        self.pipeline_card_width = max(240, min(520, int(val[0])))
 
     def select_pipeline_flow_step(self, column: str, step_id: str):
         expanded = dict(self.expanded_trace_step_by_column or {})
@@ -660,7 +604,6 @@ class State(rx.State):
             self.user_validation_needs_correction = True
             self.user_validation_feedback_target = self.pending_validation_default_target
             self.user_validation_feedback_message = self.pending_validation_default_feedback
-            self._update_pending_validation_widths()
         self._rebuild_pipeline_flow_rows()
 
     @rx.event
@@ -718,10 +661,8 @@ class State(rx.State):
             self.generated_code_for_selected_pretty = ""
             self.generated_code_lines_for_selected = []
             self.selected_report_meta = {}
-            self.selected_report_meta_pretty = "{}"
             self.selected_report_meta_lines = []
             self.selected_report_status = ""
-            self.selected_report_meta_pretty = "{}"
 
     @staticmethod
     def _build_merged_generated_code(report: Dict[str, Any]) -> str:
@@ -735,12 +676,6 @@ class State(rx.State):
             new_sizes[category][subkey] = int(value)
             self.sample_sizes = new_sizes
     
-    def set_sample_sizes(self, value: list[float]):
-        if value:
-            new_sizes = self.sample_sizes.copy()
-            new_sizes["NUMERIC"]["clean_sample_size"] = int(value[0])
-            self.sample_sizes = new_sizes
-
     def set_sample_size_validator(self, val: str): self.sample_size_validator = int(val) if val.isdigit() else self.sample_size_validator
     def set_sample_size_validator_random(self, val: str): self.sample_size_validator_random = int(val) if val.isdigit() else self.sample_size_validator_random
     def set_sample_size_validator_changed(self, val: str): self.sample_size_validator_changed = int(val) if val.isdigit() else self.sample_size_validator_changed
@@ -772,24 +707,6 @@ class State(rx.State):
         self.row_window_offset = 0
         self._refresh_current_page()
 
-    def set_page_from_slider(self, val: List[float]):
-        if not val or self.total_rows <= 0:
-            return
-        # Slider represents 1-based row index; snap to page start.
-        row_idx = max(1, min(self.total_rows, int(val[0])))
-        self.page_offset = row_idx - 1
-        self.row_window_offset = 0
-        self._refresh_current_page()
-
-    def set_row_window_offset(self, val: List[float]):
-        if not val:
-            return
-        max_start = max(0, self.page_row_count - self.row_window_size)
-        # Slider is 1-based for user readability.
-        requested = max(1, int(val[0]))
-        self.row_window_offset = max(0, min(max_start, requested - 1))
-        self._update_preview_window()
-
     def toggle_fd_selection(self, lhs: str, rhs: str):
         key = f"{lhs}::{rhs}"
         selected = list(self.selected_fd_keys or [])
@@ -800,48 +717,18 @@ class State(rx.State):
         self.selected_fd_keys = selected
         self._rebuild_fd_button_rows()
         self._rebuild_column_fd_markers()
-        self._rebuild_selected_fd_arrows()
-
-    @rx.event
-    def run_regex_detection(self):
-        if self._full_df is None or self._full_df.empty:
-            self.regex_status = "No data loaded."
-            self.regex_results_rows = []
-            return
-        if not self.selected_profile_column or self.selected_profile_column not in self._full_df.columns:
-            self.regex_status = "Select a column first."
-            self.regex_results_rows = []
-            return
-        pattern = (self.regex_pattern_input or "").strip()
-        if not pattern:
-            self.regex_status = "Enter a regex pattern."
-            self.regex_results_rows = []
-            return
-        try:
-            compiled = re.compile(pattern)
-        except re.error as ex:
-            self.regex_status = f"Invalid regex: {ex}"
-            self.regex_results_rows = []
-            return
-        series = self._full_df[self.selected_profile_column].astype(str).fillna("")
-        matches = series[series.apply(lambda v: bool(compiled.search(v)))]
-        rows: List[Dict[str, str]] = []
-        for idx, val in matches.head(25).items():
-            rows.append({"row": str(int(idx) + 1), "value": str(val)})
-        self.regex_results_rows = rows
-        self.regex_status = (
-            f"Pattern matched {int(matches.shape[0])} values in '{self.selected_profile_column}'. Showing up to 25."
-        )
 
     @rx.event
     def submit_user_validation(self, column: str):
-        if not self.pending_user_validation:
-            return
         request_id = (self.pending_validation_request_id_by_column or {}).get(column, "")
-        if not request_id:
+        if not self.pending_user_validation or not request_id:
+            self.user_validation_needs_correction = True
             return
+        needs_correction = bool(self.user_validation_needs_correction)
+        # "Accept" clears the flag for its own answer only; every answer after defaults to sending it back.
+        self.user_validation_needs_correction = True
         payload = {
-            "needs_correction": bool(self.user_validation_needs_correction),
+            "needs_correction": needs_correction,
             "feedback_target": self.user_validation_feedback_target,
             "correction_instructions": self.user_validation_feedback_message,
         }
@@ -871,7 +758,6 @@ class State(rx.State):
             self.pending_validation_column = ""
             self.pending_validation_sample_rows = []
             self.pending_validation_modified_count = 0
-        self._update_pending_validation_widths()
         self.user_validation_feedback_message = ""
         self.selected_trace_status = "User validation submitted. Pipeline resumed."
 
@@ -891,90 +777,9 @@ class State(rx.State):
             # Keep indentation from generated code for better readability.
             return "\n".join(line.rstrip() for line in normalized.splitlines())
 
-    @rx.event
-    def update_cell(self, row_id: int, col: str, value: str):
-        """Edit a single cell in the cleaned table (in-place)."""
-        if not self.has_cleaned or self._full_df is None:
-            return
-        if col not in self._full_df.columns:
-            return
-        try:
-            target_dtype = self._full_df[col].dtype
-            new_value = self._coerce_value_for_dtype(value, target_dtype)
-            self._full_df.at[row_id, col] = new_value
-        except Exception:
-            return
-        self._refresh_current_page()
-        if self._gt_df is not None:
-            self._run_evaluation()
-
     # ============================================================
     # HELPERS
     # ============================================================
-    @staticmethod
-    def _px_for_text_len(max_len: int) -> int:
-        """Map max character count to a table column width (px), capped for very long cells."""
-        max_len = max(0, min(int(max_len), 100_000))
-        min_w, max_w, char = 72, 8000, 7.2
-        return int(min(max_w, max(min_w, 16 + max_len * char)))
-
-    @staticmethod
-    def _px_for_sample_compare(max_len: int) -> int:
-        """Narrower columns for validation / HITL sample tables (easier side-by-side compare)."""
-        base = State._px_for_text_len(max_len)
-        return int(min(240, max(100, base // 2 + 48)))
-
-    def _compute_column_display_widths(self) -> None:
-        """Width per column from header name and longest cell string on the current page."""
-        cols = self.column_names
-        if not cols:
-            self.column_min_width = {}
-            return
-        widths: Dict[str, str] = {}
-        for c in cols:
-            max_len = len(str(c))
-            for row in self.df_preview or []:
-                if c in row:
-                    v = row.get(c)
-                elif str(c) in row:
-                    v = row.get(str(c))
-                else:
-                    continue
-                if v is None:
-                    s = ""
-                else:
-                    try:
-                        if isinstance(v, float) and pd.isna(v):
-                            s = ""
-                        else:
-                            s = str(v)
-                    except Exception:
-                        s = ""
-                max_len = max(max_len, len(s))
-            widths[str(c)] = f"{self._px_for_text_len(max_len)}px"
-        self.column_min_width = widths
-
-    def _update_pending_validation_widths(self) -> None:
-        rows = self.pending_validation_sample_rows or []
-        o_len = len("Original")
-        c_len = len("Cleaned")
-        for r in rows:
-            o_len = max(o_len, len(str(r.get("original", ""))))
-            c_len = max(c_len, len(str(r.get("cleaned", ""))))
-        self.pending_validation_width_original = f"{self._px_for_sample_compare(o_len)}px"
-        self.pending_validation_width_cleaned = f"{self._px_for_sample_compare(c_len)}px"
-
-    @staticmethod
-    def _df_to_preview(df: pd.DataFrame, n: int = 100) -> list[dict[str, Any]]:
-        # Add a stable row index for diff-highlighting in the UI.
-        flag_cols = list(df.columns)
-        head = df.head(n).reset_index(drop=False).rename(columns={"index": "__row_index"})
-        records = head.to_dict("records")
-        for r in records:
-            r["__modified_map"] = {}
-            r["__modified_flags"] = [False] * len(flag_cols)
-        return records
-
     def _build_page_preview(self, df: pd.DataFrame, offset: int, n: int) -> list[dict[str, Any]]:
         page = df.iloc[offset : offset + n]
         if page.empty:
@@ -1107,7 +912,6 @@ class State(rx.State):
     def _refresh_current_page(self):
         if self._full_df is None:
             self.df_preview = []
-            self.column_min_width = {}
             return
         if self.total_rows <= 0:
             self.total_rows = int(len(self._full_df))
@@ -1125,7 +929,6 @@ class State(rx.State):
         else:
             self.df_preview = self._build_page_preview(self._full_df, self.page_offset, self.page_size)
         self.page_row_count = len(self.df_preview)
-        self._compute_column_display_widths()
         self._update_preview_window()
 
     def _update_preview_window(self):
@@ -1165,105 +968,6 @@ class State(rx.State):
             markers[col] = " | ".join(parts)
         self.column_fd_markers = markers
 
-    def _rebuild_selected_fd_arrows(self):
-        total_cols = max(1, len(self.column_names))
-        col_idx = {c: i for i, c in enumerate(self.column_names)}
-        arrows: List[Dict[str, str]] = []
-        lane_count = 6
-        ranked: List[tuple[int, int, str]] = []
-        for key in self.selected_fd_keys:
-            if "::" not in key:
-                continue
-            lhs, rhs = key.split("::", 1)
-            if lhs not in col_idx or rhs not in col_idx:
-                continue
-            span = abs(col_idx[lhs] - col_idx[rhs])
-            ranked.append((span, min(col_idx[lhs], col_idx[rhs]), key))
-        ranked.sort(key=lambda t: (-t[0], t[1], t[2]))
-        for i, (_span, _order_idx, key) in enumerate(ranked):
-            if "::" not in key:
-                continue
-            lhs, rhs = key.split("::", 1)
-            if lhs not in col_idx or rhs not in col_idx:
-                continue
-            i_lhs = col_idx[lhs]
-            i_rhs = col_idx[rhs]
-            if i_lhs == i_rhs:
-                continue
-            from_i = min(i_lhs, i_rhs)
-            to_i = max(i_lhs, i_rhs)
-            start_pct = ((from_i + 0.5) / total_cols) * 100.0
-            end_pct = ((to_i + 0.5) / total_cols) * 100.0
-            width_pct = max(1.0, end_pct - start_pct)
-            lane = i % lane_count
-            top_px = 6 + lane * 10
-            direction = "right" if i_lhs < i_rhs else "left"
-            lhs_x = start_pct if i_lhs < i_rhs else end_pct
-            rhs_x = end_pct if i_lhs < i_rhs else start_pct
-            arrows.append(
-                {
-                    "key": key,
-                    "left": f"{start_pct:.4f}%",
-                    "width": f"{width_pct:.4f}%",
-                    "top": f"{top_px}px",
-                    "direction": direction,
-                    "lhs_x": f"{lhs_x:.4f}%",
-                    "rhs_x": f"{rhs_x:.4f}%",
-                }
-            )
-        self.selected_fd_arrows = arrows
-        self._rebuild_fd_svg_markup()
-
-    def _rebuild_fd_svg_markup(self):
-        # Build an SVG string with angular orthogonal FD paths.
-        width = 1200
-        height = 84
-        cols = max(1, len(self.column_names))
-        col_x = {c: ((i + 0.5) / cols) * width for i, c in enumerate(self.column_names)}
-        lane_count = 8
-
-        ranked: List[tuple[int, int, str, str]] = []
-        for key in self.selected_fd_keys:
-            if "::" not in key:
-                continue
-            lhs, rhs = key.split("::", 1)
-            if lhs not in col_x or rhs not in col_x or lhs == rhs:
-                continue
-            span = abs(self.column_names.index(lhs) - self.column_names.index(rhs))
-            ranked.append((span, min(self.column_names.index(lhs), self.column_names.index(rhs)), lhs, rhs))
-        ranked.sort(key=lambda t: (-t[0], t[1], t[2], t[3]))
-
-        paths: List[str] = []
-        for i, (_span, _ord, lhs, rhs) in enumerate(ranked):
-            x1 = col_x[lhs]
-            x2 = col_x[rhs]
-            lane = i % lane_count
-            y_ctrl = 10 + lane * 7
-            # Orthogonal path: up, horizontal, down.
-            d = f"M {x1:.2f} 74 L {x1:.2f} {y_ctrl:.2f} L {x2:.2f} {y_ctrl:.2f} L {x2:.2f} 66"
-            paths.append(
-                f'<path d="{d}" stroke="#111827" stroke-width="2" fill="none" '
-                f'stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fdArrowHead)" opacity="0.95"/>'
-            )
-            paths.append(f'<circle cx="{x1:.2f}" cy="74" r="2.6" fill="#111827" opacity="0.95"/>')
-
-        if not paths:
-            self.fd_svg_markup = '<svg width="100%" height="84" viewBox="0 0 1200 84" preserveAspectRatio="none"></svg>'
-            return
-
-        svg = (
-            '<svg width="100%" height="84" viewBox="0 0 1200 84" preserveAspectRatio="none" '
-            'xmlns="http://www.w3.org/2000/svg">'
-            '<defs>'
-            '<marker id="fdArrowHead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
-            '<path d="M 0 0 L 8 4 L 0 8 z" fill="#111827"/>'
-            "</marker>"
-            "</defs>"
-            + "".join(paths)
-            + "</svg>"
-        )
-        self.fd_svg_markup = svg
-
     def _rebuild_fd_button_rows(self):
         selected = set(self.selected_fd_keys or [])
         rows: List[Dict[str, str]] = []
@@ -1286,18 +990,6 @@ class State(rx.State):
             )
         self.fd_button_rows = rows
 
-    def _rebuild_fd_header_badges(self):
-        grouped: Dict[str, List[str]] = {str(c): [] for c in (self.column_names or [])}
-        for fd in self.fd_results or []:
-            lhs = str(fd.get("lhs", "") or "").strip()
-            rhs = str(fd.get("rhs", "") or "").strip()
-            if not lhs or not rhs:
-                continue
-            label = f"{lhs} -> {rhs}"
-            grouped.setdefault(lhs, [])
-            if label not in grouped[lhs]:
-                grouped[lhs].append(label)
-        self.fd_header_badges = grouped
 
     @staticmethod
     def _semantic_type_to_color(semantic_type: str) -> str:
@@ -1320,36 +1012,6 @@ class State(rx.State):
             "UNKNOWN": "#9CA3AF",
         }
         return mapping.get(semantic_type.upper(), "#9CA3AF")
-
-    @staticmethod
-    def _coerce_value_for_dtype(value: str, dtype: Any) -> Any:
-        """Coerce text input to a dtype-compatible scalar for safe DataFrame assignment."""
-        text = value.strip() if isinstance(value, str) else value
-        if isinstance(text, str) and text == "":
-            if pd.api.types.is_numeric_dtype(dtype) or pd.api.types.is_datetime64_any_dtype(dtype):
-                return pd.NA
-            return ""
-        try:
-            if pd.api.types.is_integer_dtype(dtype):
-                numeric = pd.to_numeric(text, errors="coerce")
-                return pd.NA if pd.isna(numeric) else int(float(numeric))
-            if pd.api.types.is_float_dtype(dtype):
-                numeric = pd.to_numeric(text, errors="coerce")
-                return pd.NA if pd.isna(numeric) else float(numeric)
-            if pd.api.types.is_bool_dtype(dtype):
-                if isinstance(text, str):
-                    lowered = text.lower()
-                    if lowered in ("true", "1", "yes", "y", "t"):
-                        return True
-                    if lowered in ("false", "0", "no", "n", "f"):
-                        return False
-                return bool(text)
-            if pd.api.types.is_datetime64_any_dtype(dtype):
-                parsed = pd.to_datetime(text, errors="coerce")
-                return pd.NA if pd.isna(parsed) else parsed
-        except Exception:
-            return value
-        return value
 
     @staticmethod
     def _trace_output_to_text(payload: Any) -> str:
@@ -1452,16 +1114,6 @@ class State(rx.State):
         self.expanded_trace_step_by_column = expanded
         self._rebuild_pipeline_flow_rows()
 
-    def _hitl_widths_for_sample_rows(self, rows: List[Dict[str, str]]) -> tuple[str, str]:
-        o_len = len("Original")
-        c_len = len("Cleaned")
-        for r in rows or []:
-            o_len = max(o_len, len(str(r.get("original", ""))))
-            c_len = max(c_len, len(str(r.get("cleaned", ""))))
-        return (
-            f"{self._px_for_sample_compare(o_len)}px",
-            f"{self._px_for_sample_compare(c_len)}px",
-        )
 
     def _hitl_attachments_for_column(self, col: str, pending_by_col: Dict[str, Tuple[str, Dict[str, Any]]]) -> Dict[str, Any]:
         empty: Dict[str, Any] = {
@@ -1474,8 +1126,6 @@ class State(rx.State):
             "hitl_llm_needs_correction": "0",
             "hitl_feedback_target": "RECOMMENDER",
             "hitl_feedback_message": "",
-            "hitl_width_original": "260px",
-            "hitl_width_cleaned": "260px",
         }
         if col not in pending_by_col:
             return empty
@@ -1508,9 +1158,6 @@ class State(rx.State):
             ]
             out["hitl_sample_rows"] = sample_rows
             out["hitl_modified_count"] = str(int(p.get("modified_count", 0) or 0))
-            wo, wc = self._hitl_widths_for_sample_rows(sample_rows)
-            out["hitl_width_original"] = wo
-            out["hitl_width_cleaned"] = wc
             uft = (self.hitl_validation_feedback_target_by_column or {}).get(col, ft or "RECOMMENDER")
             if uft not in ("CODER", "RECOMMENDER"):
                 uft = "RECOMMENDER"
@@ -1525,9 +1172,6 @@ class State(rx.State):
                 self._normalize_sample_row(r) for r in (p.get("sample_rows") or []) if isinstance(r, dict)
             ]
             out["hitl_sample_rows"] = sample_rows
-            wo, wc = self._hitl_widths_for_sample_rows(sample_rows)
-            out["hitl_width_original"] = wo
-            out["hitl_width_cleaned"] = wc
             out["hitl_feedback_message"] = (self.hitl_validation_feedback_message_by_column or {}).get(col, "")
             return out
         return empty
@@ -1679,60 +1323,6 @@ class State(rx.State):
         else:
             self.selected_trace_status = "Run cleaning to view live column workflows."
 
-    def _rebuild_fd_graph_rows(self):
-        grouped: Dict[str, List[str]] = {}
-        for fd in self.fd_results:
-            rhs = str(fd.get("rhs", "") or "")
-            lhs = str(fd.get("lhs", "") or "")
-            if not rhs:
-                continue
-            grouped.setdefault(rhs, [])
-            if lhs and lhs not in grouped[rhs]:
-                grouped[rhs].append(lhs)
-        rows: List[Dict[str, Any]] = []
-        for rhs, lhs_list in grouped.items():
-            rows.append(
-                {
-                    "rhs": rhs,
-                    "lhs_values": ", ".join(lhs_list) if lhs_list else "(none)",
-                    "count": len(lhs_list),
-                }
-            )
-        rows.sort(key=lambda r: r["rhs"])
-        self.fd_graph_rows = rows
-
-    def _df_to_preview_with_modified_map(
-        self,
-        dirty_df: pd.DataFrame,
-        cleaned_df: pd.DataFrame,
-        n: int = 100,
-    ) -> list[dict[str, Any]]:
-        dirty_head = dirty_df.head(n).reset_index(drop=False).rename(columns={"index": "__row_index"})
-        cleaned_head = cleaned_df.head(n).reset_index(drop=False).rename(columns={"index": "__row_index"})
-        common_cols = [c for c in dirty_head.columns if c in cleaned_head.columns and c != "__row_index"]
-
-        for r_idx in range(min(len(dirty_head), len(cleaned_head))):
-            dirty_row = dirty_head.iloc[r_idx]
-            cleaned_row = cleaned_head.iloc[r_idx]
-            row_id = cleaned_row["__row_index"]
-            modified_flags: list[bool] = []
-            for col in common_cols:
-                a = dirty_row[col]
-                b = cleaned_row[col]
-                modified = not ((pd.isna(a) and pd.isna(b)) or a == b)
-                modified_flags.append(modified)
-                if modified:
-                    self.modified_cell_keys.append(f"{row_id}::{col}")
-            cleaned_head.at[r_idx, "__modified_map"] = {c: f for c, f in zip(common_cols, modified_flags)}
-            cleaned_head.at[r_idx, "__modified_flags"] = modified_flags
-
-        # Ensure field exists on all records
-        records = cleaned_head.to_dict("records")
-        for r in records:
-            r.setdefault("__modified_map", {})
-            r.setdefault("__modified_flags", [False] * len(common_cols))
-        return records
-
     def _enqueue_log(self, msg: str):
         if not msg:
             return
@@ -1858,8 +1448,7 @@ class State(rx.State):
                     self.user_validation_needs_correction = True
                     self.user_validation_feedback_target = self.pending_validation_default_target
                     self.user_validation_feedback_message = self.pending_validation_default_feedback
-                    self._update_pending_validation_widths()
-                    self.selected_trace_status = "Validation requires your decision. Open the blinking red validator step."
+                    self.selected_trace_status = "Validation requires your decision. Open Review to answer it."
                 else:
                     self.pending_user_validation = False
                     self.pending_validation_request_ids = []
@@ -1896,8 +1485,7 @@ class State(rx.State):
                 self.user_validation_needs_correction = True
                 self.user_validation_feedback_target = self.pending_validation_default_target
                 self.user_validation_feedback_message = self.pending_validation_default_feedback
-                self._update_pending_validation_widths()
-                self.selected_trace_status = "Validation requires your decision. Open the blinking red validator step."
+                self.selected_trace_status = "Validation requires your decision. Open Review to answer it."
             else:
                 self.pending_user_validation = False
                 self.pending_validation_request_ids = []
@@ -1905,20 +1493,15 @@ class State(rx.State):
                 self.pending_validation_modified_count = 0
             self._rebuild_pipeline_flow_rows()
 
-    def _compute_modified_cell_keys(self, dirty_df: pd.DataFrame, cleaned_df: pd.DataFrame, n: int = 100) -> list[str]:
-        dirty_head = dirty_df.head(n).reset_index(drop=True)
-        cleaned_head = cleaned_df.head(n).reset_index(drop=True)
-        common_cols = [c for c in dirty_head.columns if c in cleaned_head.columns]
-        keys: list[str] = []
-        for r in range(min(len(dirty_head), len(cleaned_head))):
-            for c in common_cols:
-                a = dirty_head.at[r, c]
-                b = cleaned_head.at[r, c]
-                # Treat NaN/None as equal.
-                if (pd.isna(a) and pd.isna(b)) or a == b:
-                    continue
-                keys.append(f"{r}::{c}")
-        return keys
+    @staticmethod
+    def _count_changed_cells(original: Optional[pd.DataFrame], cleaned: pd.DataFrame) -> int:
+        """Cells the run changed, compared the way the evaluation counts changes."""
+        if original is None or original.shape != cleaned.shape:
+            return 0
+        columns = [c for c in original.columns if c in cleaned.columns]
+        left = original[columns].reset_index(drop=True)
+        right = cleaned[columns].reset_index(drop=True)
+        return int((~equal_mask(left, right, None, Mode.PAPER)).to_numpy().sum())
 
     def _build_profiling_dashboard_rows(self):
         if self._full_df is None or self._full_df.empty:
@@ -2277,12 +1860,6 @@ class State(rx.State):
     def set_llm_top_p_input(self, val: str):
         self.llm_top_p_input = val
 
-    def set_selected_llm_key_all_agents(self, val: str):
-        self.selected_llm_key_recommender = val
-        self.selected_llm_key_coding = val
-        self.selected_llm_key_validation = val
-        self.enable_user_validation = val == "USER"
-
     @rx.event
     def set_hitl_code_column(self, column: str, value: str):
         m = dict(self.hitl_code_by_column or {})
@@ -2460,33 +2037,6 @@ class State(rx.State):
             self.labeling_kind = "clean"
             self.labeling_expected_value = ""
         self.labeling_dialog_open = True
-
-    @rx.event
-    def open_cell_label_dialog_by_position(self, evt_or_key: Any, pos_key: Any = ""):
-        """Open label dialog by packed 'row:col' coordinates; tolerant of injected click event arg."""
-        event_obj = evt_or_key if isinstance(evt_or_key, dict) else None
-        packed = str(pos_key if event_obj is not None else evt_or_key).strip()
-        if not self.label_cells_mode:
-            return
-        if ":" not in packed:
-            return
-        left, right = packed.split(":", 1)
-        try:
-            rpos = int(left)
-            cidx = int(right)
-        except Exception:
-            return
-        if rpos < 0 or cidx < 0:
-            return
-        if cidx >= len(self.column_names):
-            return
-        if rpos >= len(self.df_preview):
-            return
-        row = self.df_preview[rpos] or {}
-        col = str(self.column_names[cidx])
-        rk = str(row.get("__row_id", str(self.page_offset + rpos)))
-        current_value = row.get(col)
-        self.open_cell_label_dialog(rk, col, current_value)
 
     @rx.event
     def save_cell_label(self):
@@ -2691,20 +2241,9 @@ class State(rx.State):
                 for col in self.column_names
             }
             self._rebuild_display_column_header_colors()
-            self.column_profile_rows = [
-                {
-                    "name": col,
-                    "semantic_type": self.column_semantic_types.get(col, "UNKNOWN"),
-                    "color": self.column_header_colors.get(col, "#9CA3AF"),
-                }
-                for col in self.column_names
-            ]
             self.fd_results = fd_rows
-            self._rebuild_fd_graph_rows()
             self._rebuild_fd_button_rows()
-            self._rebuild_fd_header_badges()
             self._rebuild_column_fd_markers()
-            self._rebuild_selected_fd_arrows()
             self._build_profiling_dashboard_rows()
             self.profiling_status = f"Profiled {len(semantic_types)} columns, found {len(fd_rows)} FDs with issues."
             self.is_profiling = False
@@ -2729,11 +2268,9 @@ class State(rx.State):
             self.runtime_seconds = 0.0
             self.runtime_seconds_display = "0.0"
             self.token_usage = {}
-            self.token_usage_pretty = "{}"
-            self.token_usage_block = ""
             self.token_usage_donut_rows = []
             self.cleaning_summary = {}
-            self.modified_cell_keys = []
+            self.changed_cell_count = 0
             self.logs = []
             self._log_file_offset = 0
             self._trace_file_offset = 0
@@ -2753,7 +2290,6 @@ class State(rx.State):
             self.pending_validation_sample_rows = []
             self.pending_validation_modified_count = 0
             self.user_validation_feedback_message = ""
-            self._update_pending_validation_widths()
             self._reset_hitl_session_state()
             # A new run starts with nothing waiting and a fresh stop flag, for this session only.
             self._run().start()
@@ -2863,8 +2399,6 @@ class State(rx.State):
                     self.runtime_seconds = 0.0
                     self.runtime_seconds_display = "0.0"
                     self.token_usage = {}
-                    self.token_usage_pretty = "{}"
-                    self.token_usage_block = "Pipeline stopped. Token usage is not available for this run."
                     self.token_usage_donut_rows = []
                     self.cleaning_summary = {}
                     self.report_code_keys = []
@@ -2873,7 +2407,6 @@ class State(rx.State):
                     self.generated_code_for_selected_pretty = ""
                     self.generated_code_lines_for_selected = []
                     self.selected_report_meta = {}
-                    self.selected_report_meta_pretty = "{}"
                     self.selected_report_meta_lines = []
                     self.selected_report_status = "Pipeline stopped. No report generated."
                     self._run_evaluation()
@@ -2882,14 +2415,8 @@ class State(rx.State):
                     self.has_cleaned = True
                     self.last_run_status = "finished"
                     self.total_rows = int(len(cleaned_df))
-                    self.modified_cell_keys = []
+                    self.changed_cell_count = self._count_changed_cells(self._orig_df, cleaned_df)
                     self.token_usage = (report or {}).get("token_usage", {})
-                    try:
-                        self.token_usage_pretty = json.dumps(self.token_usage, indent=2, default=str)
-                    except Exception:
-                        self.token_usage_pretty = str(self.token_usage)
-                    # Donut charts now carry the main token-usage visualization; keep block empty.
-                    self.token_usage_block = ""
                     self._build_token_usage_donut_rows(report or {})
                     self.runtime_seconds = float((report or {}).get("runtime_seconds", end - start))
                     self.runtime_seconds_display = f"{self.runtime_seconds:.1f}"
@@ -2924,11 +2451,10 @@ class State(rx.State):
                 self.file_name = file.filename
                 self.column_names = list(df.columns)
                 self.has_cleaned = False
-                self.selected_main_tab = "table"
                 self.total_rows = int(len(df))
                 self.page_offset = 0
                 self._refresh_current_page()
-                self.modified_cell_keys = []
+                self.changed_cell_count = 0
                 self.token_usage = {}
                 self.token_usage_donut_rows = []
                 self.logs = []
@@ -2938,13 +2464,9 @@ class State(rx.State):
                 self.generated_code_for_selected = ""
                 self.selected_report_meta = {}
                 self.fd_results = []
-                self.fd_graph_rows = []
-                self.show_fd_graph = False
                 self.selected_fd_keys = []
                 self.fd_button_rows = []
-                self.fd_header_badges = {}
                 self.column_fd_markers = {}
-                self.selected_fd_arrows = []
                 self.column_pipeline_traces = {}
                 self.pipeline_trace_columns = []
                 self.active_trace_step_by_column = {}
@@ -2959,20 +2481,12 @@ class State(rx.State):
                 self.pending_validation_sample_rows = []
                 self.pending_validation_modified_count = 0
                 self.user_validation_feedback_message = ""
-                self._update_pending_validation_widths()
                 # Initialize profiling UI defaults (runs after upload).
                 self.column_semantic_types = {c: "UNKNOWN" for c in self.column_names}
                 self.column_header_colors = {c: self._semantic_type_to_color("UNKNOWN") for c in self.column_names}
                 self._rebuild_display_column_header_colors()
-                self.column_profile_rows = [
-                    {"name": c, "semantic_type": "UNKNOWN", "color": self.column_header_colors[c]}
-                    for c in self.column_names
-                ]
                 self.profiling_dashboard_rows = []
                 self.selected_profile_column = self.column_names[0] if self.column_names else ""
-                self.regex_pattern_input = ""
-                self.regex_results_rows = []
-                self.regex_status = "Enter a regex and run detection."
                 self.profiling_status = "Waiting for profiling..."
                 self.is_profiling = False
                 self.status_msg = f"Loaded {file.filename}"

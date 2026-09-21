@@ -1,16 +1,11 @@
-import time 
 import json
 from pprint import pprint
 from dotenv import load_dotenv
 load_dotenv()
 from dataclasses import asdict
-from typing import Callable
 from pathlib import Path
 import pandas as pd
 # local imports
-from madclean.llm.llm_registry import LLM_CLIENT_MAP
-from madclean.llm.llm_settings import LLM_CLIENT_NAME
-from madclean.pipeline import Pipeline
 from madclean.utils.console import configure_console
 from madclean.evaluation import Evaluator
 from madclean.evaluation.datasets import BENCHMARKS, as_paths

@@ -79,7 +79,7 @@ def test_the_spread_is_reported_beside_every_average():
     runs = [
         evaluator.evaluate(
             load_dataset(
-                RESULTS_DIR / "beers" / "data" / (f"beers_cleaned.csv" if run == 1 else f"beers_cleaned_{run}.csv")
+                RESULTS_DIR / "beers" / "data" / ("beers_cleaned.csv" if run == 1 else f"beers_cleaned_{run}.csv")
             )
         ).overall
         for run in range(1, 5)

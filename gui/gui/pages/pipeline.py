@@ -12,7 +12,7 @@ from typing import Any
 import reflex as rx
 
 from ..components.icons import icon
-from ..components.shell import chip, panel, panel_head, view, view_head
+from ..components.shell import chip, panel_head, view, view_head
 from ..state import State
 
 

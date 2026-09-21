@@ -35,8 +35,23 @@ def panel_head(*children, **props) -> rx.Component:
     return rx.el.div(*children, class_name="panel-head", **props)
 
 
-def panel_body(*children, **props) -> rx.Component:
-    return rx.el.div(*children, class_name="panel-body", **props)
+def modal(is_open, title, *children, footer: rx.Component) -> rx.Component:
+    """A small dialog over the page, shown while `is_open` is true."""
+    return rx.cond(
+        is_open,
+        rx.el.div(
+            rx.el.div(
+                rx.el.div(rx.el.h2(title), class_name="dlg-head"),
+                rx.el.div(*children, class_name="modal-body"),
+                rx.el.div(footer, class_name="dlg-foot"),
+                class_name="modal",
+                role="dialog",
+                aria_modal="true",
+            ),
+            class_name="modal-scrim",
+        ),
+        rx.fragment(),
+    )
 
 
 def chip(*children, tone: str = "", large: bool = True) -> rx.Component:
@@ -53,16 +68,6 @@ def view_head(title: str, subtitle: str, *extra) -> rx.Component:
         ),
         *extra,
         class_name="view-head",
-    )
-
-
-def empty(title: str, message, tone: str = "neutral") -> rx.Component:
-    """The preview's empty state: a round icon, a heading and a sentence."""
-    return rx.el.div(
-        rx.el.div(icon("check" if tone != "neutral" else "minus"), class_name=f"empty-ic ic {tone}"),
-        rx.el.h2(title),
-        rx.el.p(message),
-        class_name="empty",
     )
 
 

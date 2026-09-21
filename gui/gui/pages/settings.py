@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import reflex as rx
 
+from madclean.config.loader import load_default_cleaning_config
+
 from ..components.shell import panel, panel_head, view, view_head
 from ..state import State
 
@@ -38,6 +40,77 @@ def number_field(label: str, value, on_change, note: str = "") -> rx.Component:
         ),
         rx.cond(note != "", rx.el.span(note, class_name="def"), rx.fragment()),
         class_name="num-field",
+    )
+
+
+def text_field(label: str, value, on_change, note: str = "") -> rx.Component:
+    """A free-text field; empty means "use the default"."""
+    return rx.el.div(
+        rx.el.label(label),
+        rx.el.input(
+            value=value,
+            on_change=on_change,
+            class_name="input",
+            placeholder="default",
+            input_mode="decimal",
+        ),
+        rx.cond(note != "", rx.el.span(note, class_name="def"), rx.fragment()),
+        class_name="num-field",
+    )
+
+
+def hitl_column_picker() -> rx.Component:
+    """The columns human-in-the-loop asks about, when it is not asking about all of them."""
+    return rx.el.div(
+        rx.el.span("Columns to ask about", class_name="lbl"),
+        rx.cond(
+            State.hitl_column_checkbox_rows.length() > 0,
+            rx.el.div(
+                rx.foreach(
+                    State.hitl_column_checkbox_rows,
+                    lambda row: rx.el.button(
+                        row["column"],
+                        type="button",
+                        class_name=rx.cond(row["active"] == "1", "fd-chip is-on", "fd-chip"),
+                        aria_pressed=rx.cond(row["active"] == "1", "true", "false"),
+                        on_click=State.toggle_hitl_column_pick(row["column"]),
+                    ),
+                ),
+                class_name="pick-list",
+            ),
+            rx.el.span("Upload a dataset to pick its columns.", class_name="small muted"),
+        ),
+        class_name="field",
+    )
+
+
+def sample_size_field(category: str, key: str) -> rx.Component:
+    label = f"{category.replace('_', ' ').title()}: {key.replace('_sample_size', '')} values"
+    return number_field(
+        label,
+        State.sample_sizes[category][key],
+        lambda value: State.update_sample_size(category, key, value),
+    )
+
+
+def sample_sizes() -> rx.Component:
+    """How many example values of each kind of column the recommender is shown."""
+    fields = [
+        sample_size_field(category, key)
+        for category, sizes in load_default_cleaning_config().sample_sizes.items()
+        for key in sizes
+    ]
+    return panel(
+        panel_head(
+            rx.el.div(
+                rx.el.h2("What the recommender sees"),
+                rx.el.p(
+                    "How many example values are sent to the model for each kind of column.",
+                    class_name="small muted",
+                ),
+            )
+        ),
+        rx.el.div(*fields, class_name="panel-body form-grid"),
     )
 
 
@@ -87,6 +160,11 @@ def page() -> rx.Component:
                     State.hitl_apply_to_all_columns,
                     State.set_hitl_apply_to_all_columns,
                 ),
+                rx.cond(
+                    State.human_in_the_loop & ~State.hitl_apply_to_all_columns,
+                    hitl_column_picker(),
+                    rx.fragment(),
+                ),
                 switch_row(
                     "Verbose output",
                     "Print each task's progress to the log as it happens.",
@@ -134,9 +212,28 @@ def page() -> rx.Component:
                     State.set_semaphore_limit,
                     "15 in the thesis runs",
                 ),
+                number_field(
+                    "Labelled cells sent per column",
+                    State.max_labeled_cells_per_column,
+                    State.set_max_labeled_cells_per_column,
+                    "From the Table's label mode",
+                ),
+                text_field(
+                    "Model temperature",
+                    State.llm_temperature_input,
+                    State.set_llm_temperature_input,
+                    "Empty uses the provider's default",
+                ),
+                text_field(
+                    "Model top_p",
+                    State.llm_top_p_input,
+                    State.set_llm_top_p_input,
+                    "Empty uses the provider's default",
+                ),
                 class_name="panel-body form-grid",
             ),
         ),
+        sample_sizes(),
         panel(
             panel_head(
                 rx.el.div(
@@ -167,7 +264,7 @@ def page() -> rx.Component:
                 rx.el.div(
                     rx.el.label("When the validator cannot decide"),
                     rx.el.select(
-                        rx.el.option("Keep the cleaned column", value="accept"),
+                        rx.el.option("Keep the cleaned column", value="accept_cleaned"),
                         rx.el.option("Leave the column as it was", value="leave_uncleaned"),
                         rx.el.option("Ask me", value="ask_user"),
                         value=State.validator_failure_strategy,

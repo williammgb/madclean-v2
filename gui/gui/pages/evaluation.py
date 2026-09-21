@@ -6,8 +6,6 @@ scored cell by cell: which wrong cells it found, and which of them it repaired c
 
 from __future__ import annotations
 
-from typing import Any
-
 import reflex as rx
 
 from ..components.icons import icon
@@ -90,6 +88,12 @@ def ground_truth_bar() -> rx.Component:
                 id="gt_upload",
                 on_drop=State.handle_gt_upload(rx.upload_files(upload_id="gt_upload")),
                 multiple=False,
+            ),
+            rx.el.button(
+                "Clear",
+                type="button",
+                class_name="btn btn-ghost btn-sm",
+                on_click=State.clear_ground_truth,
             ),
             rx.el.span(class_name="spacer"),
             rx.el.span(State.evaluation_status, class_name="small muted"),

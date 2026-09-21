@@ -6,8 +6,6 @@ and per dependency rule, which is the same code the notebook export writes out.
 
 from __future__ import annotations
 
-from typing import Any
-
 import reflex as rx
 
 from ..components.icons import icon
@@ -126,7 +124,7 @@ def page() -> rx.Component:
                 rx.el.div(
                     tile("Runtime", State.runtime_seconds_display + " s"),
                     tile("Tokens", State.total_tokens_display),
-                    tile("Cells changed", State.modified_cell_keys.length().to(str)),
+                    tile("Cells changed", State.changed_cell_count.to(str)),
                     tile("Tasks", State.pipeline_task_count.to(str)),
                     class_name="tiles",
                 ),

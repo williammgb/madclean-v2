@@ -94,17 +94,40 @@ def code_review(row: rx.Var) -> rx.Component:
     )
 
 
+def target_select(value, on_change) -> rx.Component:
+    """Which agent your instructions go to on the next attempt."""
+    return rx.el.div(
+        rx.el.span("Send the instructions to", class_name="lbl"),
+        rx.el.select(
+            rx.el.option("The recommender", value="RECOMMENDER"),
+            rx.el.option("The coder", value="CODER"),
+            value=value,
+            on_change=on_change,
+            class_name="select",
+            style={"width": "220px"},
+        ),
+        class_name="field",
+    )
+
+
 def validation_review(row: rx.Var) -> rx.Component:
-    """The validator reached a verdict; you agree with it or overrule it."""
+    """The validator reached a verdict; you agree with it or overrule it.
+
+    The choices depend on the verdict: an approval can be agreed with or overruled, and a request
+    for correction can be accepted, dismissed, or replaced with your own instructions.
+    """
     column = text(row, "column")
     request_id = text(row, "hitl_request_id")
+    validator_approved = text(row, "hitl_llm_needs_correction") == "0"
     return rx.el.div(
         rx.el.ul(
             rx.foreach(lines(row, "hitl_validator_summary_lines"), lambda line: rx.el.li(line))
         ),
         sample_table(samples(row, "hitl_sample_rows")),
         rx.el.div(
-            rx.el.span("Your instructions, if you want another attempt", class_name="lbl"),
+            rx.el.span(
+                "Your instructions, if you overrule or revise the validator", class_name="lbl"
+            ),
             rx.el.textarea(
                 value=text(row, "hitl_feedback_message"),
                 on_change=lambda value: State.set_hitl_validation_feedback_message_column(
@@ -115,28 +138,54 @@ def validation_review(row: rx.Var) -> rx.Component:
             ),
             class_name="field",
         ),
-        rx.el.div(
-            rx.el.button(
-                "Agree with the validator",
-                type="button",
-                class_name="btn btn-green",
-                on_click=State.submit_hitl_validation_validator_ok_agree(request_id, column),
-            ),
-            rx.el.button(
-                "Accept the feedback and try again",
-                type="button",
-                class_name="btn btn-orange",
-                on_click=State.submit_hitl_validation_feedback_accept(request_id, column),
-            ),
-            rx.el.button(
-                "The cleaning is fine, keep it",
-                type="button",
-                class_name="btn btn-ghost",
-                on_click=State.submit_hitl_validation_feedback_reject_cleaning_valid(
-                    request_id, column
+        target_select(
+            text(row, "hitl_feedback_target"),
+            lambda value: State.set_hitl_validation_feedback_target_column(column, value),
+        ),
+        rx.cond(
+            validator_approved,
+            rx.el.div(
+                rx.el.button(
+                    "Agree, the cleaning is valid",
+                    type="button",
+                    class_name="btn btn-green",
+                    on_click=State.submit_hitl_validation_validator_ok_agree(request_id, column),
                 ),
+                rx.el.button(
+                    "Disagree, it needs correction",
+                    type="button",
+                    class_name="btn btn-orange",
+                    on_click=State.submit_hitl_validation_validator_ok_disagree(
+                        request_id, column
+                    ),
+                ),
+                class_name="choices",
             ),
-            class_name="choices",
+            rx.el.div(
+                rx.el.button(
+                    "Accept the feedback and try again",
+                    type="button",
+                    class_name="btn btn-green",
+                    on_click=State.submit_hitl_validation_feedback_accept(request_id, column),
+                ),
+                rx.el.button(
+                    "The cleaning is fine, keep it",
+                    type="button",
+                    class_name="btn btn-ghost",
+                    on_click=State.submit_hitl_validation_feedback_reject_cleaning_valid(
+                        request_id, column
+                    ),
+                ),
+                rx.el.button(
+                    "Try again with my instructions",
+                    type="button",
+                    class_name="btn btn-orange",
+                    on_click=State.submit_hitl_validation_feedback_reject_revise(
+                        request_id, column
+                    ),
+                ),
+                class_name="choices",
+            ),
         ),
         class_name="decision",
     )
@@ -149,6 +198,18 @@ def already_clean_review(row: rx.Var) -> rx.Component:
     return rx.el.div(
         rx.el.ul(
             rx.foreach(lines(row, "hitl_validator_summary_lines"), lambda line: rx.el.li(line))
+        ),
+        sample_table(samples(row, "hitl_sample_rows")),
+        rx.el.div(
+            rx.el.span("If it does need cleaning, what is wrong?", class_name="lbl"),
+            rx.el.textarea(
+                value=text(row, "hitl_feedback_message"),
+                on_change=lambda value: State.set_hitl_validation_feedback_message_column(
+                    column, value
+                ),
+                class_name="input",
+            ),
+            class_name="field",
         ),
         rx.el.div(
             rx.el.button(
@@ -195,6 +256,9 @@ def user_validation() -> rx.Component:
                     class_name="input",
                 ),
                 class_name="field",
+            ),
+            target_select(
+                State.user_validation_feedback_target, State.set_user_validation_feedback_target
             ),
             rx.el.div(
                 rx.el.button(

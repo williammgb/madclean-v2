@@ -78,6 +78,59 @@ def test_the_gui_is_split_into_modules_rather_than_one_file():
     assert (GUI_DIR / "gui" / "components" / "icons.py").is_file()
 
 
+def _view_source() -> str:
+    parts = [(GUI_DIR / "gui" / "pages" / f"{module}.py").read_text(encoding="utf-8") for module in VIEWS]
+    parts.append((GUI_DIR / "gui" / "components" / "shell.py").read_text(encoding="utf-8"))
+    return "".join(parts)
+
+
+def test_every_event_handler_is_reachable():
+    """A handler no view calls is a feature the rebuild dropped, or code nothing runs.
+
+    The rebuild once left the column-instructions menu and the "Label cells" switch opening
+    dialogs that no view drew; this is the check that would have caught it.
+    """
+    import re
+
+    from gui.state import State
+
+    views = _view_source()
+    state_source = (GUI_DIR / "gui" / "state.py").read_text(encoding="utf-8")
+    # Only the handlers written in state.py: Reflex adds a setter for every field on its own.
+    written = set(re.findall(r"^    (?:async )?def ([a-z]\w*)\(self", state_source, re.MULTILINE))
+    unreached = sorted(
+        name
+        for name in written & set(State.event_handlers)
+        if f"State.{name}" not in views
+        and f"State.{name}" not in state_source
+        and f"self.{name}(" not in state_source
+    )
+    assert unreached == []
+
+
+def test_the_changed_cell_count_covers_the_whole_table():
+    """The report's "Cells changed" tile once read a list nothing filled, so it always said 0."""
+    import pandas as pd
+
+    from gui.state import State
+
+    original = pd.DataFrame({"a": [1, 2, None, 4], "b": ["x", "y", "z", None]})
+    cleaned = pd.DataFrame({"a": [1.0, 3.0, None, 4.0], "b": ["x", "Y", "z", "w"]})
+    # 1 vs 1.0 is no change and both-missing is no change: a[1], b[1] and b[3] changed.
+    assert State._count_changed_cells(original, cleaned) == 3
+    assert State._count_changed_cells(None, cleaned) == 0
+
+
+def test_the_validator_fallback_choices_are_ones_the_config_accepts():
+    """The dropdown once sent "accept", which the setter silently refused."""
+    import re
+
+    settings_source = (GUI_DIR / "gui" / "pages" / "settings.py").read_text(encoding="utf-8")
+    block = settings_source.split("When the validator cannot decide", 1)[1].split("value=State", 1)[0]
+    offered = set(re.findall(r'value="([a-z_]+)"', block))
+    assert offered == {"accept_cleaned", "leave_uncleaned", "ask_user"}
+
+
 def test_the_views_carry_the_approved_previews_class_names():
     """The stylesheet is the preview's, so the markup has to use its names to be styled by it."""
     stylesheet = (GUI_DIR / "assets" / "madclean.css").read_text(encoding="utf-8")

@@ -3,7 +3,6 @@ import json
 from dotenv import load_dotenv
 load_dotenv()
 from dataclasses import asdict
-from typing import Callable
 from pathlib import Path
 import pandas as pd
 # local imports

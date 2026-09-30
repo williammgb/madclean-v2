@@ -319,6 +319,7 @@ table.data{border-collapse:collapse;width:100%;font-size:13px}
 .insp-head{display:flex;align-items:center;gap:10px;padding:11px 12px 11px 16px;border-bottom:1px solid var(--border)}
 .insp-head h2{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .insp-body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 210px);overflow:auto}
+.insp-body pre.code{white-space:pre-wrap;overflow-wrap:anywhere}
 
 pre.code{margin:0;padding:12px 14px;background:var(--code-bg);border:1px solid var(--border);border-radius:6px;overflow:auto;font:12.5px/1.6 var(--mono);color:var(--text);tab-size:4}
 .kw{color:var(--code-kw)} .st{color:var(--code-str)} .nu{color:var(--code-num)} .co{color:var(--code-com);font-style:italic} .fn{color:var(--code-fn)}

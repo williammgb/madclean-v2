@@ -508,7 +508,8 @@ class State(rx.State):
                 continue
             match = re.match(r"^(\[[^\]]+\])\s(.*)$", line)
             col, text = (match.group(1), match.group(2)) if match else ("", line)
-            if re.search(r"Successfully|already clean", text):
+            # "Succes+fully": the dependency tasks log it as "Succesfully".
+            if re.search(r"Succes+fully|already clean", text):
                 tone = "ok"
             elif re.search(r"detected|failed|unavailable|error", text, re.IGNORECASE):
                 tone = "warn"

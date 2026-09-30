@@ -21,6 +21,8 @@ run                a shell script for setup, tests and re-scoring the stored res
 - [uv](https://docs.astral.sh/uv/) for dependency management. It uses an installed Python 3.12,
   and downloads one if there is none.
 
+Installation and the full test suite are tested on Windows and Linux.
+
 ## Installation
 
 ```bash

@@ -1,8 +1,10 @@
 """The Table view: the data itself, with each column's semantic type in its header band.
 
 Rows come from the state already prepared: every row carries the values to show, a flag per column
-saying whether the cleaning changed that cell, and the value it had before. A changed cell shows
-both, the old struck through above the new, which is what the preview does.
+saying whether the cleaning changed that cell, and the value it had before. The switch above the
+table picks what a changed cell shows: the value before, the value after, or both.
+
+Every column has one width, set once in a `<colgroup>`, so a header and its values always line up.
 """
 
 from __future__ import annotations
@@ -12,23 +14,25 @@ from typing import Any
 import reflex as rx
 
 from ..components.icons import icon
-from ..components.shell import modal, view, view_head
+from ..components.shell import modal, switch, view, view_head
 from ..state import State
 
+TABLE_MODES = (("original", "Original"), ("cleaned", "Cleaned"), ("changes", "Changes"))
 
-def column_header(col: rx.Var, index: rx.Var) -> rx.Component:
-    """One header: the colour band on top, the name, and the semantic type underneath."""
+
+def column_header(col: rx.Var) -> rx.Component:
+    """One header: the colour band on top, the name and its two buttons, the type underneath."""
     colour = State.display_column_header_colors[col]
     return rx.el.th(
         rx.el.div(
             rx.el.div(
-                rx.el.span(col, class_name="th-name"),
+                rx.el.span(col, class_name="th-name", title=col),
                 rx.el.button(
                     icon("check"),
                     type="button",
-                    class_name="th-mark",
-                    aria_label="Mark column as already clean",
-                    title="Mark column as already clean",
+                    class_name="th-btn",
+                    aria_label="Mark " + col + " as already clean",
+                    title="Mark as already clean",
                     aria_pressed=rx.cond(
                         State.user_marked_clean_columns[col].to(bool), "true", "false"
                     ),
@@ -37,9 +41,9 @@ def column_header(col: rx.Var, index: rx.Var) -> rx.Component:
                 rx.el.button(
                     icon("more"),
                     type="button",
-                    class_name="th-menu",
-                    aria_label="Instructions for this column",
-                    title="Instructions for this column",
+                    class_name="th-btn",
+                    aria_label="Instructions for " + col,
+                    title="Instructions",
                     on_click=State.open_recommender_hint_editor(col),
                 ),
                 class_name="th-top",
@@ -56,12 +60,23 @@ def column_header(col: rx.Var, index: rx.Var) -> rx.Component:
             ),
             class_name="th",
         ),
+        scope="col",
+        class_name=State.column_align[col].to(str),
         style={"--c": colour},
     )
 
 
+def is_empty(value: rx.Var) -> rx.Var:
+    """A missing value, however it reached the page: pandas' NaN arrives as the number NaN."""
+    return (value == "") | (value == "nan") | (value == "NaN") | (value == "None")
+
+
+def empty_or(value: rx.Var) -> rx.Component:
+    return rx.cond(is_empty(value), rx.el.span("—", class_name="null"), rx.el.span(value))
+
+
 def cell(row: rx.Var, col: rx.Var, index: rx.Var) -> rx.Component:
-    """One cell. Changed cells show what the value was, and what it became.
+    """One cell. A changed cell shows what the switch asks for: before, after, or both.
 
     With "Label cells" on, a click opens the label dialog; a labelled cell carries its label.
     """
@@ -69,24 +84,28 @@ def cell(row: rx.Var, col: rx.Var, index: rx.Var) -> rx.Component:
     changed = row["__modified_flags"].to(list[bool])[index]
     before = row["__original_values"].to(list[str])[index]
     kind = row["__label_kinds"].to(list[str])[index]
+    shows_change = changed & (State.table_mode != "original")
     label_class = rx.cond(
         kind == "dirty", " lab lab-dirty", rx.cond(kind == "clean", " lab lab-clean", "")
     )
     return rx.el.td(
         rx.cond(
-            changed,
+            shows_change,
             rx.fragment(
-                rx.el.span(rx.cond(before == "", "(empty)", before), class_name="old"),
-                rx.el.span(rx.cond(value == "", "(empty)", value), class_name="new"),
+                rx.cond(
+                    State.table_mode == "changes",
+                    rx.el.span(rx.cond(is_empty(before), "—", before), class_name="old"),
+                    rx.fragment(),
+                ),
+                rx.el.span(rx.cond(is_empty(value), "—", value), class_name="new"),
             ),
-            rx.cond(
-                (value == "") | (value == "nan") | (value == "None"),
-                rx.el.span("(empty)", class_name="null"),
-                rx.el.span(value),
-            ),
+            empty_or(rx.cond(changed, before, value)),
         ),
         rx.cond(kind != "", rx.el.span(kind, class_name="lab-tag"), rx.fragment()),
-        class_name=rx.cond(changed, "chg", "") + label_class,
+        class_name=State.column_align[col].to(str)
+        + rx.cond(shows_change, " chg", "")
+        + label_class,
+        title=rx.cond(shows_change, before + " → " + value, rx.cond(changed, before, value)),
         on_click=State.open_cell_label_dialog(row["row_id"].to(str), col, value),
     )
 
@@ -94,9 +113,16 @@ def cell(row: rx.Var, col: rx.Var, index: rx.Var) -> rx.Component:
 def grid() -> rx.Component:
     return rx.el.div(
         rx.el.table(
+            rx.el.colgroup(
+                rx.el.col(style={"width": "52px"}),
+                rx.foreach(
+                    State.column_names,
+                    lambda col: rx.el.col(style={"width": State.column_widths[col].to(str)}),
+                ),
+            ),
             rx.el.thead(
                 rx.el.tr(
-                    rx.el.th("#", class_name="rownum"),
+                    rx.el.th("#", scope="col", class_name="rownum"),
                     rx.foreach(State.column_names, column_header),
                 )
             ),
@@ -115,31 +141,33 @@ def grid() -> rx.Component:
     )
 
 
+def mode_switch() -> rx.Component:
+    """Original / Cleaned / Changes, once a run has cleaned something."""
+    return rx.cond(
+        State.has_cleaned,
+        rx.el.div(
+            *[
+                rx.el.button(
+                    label,
+                    type="button",
+                    aria_pressed=rx.cond(State.table_mode == mode, "true", "false"),
+                    on_click=State.set_table_mode(mode),
+                )
+                for mode, label in TABLE_MODES
+            ],
+            class_name="seg",
+            role="group",
+            aria_label="Table version",
+        ),
+        rx.fragment(),
+    )
+
+
 def toolbar() -> rx.Component:
     return rx.el.div(
-        rx.el.div(
-            rx.el.label(
-                rx.el.input(
-                    type="checkbox",
-                    checked=State.show_fds,
-                    on_change=State.set_show_fds,
-                ),
-                rx.el.span(class_name="track"),
-                "Dependencies",
-                class_name="switch",
-            ),
-            rx.el.label(
-                rx.el.input(
-                    type="checkbox",
-                    checked=State.label_cells_mode,
-                    on_change=State.set_label_cells_mode,
-                ),
-                rx.el.span(class_name="track"),
-                "Label cells",
-                class_name="switch",
-            ),
-            class_name="toggles",
-        ),
+        mode_switch(),
+        switch(State.show_fds, State.set_show_fds, "Dependencies"),
+        switch(State.label_cells_mode, State.set_label_cells_mode, "Label cells"),
         rx.el.span(class_name="spacer"),
         rx.el.div(
             State.page_range_label,
@@ -170,7 +198,7 @@ def dependency_strip() -> rx.Component:
     return rx.cond(
         State.show_fds & (State.fd_button_rows.length() > 0),
         rx.el.div(
-            rx.el.span("Dependencies found:", class_name="small muted"),
+            rx.el.span("Dependencies", class_name="small muted"),
             rx.foreach(
                 State.fd_button_rows,
                 lambda row: rx.el.button(
@@ -193,16 +221,12 @@ def hint_dialog() -> rx.Component:
     return modal(
         State.recommender_hint_dialog_open,
         "Instructions for " + State.recommender_hint_editing_column,
-        rx.el.p(
-            "Added to the recommender's prompt for this column only.",
-            class_name="small muted",
-        ),
         rx.el.textarea(
             value=State.recommender_hint_editor_text,
             on_change=State.set_recommender_hint_editor_text,
-            placeholder="For example: replace the sentinel -999 with an empty value.",
             class_name="input",
             rows="6",
+            aria_label="Instructions",
         ),
         footer=rx.fragment(
             rx.el.button(
@@ -227,7 +251,7 @@ def label_dialog() -> rx.Component:
     return modal(
         State.labeling_dialog_open,
         "Label a cell in " + State.labeling_target_col,
-        rx.el.div(rx.cond(current == "", "(empty)", current), class_name="value"),
+        rx.el.div(rx.cond(current == "", "—", current), class_name="value"),
         rx.el.div(
             rx.el.button(
                 "Clean",
@@ -248,7 +272,7 @@ def label_dialog() -> rx.Component:
         rx.cond(
             State.labeling_kind == "dirty",
             rx.el.div(
-                rx.el.span("What the value should be", class_name="lbl"),
+                rx.el.span("Correct value", class_name="lbl"),
                 rx.el.textarea(
                     value=State.labeling_expected_value,
                     on_change=State.set_labeling_expected_value,
@@ -290,25 +314,17 @@ def page() -> rx.Component:
     )
     return view(
         "table",
-        view_head(
-            "Table",
-            "Header colours show each column's semantic type from profiling. A changed cell shows "
-            "what it was above what it became.",
-        ),
+        view_head("Table"),
         rx.cond(
             State.column_names.length() > 0,
             rx.el.div(
                 toolbar(),
                 dependency_strip(),
                 grid(),
-                rx.el.div(
-                    rx.el.span(State.table_window_label),
-                    rx.cond(
-                        State.has_cleaned,
-                        rx.el.span(State.changed_cells_label),
-                        rx.fragment(),
-                    ),
-                    class_name="table-foot",
+                rx.cond(
+                    State.has_cleaned,
+                    rx.el.div(State.changed_cells_label, class_name="table-foot"),
+                    rx.fragment(),
                 ),
                 hint_dialog(),
                 label_dialog(),
@@ -316,14 +332,16 @@ def page() -> rx.Component:
                 style={"display": "flex", "flexDirection": "column", "gap": "12px"},
             ),
             rx.el.div(
-                rx.el.p("Upload a CSV or Excel file to begin.", class_name="muted"),
+                rx.el.h2("No dataset yet"),
                 rx.upload(
-                    rx.el.button("Choose a file", type="button", class_name="btn btn-accent"),
+                    rx.el.button(
+                        icon("upload"), "Choose a file", type="button", class_name="btn btn-accent"
+                    ),
                     id="dataset_upload",
                     on_drop=State.handle_upload(rx.upload_files(upload_id="dataset_upload")),
                     multiple=False,
                 ),
-                class_name="panel panel-body",
+                class_name="panel empty",
             ),
         ),
     )

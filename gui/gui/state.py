@@ -29,6 +29,118 @@ from madclean.notebook import merged_cleaning_code, notebook_json
 
 from .session import SessionRun, session_run
 
+# Semantic types whose values are numbers, and so line up on the right of the table.
+RIGHT_ALIGNED_TYPES = ("INTEGER", "FLOAT")
+# Labelled cells sent to the recommender per column; not in configurations.json.
+DEFAULT_LABELED_CELLS_PER_COLUMN = 10
+
+
+def _score_tone(share: Optional[float]) -> Tuple[str, str]:
+    """A score's text class and bar colour: green from 90%, orange from 60%, red below."""
+    if share is None:
+        return "score-na", "transparent"
+    if share >= 0.9:
+        return "score-good", "var(--green)"
+    if share >= 0.6:
+        return "score-mid", "var(--orange)"
+    return "score-bad", "var(--red)"
+
+
+def _cell_bar(label: str, parts: List[Tuple[str, int, str]]) -> Dict[str, Any]:
+    """One of Evaluation's split bars: its total, and a segment per part with its legend entry."""
+    return {
+        "label": label,
+        "total": f"{sum(count for _name, count, _colour in parts):,}",
+        "segments": [
+            {
+                "label": name,
+                "count": f"{count:,}",
+                "flex": str(count),
+                "colour": colour,
+                "shown": "1" if count else "0",
+            }
+            for name, count, colour in parts
+        ],
+    }
+
+
+def evaluation_view(metrics: Dict[str, Any], columns: List[str], colours: Dict[str, str]) -> Dict[str, Any]:
+    """What the Evaluation view draws from the scorer's metrics: tiles, cell bars, and column rows."""
+    scores = []
+    for label, key in (("Precision", "repair_precision"), ("Recall", "repair_recall"), ("F1", "f1_repair")):
+        share = metrics.get(key)
+        _tone, colour = _score_tone(share)
+        scores.append(
+            {
+                "k": label,
+                "v": "—" if share is None else f"{100.0 * share:.2f}",
+                "unit": "" if share is None else "%",
+                "width": "0%" if share is None else f"{100.0 * share:.2f}%",
+                "colour": colour,
+            }
+        )
+
+    repaired = int(metrics.get("repaired", 0))
+    # A wrong cell the run changed, but not to the right value: counted as found, not as repaired.
+    still_wrong = int(metrics.get("tp", 0)) - repaired
+    still = [("Changed, still wrong", still_wrong, "var(--red-border)")] if still_wrong else []
+    bars = [
+        _cell_bar(
+            "Wrong in the dirty file",
+            [("Repaired", repaired, "var(--green)"), *still, ("Left wrong", int(metrics.get("fn", 0)), "var(--red)")],
+        ),
+        _cell_bar(
+            "Changed by the run",
+            [
+                ("Repaired", repaired, "var(--green)"),
+                *still,
+                ("Changed but was fine", int(metrics.get("fp", 0)), "var(--orange)"),
+            ],
+        ),
+    ]
+
+    def count(value: int) -> Tuple[str, str]:
+        return f"{value:,}", "num score-na" if value == 0 else "num"
+
+    rows = []
+    per_column = metrics.get("per_column") or {}
+    for column in columns:
+        scored = per_column.get(column) or {}
+        f1 = scored.get("f1")
+        f1_class, f1_colour = _score_tone(f1)
+        precision, recall = scored.get("repair_precision"), scored.get("repair_recall")
+        repaired_text, repaired_class = count(int(scored.get("repaired", 0)))
+        fp_text, fp_class = count(int(scored.get("fp", 0)))
+        fn_text, fn_class = count(int(scored.get("fn", 0)))
+        rows.append(
+            {
+                "column": column,
+                "type_color": colours.get(column, ""),
+                "has_f1": "0" if f1 is None else "1",
+                "f1": format_pct(f1),
+                "f1_width": "0%" if f1 is None else f"{100.0 * f1:.2f}%",
+                "f1_colour": f1_colour,
+                "f1_class": "num " + f1_class,
+                "precision": format_pct(precision),
+                "precision_class": "num score-na" if precision is None else "num",
+                "recall": format_pct(recall),
+                "recall_class": "num score-na" if recall is None else "num",
+                "repaired": repaired_text,
+                "repaired_class": repaired_class,
+                "fp": fp_text,
+                "fp_class": fp_class,
+                "fn": fn_text,
+                "fn_class": fn_class,
+            }
+        )
+    return {
+        "scores": scores,
+        "bars": bars,
+        "untouched": f"{int(metrics.get('tn', 0)):,}",
+        "rows": rows,
+    }
+
+
 class State(rx.State):
     """Bridge between MADClean system and the UI."""
     _default_config = load_default_cleaning_config()
@@ -65,7 +177,7 @@ class State(rx.State):
     labeling_current_value_preview: str = ""
     labeling_kind: str = "clean"
     labeling_expected_value: str = ""
-    max_labeled_cells_per_column: int = 10
+    max_labeled_cells_per_column: int = DEFAULT_LABELED_CELLS_PER_COLUMN
     llm_temperature_input: str = ""
     llm_top_p_input: str = ""
 
@@ -113,7 +225,13 @@ class State(rx.State):
     evaluation_compatible: bool = False
     evaluation_status: str = "Upload a dataset, then optionally upload a matching ground-truth file."
     evaluation_error: str = ""
-    evaluation_overall_rows: List[Dict[str, str]] = []
+    # "rows · columns" of the ground-truth file; empty while there is none.
+    gt_meta: str = ""
+    # The Evaluation view, built by `_run_evaluation`: the three score tiles, the two cell bars,
+    # the cells nobody needed to touch, and one row per column.
+    evaluation_scores: List[Dict[str, str]] = []
+    evaluation_cell_bars: List[Dict[str, Any]] = []
+    evaluation_untouched: str = ""
     evaluation_column_rows: List[Dict[str, str]] = []
     df_preview: List[Dict[str, Any]] = []
     df_preview_window: List[Dict[str, Any]] = []
@@ -159,8 +277,16 @@ class State(rx.State):
     active_trace_step_by_column: Dict[str, str] = {}
     expanded_trace_step_by_column: Dict[str, str] = {}
     pipeline_flow_rows: List[Dict[str, Any]] = []
-    # Which of the rail's eight views the main area shows.
+    # Which of the rail's views the main area shows.
     active_view: str = "table"
+    # "1" when the rail is folded to icons; kept in the browser, so it survives a reload.
+    rail_collapsed: str = rx.LocalStorage("0", name="mc-rail")
+    export_menu_open: bool = False
+    # What the table shows in a changed cell: "original", "cleaned", or "changes" (both).
+    table_mode: str = "cleaned"
+    # The step the pipeline inspector shows. Empty: the first task's last step.
+    pipeline_pick_column: str = ""
+    pipeline_pick_step: str = ""
     selected_trace_status: str = "Run cleaning to view live column workflows."
     pending_user_validation: bool = False
     pending_validation_request_ids: List[str] = []
@@ -263,6 +389,138 @@ class State(rx.State):
         """Switches the main area to one of the rail's views."""
         self.active_view = name
 
+    @rx.event
+    def toggle_rail(self):
+        """Folds the rail to icons, or opens it again."""
+        self.rail_collapsed = "0" if self.rail_collapsed == "1" else "1"
+
+    @rx.event
+    def toggle_export_menu(self):
+        self.export_menu_open = not self.export_menu_open
+
+    @rx.event
+    def close_export_menu(self):
+        self.export_menu_open = False
+
+    @rx.event
+    def set_table_mode(self, mode: str):
+        if mode in ("original", "cleaned", "changes"):
+            self.table_mode = mode
+
+    @rx.var
+    def column_align(self) -> Dict[str, str]:
+        """"num" for a column whose values are numbers, so its header and cells align right."""
+        return {
+            col: "num" if str(self.column_semantic_types.get(col, "")).upper() in RIGHT_ALIGNED_TYPES else ""
+            for col in self.column_names
+        }
+
+    @rx.var
+    def column_widths(self) -> Dict[str, str]:
+        """Each column's width in pixels, shared by its header and its cells.
+
+        Taken from the longest value on the page (before or after cleaning) and from what the
+        header has to hold, then kept between 96 and 320 pixels. The table is laid out at these
+        widths, so a header can never drift away from its values.
+        """
+        widths: Dict[str, str] = {}
+        rows = self.df_preview_window or []
+        for index, col in enumerate(self.column_names):
+            longest = 0
+            for row in rows:
+                longest = max(longest, len(str(row.get(col, "") or "")))
+                before = row.get("__original_values") or []
+                if index < len(before):
+                    longest = max(longest, len(str(before[index] or "")))
+            header = max(len(col) * 8 + 72, len(str(self.column_semantic_types.get(col, ""))) * 7 + 40)
+            widths[col] = f"{min(320, max(96, header, longest * 8 + 26))}px"
+        return widths
+
+    @rx.var
+    def pipeline_result_counts(self) -> Dict[str, int]:
+        """How the finished tasks ended, for the chips at the top of the Pipeline view."""
+        counts = {"validated": 0, "not_validated": 0, "clean": 0, "failed": 0}
+        for row in self.pipeline_flow_rows:
+            kind = str(row.get("result_kind", ""))
+            if kind in counts:
+                counts[kind] += 1
+        return counts
+
+    def _picked_pipeline_step(self) -> Tuple[Dict[str, Any], int]:
+        """The task and the index of the step the inspector shows, or ({}, -1) with nothing to show."""
+        rows = self.pipeline_flow_rows or []
+        if not rows:
+            return {}, -1
+        row = next((r for r in rows if r.get("column") == self.pipeline_pick_column), rows[0])
+        ids = [str(step.get("id", "")) for step in row.get("steps") or []]
+        if not ids:
+            return row, -1
+        index = ids.index(self.pipeline_pick_step) if self.pipeline_pick_step in ids else len(ids) - 1
+        return row, index
+
+    @rx.var
+    def pipeline_inspector(self) -> Dict[str, Any]:
+        """The one step the inspector shows: its title, how it ended, and what it produced."""
+        row, index = self._picked_pipeline_step()
+        if index < 0:
+            return {}
+        steps = row.get("steps") or []
+        step = steps[index]
+        column = str(row.get("column", ""))
+        output = ""
+        for raw in self.column_pipeline_traces.get(column, []):
+            if str(raw.get("id", "")) == step.get("id"):
+                output = str(raw.get("output", "") or "")
+        return {
+            "column": column,
+            "step": str(step.get("id", "")),
+            "title": f"{column} · {step.get('label', '')}",
+            "status": str(step.get("status_label", "")),
+            "tone": str(step.get("status_tone", "")),
+            "lines": output.splitlines() or ["Not run for this task."],
+            "has_prev": index > 0,
+            "has_next": index < len(steps) - 1,
+        }
+
+    @rx.event
+    def open_pipeline_step(self, column: str, step_id: str):
+        """Shows one step in the inspector."""
+        self.pipeline_pick_column = column
+        self.pipeline_pick_step = step_id
+
+    @rx.event
+    def move_pipeline_step(self, delta: int):
+        """Walks the inspector to the previous or next step of the same task."""
+        row, index = self._picked_pipeline_step()
+        steps = row.get("steps") or []
+        if index < 0 or not 0 <= index + delta < len(steps):
+            return
+        self.pipeline_pick_column = str(row.get("column", ""))
+        self.pipeline_pick_step = str(steps[index + delta].get("id", ""))
+
+    @rx.var
+    def log_rows(self) -> List[Dict[str, str]]:
+        """Each log line split into its task tag and its text, with a tone for the colour."""
+        rows: List[Dict[str, str]] = []
+        for line in self.logs:
+            if line.strip() and set(line.strip()) == {"="}:
+                rows.append({"col": "", "text": line, "tone": "rule"})
+                continue
+            match = re.match(r"^(\[[^\]]+\])\s(.*)$", line)
+            col, text = (match.group(1), match.group(2)) if match else ("", line)
+            if re.search(r"Successfully|already clean", text):
+                tone = "ok"
+            elif re.search(r"detected|failed|unavailable|error", text, re.IGNORECASE):
+                tone = "warn"
+            else:
+                tone = ""
+            rows.append({"col": col, "text": text, "tone": tone})
+        return rows
+
+    @rx.event
+    def copy_logs(self):
+        return rx.set_clipboard("\n".join(self.logs))
+
     @rx.var
     def dataset_meta(self) -> str:
         """The line under the file name in the top bar: how much data is loaded."""
@@ -331,11 +589,6 @@ class State(rx.State):
         return waiting
 
     @rx.var
-    def opened_pipeline_rows(self) -> List[Dict[str, Any]]:
-        """The tasks with a step opened, for the pipeline inspector to show."""
-        return [row for row in self.pipeline_flow_rows if str(row.get("show_details", "0")) == "1"]
-
-    @rx.var
     def selected_profile_rows(self) -> List[Dict[str, Any]]:
         """The selected column's profile, as a list of one, so a view can render it without indexing."""
         wanted = self.selected_profile_column
@@ -354,16 +607,8 @@ class State(rx.State):
         return f"Rows {first:,}–{last:,} of {self.total_rows:,}"
 
     @rx.var
-    def table_window_label(self) -> str:
-        """How much of the current page is on screen."""
-        if not self.page_row_count:
-            return ""
-        shown = min(self.row_window_size, self.page_row_count - self.row_window_offset)
-        return f"Showing {shown} of the {self.page_row_count} rows on this page."
-
-    @rx.var
     def changed_cells_label(self) -> str:
-        return f"{self.changed_cell_count:,} cells changed · green cells differ from the original"
+        return f"{self.changed_cell_count:,} cells changed"
 
     @rx.var
     def pipeline_task_count(self) -> int:
@@ -380,8 +625,12 @@ class State(rx.State):
         self.evaluation_ready = False
         self.evaluation_compatible = False
         self.evaluation_error = ""
-        self.evaluation_overall_rows = []
+        self.evaluation_scores = []
+        self.evaluation_cell_bars = []
+        self.evaluation_untouched = ""
         self.evaluation_column_rows = []
+        gt = self._gt_df
+        self.gt_meta = "" if gt is None else f"{len(gt):,} rows · {len(gt.columns)} columns"
 
         if self._orig_df is None or self._orig_df.empty:
             self.evaluation_status = "Load a dirty dataset first."
@@ -422,37 +671,15 @@ class State(rx.State):
         self.evaluation_ready = True
         self.evaluation_status = ""
 
-        m = metrics
-        # Single-row overall metrics table: metrics as columns.
-        self.evaluation_overall_rows = [
-            {
-                "tp": str(m.get("tp", 0)),
-                "fp": str(m.get("fp", 0)),
-                "tn": str(m.get("tn", 0)),
-                "fn": str(m.get("fn", 0)),
-                "precision": format_pct(m.get("repair_precision")),
-                "recall": format_pct(m.get("repair_recall")),
-                "f1": format_pct(m.get("f1_repair")),
-            }
-        ]
-
-        col_rows: List[Dict[str, str]] = []
-        per_col = m.get("per_column") or {}
-        for col in self.column_names:
-            pc = per_col.get(col) or {}
-            col_rows.append(
-                {
-                    "column": col,
-                    "tp": str(pc.get("tp", 0)),
-                    "fp": str(pc.get("fp", 0)),
-                    "tn": str(pc.get("tn", 0)),
-                    "fn": str(pc.get("fn", 0)),
-                    "precision": format_pct(pc.get("repair_precision")),
-                    "recall": format_pct(pc.get("repair_recall")),
-                    "f1": format_pct(pc.get("f1")),
-                }
-            )
-        self.evaluation_column_rows = col_rows
+        colours = {
+            col: self._semantic_type_to_color(str(self.column_semantic_types.get(col, "")))
+            for col in self.column_names
+        }
+        shown = evaluation_view(metrics, list(self.column_names), colours)
+        self.evaluation_scores = shown["scores"]
+        self.evaluation_cell_bars = shown["bars"]
+        self.evaluation_untouched = shown["untouched"]
+        self.evaluation_column_rows = shown["rows"]
 
     def _build_token_usage_donut_rows(self, report: Dict[str, Any]) -> None:
         rows: List[Dict[str, str]] = []
@@ -928,6 +1155,13 @@ class State(rx.State):
             )
         else:
             self.df_preview = self._build_page_preview(self._full_df, self.page_offset, self.page_size)
+        # A missing value goes to the page as "", which the table shows as a dash; pandas' NaN
+        # would arrive as the number NaN and print as "NaN".
+        for record in self.df_preview:
+            for col in self.column_names:
+                value = record.get(col)
+                if value is None or (isinstance(value, float) and math.isnan(value)):
+                    record[col] = ""
         self.page_row_count = len(self.df_preview)
         self._update_preview_window()
 
@@ -1230,6 +1464,59 @@ class State(rx.State):
         self.hitl_validation_feedback_message_by_column = fm_map
         return pending_by_col
 
+    @staticmethod
+    def _step_chip(step_id: str, title: str, status: str, waiting: bool) -> Dict[str, str]:
+        """One step as its chip draws it: a short name, a mark, and how it ended."""
+        match = re.match(r"^(.*) \(attempt (\d+)\)$", title)
+        if match:
+            label = match.group(1) if match.group(2) == "1" else f"{match.group(1)} {match.group(2)}"
+        else:
+            label = {"Validator (already clean check)": "Validator", "User code review": "Your review"}.get(
+                title, title
+            )
+        if waiting:
+            chip, mark, status_label, tone = "waiting", "", "Waiting", "orange"
+        elif status in ("ok", "approved", "completed", "already_clean"):
+            chip, mark, status_label, tone = "ok", "check", "Done", "green"
+        elif status in ("needs_correction", "rejected"):
+            chip, mark, status_label, tone = "rejected", "x", "Sent back", "red"
+        elif status in ("failed", "invalid_response"):
+            chip, mark, status_label, tone = "rejected", "x", "Failed", "red"
+        elif status == "skipped":
+            chip, mark, status_label, tone = "skipped", "minus", "Skipped", ""
+        else:
+            chip, mark, status_label, tone = "running", "", "Running", "accent"
+        return {
+            "id": step_id,
+            "title": title,
+            "label": label,
+            "status": status,
+            "chip": chip,
+            "mark": mark,
+            "status_label": status_label,
+            "status_tone": tone,
+            "needs_blink": "1" if waiting else "0",
+        }
+
+    @staticmethod
+    def _task_result(
+        entry: Dict[str, Any], finished_status: str, waiting: bool, running: bool
+    ) -> Tuple[str, str, str]:
+        """How a task ended, as the result chip says it: its words, its colour, and its kind."""
+        if waiting:
+            return "Waiting for you", "orange", ""
+        if not finished_status:
+            return ("Running", "accent", "") if running else ("Stopped", "", "")
+        if entry.get("already_clean"):
+            return "Already clean", "", "clean"
+        if finished_status == "failed" or (entry and not entry.get("cleaned")):
+            return "Failed", "red", "failed"
+        if entry.get("cleaning_validated"):
+            return "Cleaned, validated", "green", "validated"
+        if entry.get("cleaned"):
+            return "Cleaned, not validated", "accent", "not_validated"
+        return "Done", "green", ""
+
     def _rebuild_pipeline_flow_rows(self):
         pending_by_col = self._sync_hitl_editing_state_from_global_pending()
         rows: List[Dict[str, Any]] = []
@@ -1247,16 +1534,14 @@ class State(rx.State):
             detail_title = ""
             detail_status = ""
             detail_output_lines: List[str] = []
-            column_done = "0"
+            finished_status = ""
             rendered_steps: List[Dict[str, str]] = []
             step_lookup: Dict[str, Dict[str, str]] = {}
             for step in steps:
                 sid = str(step.get("id", "") or "")
-                is_active = sid == active_id
-                is_expanded = sid == expanded_id and expanded_id != ""
                 status = str(step.get("status", ""))
-                if (sid == "finished" and status == "completed") or status == "already_clean":
-                    column_done = "1"
+                if sid == "finished":
+                    finished_status = status
                 step_lookup[sid] = {
                     "title": str(step.get("title", sid)),
                     "status": status,
@@ -1274,24 +1559,33 @@ class State(rx.State):
                         needs_blink = "1"
                 if status in ("pending_hitl",):
                     needs_blink = "1"
+                if sid == "finished":
+                    # How a task ended is its result chip, not one more step.
+                    continue
                 rendered_steps.append(
-                    {
-                        "id": sid,
-                        "title": step_lookup[sid]["title"],
-                        "status": status,
-                        "is_error": "1"
-                        if status
-                        in ("needs_correction", "failed", "invalid_response", "needs_user_validation", "rejected", "pending_hitl")
-                        else "0",
-                        "is_success": "1" if status in ("ok", "approved", "completed", "already_clean") else "0",
-                        "is_active": "1" if is_active else "0",
-                        "is_expanded": "1" if is_expanded else "0",
-                        "needs_blink": needs_blink,
-                        "show_arrow_after": "0",
-                    }
+                    self._step_chip(sid, step_lookup[sid]["title"], status, needs_blink == "1")
                 )
-            for i in range(max(0, len(rendered_steps) - 1)):
-                rendered_steps[i]["show_arrow_after"] = "1"
+            entry = (self.cleaning_summary or {}).get(col)
+            entry = entry if isinstance(entry, dict) else {}
+            has_validator = any("validator" in str(s.get("id", "")) for s in rendered_steps)
+            if (
+                col in self.column_names
+                and entry.get("cleaned")
+                and not entry.get("cleaning_validated")
+                and not entry.get("already_clean")
+                and not has_validator
+            ):
+                # A cleaned column no validator looked at shows the validator it skipped.
+                rendered_steps.append(self._step_chip("validator_skipped", "Validator", "skipped", False))
+            if any(s["id"] == "user_marked_clean" for s in rendered_steps):
+                # A column the user marked clean has no report entry saying so.
+                entry = {**entry, "already_clean": True}
+            result, result_tone, result_kind = self._task_result(
+                entry,
+                finished_status,
+                any(s["needs_blink"] == "1" for s in rendered_steps),
+                self.is_cleaning,
+            )
             detail_id = expanded_id if expanded_id else active_id
             if detail_id and detail_id in step_lookup:
                 detail_title = step_lookup[detail_id]["title"]
@@ -1313,7 +1607,12 @@ class State(rx.State):
                 if (ex.startswith("validator_") and ex != "validator_already_clean")
                 else "0",
                 "expanded_is_already_clean_step": "1" if ex == "validator_already_clean" else "0",
-                "column_done": column_done,
+                "type_color": self._semantic_type_to_color(str(self.column_semantic_types.get(col, "")))
+                if col in self.column_names
+                else "",
+                "result": result,
+                "result_tone": result_tone,
+                "result_kind": result_kind,
             }
             row_out.update(hitl_ex)
             rows.append(row_out)
@@ -1853,6 +2152,32 @@ class State(rx.State):
         self.hitl_apply_to_all_columns = bool(val)
         if self.column_names:
             self._rebuild_hitl_column_checkbox_rows()
+
+    @rx.event
+    def reset_settings(self):
+        """Puts every setting in the Settings view back to what configurations.json says."""
+        config = load_default_cleaning_config()
+        self.verbose = config.verbose
+        self.enable_validation = config.enable_validation
+        self.enable_validation_multi = config.enable_validation_multi
+        self.enable_multi_col_cleaning = config.enable_multi_col_cleaning
+        self.human_in_the_loop = config.human_in_the_loop
+        self.hitl_apply_to_all_columns = config.hitl_apply_to_all_columns
+        self.hitl_selected_columns = [c for c in self.column_names if c in (config.hitl_column_list or [])]
+        self._rebuild_hitl_column_checkbox_rows()
+        self.sample_sizes = json.loads(json.dumps(config.sample_sizes))
+        self.sample_size_validator = config.sample_size_validator
+        self.sample_size_validator_random = config.sample_size_validator_random
+        self.sample_size_validator_changed = config.sample_size_validator_changed
+        self.validator_failure_strategy = config.validator_failure_strategy
+        self.max_cleaning_attempts = config.max_cleaning_attempts
+        self.max_multi_col_attempts = config.max_multi_col_attempts
+        self.max_parse_attempts = config.max_parse_attempts
+        self.max_coding_attempts = config.max_coding_attempts
+        self.semaphore_limit = config.semaphore_limit
+        self.llm_temperature_input = "" if config.llm_temperature is None else str(config.llm_temperature)
+        self.llm_top_p_input = "" if config.llm_top_p is None else str(config.llm_top_p)
+        self.max_labeled_cells_per_column = DEFAULT_LABELED_CELLS_PER_COLUMN
 
     def set_llm_temperature_input(self, val: str):
         self.llm_temperature_input = val
@@ -2432,6 +2757,8 @@ class State(rx.State):
                 self.status_msg = "Pipeline Error."
                 self.last_run_status = "error"
             self.is_cleaning = False
+            # Once more with the run over, so a task that never finished says "Stopped", not "Running".
+            self._rebuild_pipeline_flow_rows()
             # keep log file path for post-mortem/debugging
 
     async def handle_upload(self, files: List[rx.UploadFile]):
@@ -2543,12 +2870,9 @@ class State(rx.State):
             async with self:
                 self._gt_df = None
                 self.gt_file_name = "No ground-truth file"
+                self._run_evaluation()
                 self.evaluation_error = str(e)
                 self.evaluation_status = "Failed to parse ground-truth file."
-                self.evaluation_ready = False
-                self.evaluation_compatible = False
-                self.evaluation_overall_rows = []
-                self.evaluation_column_rows = []
                 self.status_msg = f"Ground truth upload error: {str(e)}"
 
     def download_cleaned_file(self):

@@ -165,16 +165,7 @@ def column_detail(row: rx.Var) -> rx.Component:
 
 def dependencies() -> rx.Component:
     return panel(
-        panel_head(
-            rx.el.div(
-                rx.el.h2("Functional dependencies"),
-                rx.el.p(
-                    "Pairs where one column almost always decides the other (score of at least "
-                    "0.925). These become multi-column cleaning tasks.",
-                    class_name="small muted",
-                ),
-            )
-        ),
+        panel_head(rx.el.h2("Functional dependencies")),
         rx.cond(
             State.fd_results.length() > 0,
             rx.el.div(
@@ -205,7 +196,7 @@ def dependencies() -> rx.Component:
                 class_name="scroll-x",
             ),
             rx.el.div(
-                rx.el.p("No dependencies were found in this dataset.", class_name="muted"),
+                rx.el.p("No dependencies", class_name="muted"),
                 class_name="panel-body",
             ),
         ),
@@ -217,7 +208,6 @@ def page() -> rx.Component:
         "profile",
         view_head(
             "Profile",
-            "Computed on this machine from every row. Nothing is sent to a model at this step.",
             rx.el.div(
                 chip(State.column_names.length().to(str) + " columns"),
                 rx.cond(
@@ -251,13 +241,6 @@ def page() -> rx.Component:
                 ),
                 dependencies(),
             ),
-            rx.el.div(
-                rx.el.div(
-                    icon("info"),
-                    "Upload a dataset and profiling runs by itself.",
-                    class_name="callout info",
-                ),
-                class_name="panel panel-body",
-            ),
+            rx.el.div(rx.el.h2("No profile yet"), class_name="panel empty"),
         ),
     )

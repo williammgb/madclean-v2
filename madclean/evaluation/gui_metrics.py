@@ -97,6 +97,8 @@ def _view(scores, total_cells: int, correct_cells: int) -> dict[str, Any]:
         "fp": detection.false_positives,
         "tn": detection.true_negatives,
         "fn": detection.false_negatives,
+        # Wrong cells the run changed to the right value; tp also counts ones changed to another wrong one.
+        "repaired": correction.correctly_repaired_cells,
         "cell_accuracy": _ratio(correct_cells, total_cells),
         "repair_precision": precision,
         "repair_recall": recall,

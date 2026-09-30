@@ -49,13 +49,7 @@ def token_split() -> rx.Component:
 def generated_code() -> rx.Component:
     return panel(
         panel_head(
-            rx.el.div(
-                rx.el.h2("Cleaning code"),
-                rx.el.p(
-                    "What the coder wrote for this task, exactly as it ran.",
-                    class_name="small muted",
-                ),
-            ),
+            rx.el.h2("Cleaning code"),
             rx.el.select(
                 rx.foreach(State.report_code_keys, lambda key: rx.el.option(key, value=key)),
                 value=State.selected_report_code_key,
@@ -117,7 +111,7 @@ def exports() -> rx.Component:
 def page() -> rx.Component:
     return view(
         "report",
-        view_head("Report", "What the run produced, what it cost, and the code it wrote."),
+        view_head("Report"),
         rx.cond(
             State.has_cleaned,
             rx.fragment(
@@ -132,11 +126,6 @@ def page() -> rx.Component:
                 exports(),
                 generated_code(),
             ),
-            rx.el.div(
-                rx.el.p(
-                    "Run the cleaning and this fills with what it produced.", class_name="muted"
-                ),
-                class_name="panel panel-body",
-            ),
+            rx.el.div(rx.el.h2("No run yet"), class_name="panel empty"),
         ),
     )

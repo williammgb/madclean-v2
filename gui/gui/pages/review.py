@@ -309,11 +309,7 @@ def page() -> rx.Component:
     waiting = State.waiting_review_rows.to(list[dict[str, Any]])
     return view(
         "review",
-        view_head(
-            "Review",
-            "The run pauses on each decision until you answer it. Every other task keeps running "
-            "while it waits.",
-        ),
+        view_head("Review"),
         rx.cond(
             State.review_waiting_count > 0,
             rx.el.div(
@@ -329,13 +325,6 @@ def page() -> rx.Component:
                 rx.el.div(
                     rx.el.div(rx.el.span("✓"), class_name="ic"),
                     rx.el.h2("No decisions waiting"),
-                    rx.el.p(
-                        rx.cond(
-                            State.is_cleaning,
-                            "The run is working. It will stop here if it needs you.",
-                            "Turn on human-in-the-loop, or set the validator to USER, to be asked.",
-                        )
-                    ),
                     class_name="empty",
                 )
             ),

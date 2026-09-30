@@ -37,6 +37,19 @@ def test_the_metrics_the_gui_reads_are_unchanged():
     assert column_b["f1"] == pytest.approx(0.8)
 
 
+def test_a_wrong_cell_changed_to_another_wrong_value_is_not_counted_as_repaired():
+    """Evaluation's "Repaired" column counts correct repairs only; tp counts every changed wrong cell."""
+    dirty = pd.DataFrame({"a": ["1O", "x", "3"]})
+    ground_truth = pd.DataFrame({"a": ["10", "2", "3"]})
+    cleaned = pd.DataFrame({"a": ["10", "y", "3"]})
+    metrics = compute_cleaning_metrics(dirty, cleaned, ground_truth)
+
+    assert metrics["tp"] == 2
+    assert metrics["repaired"] == 1
+    assert metrics["per_column"]["a"]["repaired"] == 1
+    assert metrics["repair_precision"] == pytest.approx(0.5)
+
+
 def test_a_column_with_nothing_to_repair_reports_no_score_rather_than_zero():
     """The GUI prints a dash for an undefined score, so the metric has to be None, not 0.0."""
     frame = pd.DataFrame({"a": ["x", "y", "z"]})

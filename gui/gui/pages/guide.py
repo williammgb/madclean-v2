@@ -60,7 +60,7 @@ TERMS: list[tuple[str, str]] = [
 def page() -> rx.Component:
     return view(
         "guide",
-        view_head("Guide", "How MADClean cleans a table, and what the words on these pages mean."),
+        view_head("Guide"),
         rx.el.div(
             panel(
                 panel_head(rx.el.h2("Working through a dataset")),

@@ -54,11 +54,13 @@ def test_the_shell_builds():
     assert isinstance(rail(), rx.Component)
 
 
-def test_the_rail_offers_the_eight_views():
+def test_the_rail_offers_the_nine_views():
     from gui.components.shell import NAV_GROUPS
 
     names = [name for _label, items in NAV_GROUPS for name, _title, _icon in items]
-    assert names == ["table", "profile", "pipeline", "review", "logs", "report", "evaluation", "guide"]
+    assert names == [
+        "table", "profile", "pipeline", "review", "logs", "report", "evaluation", "settings", "guide"
+    ]
 
 
 def test_the_gui_is_split_into_modules_rather_than_one_file():
@@ -121,12 +123,42 @@ def test_the_changed_cell_count_covers_the_whole_table():
     assert State._count_changed_cells(None, cleaned) == 0
 
 
+def test_evaluation_splits_found_cells_into_repaired_and_still_wrong():
+    """A wrong cell changed to another wrong value is not "Repaired"; it gets its own segment."""
+    import pandas as pd
+
+    from gui.state import evaluation_view
+    from madclean.evaluation import compute_cleaning_metrics
+
+    dirty = pd.DataFrame({"a": ["1O", "x", "3"], "b": ["p", "q", "r"]})
+    truth = pd.DataFrame({"a": ["10", "2", "3"], "b": ["p", "q", "r"]})
+    cleaned = pd.DataFrame({"a": ["10", "y", "3"], "b": ["p", "q", "r"]})
+    shown = evaluation_view(compute_cleaning_metrics(dirty, cleaned, truth), ["a", "b"], {})
+
+    wrong, changed = shown["bars"]
+    assert [(s["label"], s["count"]) for s in wrong["segments"]] == [
+        ("Repaired", "1"), ("Changed, still wrong", "1"), ("Left wrong", "0")
+    ]
+    assert changed["total"] == "2"
+    assert [s["label"] for s in changed["segments"]] == ["Repaired", "Changed, still wrong", "Changed but was fine"]
+    assert [s["v"] for s in shown["scores"]] == ["50.00", "50.00", "50.00"]
+
+    row_a, row_b = shown["rows"]
+    assert (row_a["repaired"], row_a["repaired_class"]) == ("1", "num")
+    assert (row_a["fp"], row_a["fp_class"]) == ("0", "num score-na")
+    # Nothing to repair in b: its scores are undefined, shown as a dash, and it has no F1 bar.
+    assert (row_b["precision"], row_b["has_f1"]) == ("—", "0")
+
+    clean_run = evaluation_view(compute_cleaning_metrics(dirty, truth, truth), ["a", "b"], {})
+    assert "Changed, still wrong" not in [s["label"] for s in clean_run["bars"][0]["segments"]]
+
+
 def test_the_validator_fallback_choices_are_ones_the_config_accepts():
     """The dropdown once sent "accept", which the setter silently refused."""
     import re
 
     settings_source = (GUI_DIR / "gui" / "pages" / "settings.py").read_text(encoding="utf-8")
-    block = settings_source.split("When the validator cannot decide", 1)[1].split("value=State", 1)[0]
+    block = settings_source.split("When undecided", 1)[1].split("value=State", 1)[0]
     offered = set(re.findall(r'value="([a-z_]+)"', block))
     assert offered == {"accept_cleaned", "leave_uncleaned", "ask_user"}
 

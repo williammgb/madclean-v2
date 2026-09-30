@@ -19,10 +19,11 @@ from .pages import (
     settings,
     table,
 )
+from .state import State
 
 
 def main() -> rx.Component:
-    """The eight views, in the order the rail lists them. One is shown at a time."""
+    """The nine views, in the order the rail lists them. One is shown at a time."""
     return rx.el.main(
         table.page(),
         profile.page(),
@@ -31,9 +32,8 @@ def main() -> rx.Component:
         logs.page(),
         report.page(),
         evaluation.page(),
-        guide.page(),
-        # Not in the rail: reached from the gear in the top bar, as in the preview.
         settings.page(),
+        guide.page(),
         class_name="main",
     )
 
@@ -42,7 +42,12 @@ def main() -> rx.Component:
 def index() -> rx.Component:
     return rx.fragment(
         sprite(),
-        rx.el.div(top_bar(), rail(), main(), class_name="app"),
+        rx.el.div(
+            top_bar(),
+            rail(),
+            main(),
+            class_name=rx.cond(State.rail_collapsed == "1", "app collapsed", "app"),
+        ),
     )
 
 

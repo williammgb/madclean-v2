@@ -23,7 +23,7 @@ NAV_GROUPS: list[tuple[str, list[tuple[str, str, str]]]] = [
         ],
     ),
     ("Results", [("report", "Report", "report"), ("evaluation", "Evaluation", "eval")]),
-    ("Help", [("guide", "Guide", "guide")]),
+    ("Settings", [("settings", "Settings", "sliders"), ("guide", "Guide", "guide")]),
 ]
 
 
@@ -60,14 +60,18 @@ def chip(*children, tone: str = "", large: bool = True) -> rx.Component:
     return rx.el.span(*children, class_name=classes)
 
 
-def view_head(title: str, subtitle: str, *extra) -> rx.Component:
-    return rx.el.div(
-        rx.el.div(
-            rx.el.h1(title),
-            rx.el.p(subtitle, class_name="sub"),
-        ),
-        *extra,
-        class_name="view-head",
+def view_head(title: str, *extra) -> rx.Component:
+    """A view's title and whatever sits beside it. No subtitle: a label names the view, and that is all."""
+    return rx.el.div(rx.el.h1(title), *extra, class_name="view-head")
+
+
+def switch(checked, on_change, *label, disabled=False) -> rx.Component:
+    """The preview's toggle, with its label (if any) after the track."""
+    return rx.el.label(
+        rx.el.input(type="checkbox", checked=checked, on_change=on_change, disabled=disabled),
+        rx.el.span(class_name="track"),
+        *label,
+        class_name="switch",
     )
 
 
@@ -92,9 +96,10 @@ def nav_item(name: str, label: str, icon_name: str) -> rx.Component:
         )
     return rx.el.button(
         icon(icon_name),
-        label,
+        rx.el.span(label, class_name="txt"),
         *trailing,
         type="button",
+        title=label,
         class_name=rx.cond(
             State.active_view == name, "nav-item is-active", "nav-item"
         ),
@@ -111,9 +116,22 @@ def rail() -> rx.Component:
         )
         for label, items in NAV_GROUPS
     ]
+    collapsed = State.rail_collapsed == "1"
     return rx.el.aside(
         rx.el.nav(*groups, class_name="nav", aria_label="Workspace"),
-        run_setup(),
+        rx.el.div(
+            run_setup(),
+            rx.el.button(
+                icon("collapse"),
+                rx.el.span("Collapse", class_name="txt"),
+                type="button",
+                class_name="collapse-btn",
+                aria_expanded=rx.cond(collapsed, "false", "true"),
+                title=rx.cond(collapsed, "Expand sidebar", "Collapse sidebar"),
+                on_click=State.toggle_rail,
+            ),
+            class_name="rail-foot",
+        ),
         class_name="rail",
     )
 
@@ -132,18 +150,8 @@ def model_row(label: str, value, on_change, options) -> rx.Component:
 
 
 def run_setup() -> rx.Component:
-    """The card at the bottom of the rail: one model per agent, and the human-in-the-loop switch."""
+    """The card at the bottom of the rail: one model per agent."""
     return rx.el.section(
-        rx.el.div(
-            rx.el.h3("Run setup"),
-            rx.el.button(
-                "All settings",
-                type="button",
-                class_name="link small",
-                on_click=State.show_view("settings"),
-            ),
-            class_name="setup-head",
-        ),
         model_row(
             "Recommender",
             State.selected_llm_key_recommender,
@@ -162,20 +170,44 @@ def run_setup() -> rx.Component:
             State.set_selected_llm_key_validation,
             State.validation_llm_options,
         ),
-        rx.el.div(
-            rx.el.span("Human-in-the-loop", class_name="small"),
-            rx.el.label(
-                rx.el.input(
-                    type="checkbox",
-                    checked=State.human_in_the_loop,
-                    on_change=State.set_human_in_the_loop,
-                ),
-                rx.el.span(class_name="track"),
-                class_name="switch",
-            ),
-            class_name="switch-row",
-        ),
         class_name="setup",
+        aria_label="Models",
+    )
+
+
+def export_menu() -> rx.Component:
+    """Export, and the three things a run can hand you to take away."""
+
+    def item(label: str, icon_name: str, handler) -> rx.Component:
+        return rx.el.button(
+            icon(icon_name),
+            label,
+            type="button",
+            on_click=[State.close_export_menu, handler],
+        )
+
+    return rx.el.div(
+        rx.el.button(
+            icon("download"),
+            "Export",
+            icon("down"),
+            type="button",
+            class_name="btn btn-soft",
+            aria_expanded=rx.cond(State.export_menu_open, "true", "false"),
+            on_click=State.toggle_export_menu,
+        ),
+        rx.cond(
+            State.export_menu_open,
+            rx.el.div(
+                item("Cleaned data (.csv)", "table", State.download_cleaned_file),
+                item("Cleaning code (.py)", "report", State.download_cleaning_code),
+                item("Notebook (.ipynb)", "report", State.download_notebook),
+                class_name="menu",
+                role="menu",
+            ),
+            rx.fragment(),
+        ),
+        class_name="export",
     )
 
 
@@ -187,11 +219,31 @@ def top_bar() -> rx.Component:
         rx.el.div(
             rx.el.span(icon("file"), State.file_name, class_name="file"),
             rx.el.span(State.dataset_meta, class_name="meta"),
+            rx.cond(
+                State.column_names.length() > 0,
+                rx.upload(
+                    rx.el.button(
+                        icon("upload"), "Replace", type="button", class_name="btn btn-sm btn-ghost"
+                    ),
+                    id="dataset_replace",
+                    on_drop=State.handle_upload(rx.upload_files(upload_id="dataset_replace")),
+                    multiple=False,
+                    no_keyboard=True,
+                    # rx.upload draws a dashed drop zone with 5em of padding unless told not to.
+                    border="none",
+                    padding="0",
+                ),
+                rx.fragment(),
+            ),
             class_name="dataset",
         ),
         rx.el.span(class_name="spacer"),
         rx.el.div(
-            rx.el.span(State.run_chip_text, class_name=State.run_chip_class),
+            rx.el.span(
+                rx.cond(State.last_run_status == "finished", icon("check"), rx.fragment()),
+                State.run_chip_text,
+                class_name=State.run_chip_class,
+            ),
             rx.cond(
                 State.is_cleaning,
                 rx.el.span(
@@ -213,17 +265,7 @@ def top_bar() -> rx.Component:
                 title="Settings",
                 on_click=State.show_view("settings"),
             ),
-            rx.cond(
-                State.has_cleaned,
-                rx.el.button(
-                    icon("download"),
-                    "Export",
-                    type="button",
-                    class_name="btn btn-soft",
-                    on_click=State.show_view("report"),
-                ),
-                rx.fragment(),
-            ),
+            rx.cond(State.has_cleaned, export_menu(), rx.fragment()),
             rx.cond(
                 State.is_cleaning,
                 rx.el.button(

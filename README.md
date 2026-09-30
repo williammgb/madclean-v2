@@ -159,7 +159,7 @@ The interface is eight views behind one workflow rail — Table, Profile, Pipeli
 Report, Evaluation, Guide. Every browser tab gets its own run: two tabs can clean two datasets
 without sharing a stop button or a review queue.
 
-![The MADClean interface](docs/main_window.png)
+![The MADClean interface](docs/v2_cleaned.png)
 
 ## Evaluation
 

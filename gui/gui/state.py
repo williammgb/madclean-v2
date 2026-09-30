@@ -46,6 +46,34 @@ def _score_tone(share: Optional[float]) -> Tuple[str, str]:
     return "score-bad", "var(--red)"
 
 
+def token_usage_rows(token_usage: Any) -> List[Dict[str, str]]:
+    """One row per agent for the report: its name and token count, and its share of the run."""
+    if not isinstance(token_usage, dict):
+        return []
+    names = {"recommender": "Recommender", "coding": "Coder", "validation": "Validator"}
+    colours = ["var(--accent)", "var(--orange)", "var(--green)", "var(--t-discrete)"]
+    order = list(names) + [k for k in token_usage if k not in names and k != "total_usage"]
+    spent: List[Tuple[str, int]] = []
+    for key in order:
+        usage = token_usage.get(key)
+        if not isinstance(usage, dict):
+            continue
+        count = int(usage.get("total_tokens", 0) or 0) or (
+            int(usage.get("input_tokens", 0) or 0) + int(usage.get("output_tokens", 0) or 0)
+        )
+        if count > 0:
+            spent.append((names.get(key, str(key).capitalize()), count))
+    total = sum(count for _, count in spent)
+    return [
+        {
+            "label": f"{name} · {count:,}",
+            "pct": f"{count / total * 100:.1f}",
+            "color": colours[i % len(colours)],
+        }
+        for i, (name, count) in enumerate(spent)
+    ]
+
+
 def _cell_bar(label: str, parts: List[Tuple[str, int, str]]) -> Dict[str, Any]:
     """One of Evaluation's split bars: its total, and a segment per part with its legend entry."""
     return {
@@ -241,7 +269,7 @@ class State(rx.State):
     has_cleaned: bool = False
     changed_cell_count: int = 0
     token_usage: Dict[str, Any] = {}
-    token_usage_donut_rows: List[Dict[str, str]] = []
+    token_usage_rows: List[Dict[str, str]] = []
     runtime_seconds: float = 0.0
     runtime_seconds_display: str = "0.0"
     cleaning_summary: Dict[str, Any] = {}
@@ -439,7 +467,7 @@ class State(rx.State):
     @rx.var
     def pipeline_result_counts(self) -> Dict[str, int]:
         """How the finished tasks ended, for the chips at the top of the Pipeline view."""
-        counts = {"validated": 0, "not_validated": 0, "clean": 0, "failed": 0}
+        counts = {"validated": 0, "cleaned": 0, "clean": 0, "failed": 0}
         for row in self.pipeline_flow_rows:
             kind = str(row.get("result_kind", ""))
             if kind in counts:
@@ -681,114 +709,6 @@ class State(rx.State):
         self.evaluation_cell_bars = shown["bars"]
         self.evaluation_untouched = shown["untouched"]
         self.evaluation_column_rows = shown["rows"]
-
-    def _build_token_usage_donut_rows(self, report: Dict[str, Any]) -> None:
-        rows: List[Dict[str, str]] = []
-        token_usage = (report or {}).get("token_usage", {})
-        total_usage = (report or {}).get("total_usage", {}) or {}
-        if not isinstance(token_usage, dict):
-            self.token_usage_donut_rows = []
-            return
-        # Grand total across all agents.
-        total_tokens = int(total_usage.get("total_tokens", 0) or 0)
-        if total_tokens <= 0:
-            total_tokens = int(
-                sum(
-                    int((v or {}).get("total_tokens", 0) or 0)
-                    for v in token_usage.values()
-                    if isinstance(v, dict)
-                )
-            )
-        if total_tokens <= 0:
-            self.token_usage_donut_rows = []
-            return
-
-        def _pct_of_total(v: int) -> float:
-            return max(0.0, min(100.0, (float(v) / float(total_tokens)) * 100.0))
-
-        # Per-agent donuts: only input vs output segments; center shows share of total tokens.
-        ordered_agents = ("recommender", "coding", "validation")
-        for agent_key in ordered_agents:
-            usage = token_usage.get(agent_key) or {}
-            if not isinstance(usage, dict):
-                usage = {}
-            inp = int(usage.get("input_tokens", 0) or 0)
-            out = int(usage.get("output_tokens", 0) or 0)
-            agent_total = inp + out
-            if agent_total <= 0:
-                continue
-            # Segment sizes within the donut for this agent.
-            inp_frac = max(0.0, min(100.0, (float(inp) / float(agent_total)) * 100.0))
-            out_frac = max(
-                0.0, min(100.0, (float(out) / float(agent_total)) * 100.0)
-            )
-            # Center text: agent’s share of overall tokens.
-            agent_pct_total = _pct_of_total(agent_total)
-            rows.append(
-                {
-                    "title": agent_key.capitalize(),
-                    "subtitle": f"{agent_total:,} tokens",
-                    "center_text": f"{agent_pct_total:.1f}%",
-                    "legend_items": [
-                        {"label": f"Input: {inp:,}", "color": "#2563eb"},
-                        {"label": f"Output: {out:,}", "color": "#f97316"},
-                    ],
-                    "bg": (
-                        f"conic-gradient(#2563eb 0% {inp_frac:.2f}%, "
-                        f"#f97316 {inp_frac:.2f}% {(inp_frac + out_frac):.2f}%, "
-                        f"#e5e7eb {(inp_frac + out_frac):.2f}% 100%)"
-                    ),
-                }
-            )
-
-        # Total donut: share per agent.
-        agents_totals: List[tuple[str, int]] = []
-        for agent_key in ordered_agents:
-            usage = token_usage.get(agent_key) or {}
-            if not isinstance(usage, dict):
-                continue
-            agents_totals.append(
-                (agent_key, int(usage.get("total_tokens", 0) or 0))
-            )
-        # Fallback: any extra agents not in the default order.
-        for agent_key, usage in token_usage.items():
-            if agent_key in ordered_agents:
-                continue
-            if not isinstance(usage, dict):
-                continue
-            agents_totals.append(
-                (str(agent_key), int(usage.get("total_tokens", 0) or 0))
-            )
-
-        if agents_totals:
-            # Build conic gradient segments for each agent.
-            segments: List[str] = []
-            legend_items: List[Dict[str, str]] = []
-            cursor = 0.0
-            colors = ["#2563eb", "#f97316", "#22c55e", "#7c3aed", "#ec4899"]
-            for idx, (agent_key, atotal) in enumerate(agents_totals):
-                if atotal <= 0:
-                    continue
-                pct = _pct_of_total(atotal)
-                start = cursor
-                end = min(100.0, cursor + pct)
-                color = colors[idx % len(colors)]
-                segments.append(f"{color} {start:.2f}% {end:.2f}%")
-                legend_items.append(
-                    {"label": f"{agent_key.capitalize()}: {atotal:,} ({pct:.1f}%)", "color": color}
-                )
-                cursor = end
-            if segments:
-                rows.append(
-                    {
-                        "title": "Total",
-                        "subtitle": f"{total_tokens:,} tokens",
-                        "center_text": "100%",
-                        "legend_items": legend_items,
-                        "bg": f"conic-gradient({', '.join(segments)})",
-                    }
-                )
-        self.token_usage_donut_rows = rows
 
     def clear_ground_truth(self) -> None:
         self._gt_df = None
@@ -1515,7 +1435,7 @@ class State(rx.State):
         if entry.get("cleaning_validated"):
             return "Cleaned, validated", "green", "validated"
         if entry.get("cleaned"):
-            return "Cleaned, not validated", "accent", "not_validated"
+            return "Cleaned", "accent", "cleaned"
         return "Done", "green", ""
 
     def _rebuild_pipeline_flow_rows(self):
@@ -2594,7 +2514,7 @@ class State(rx.State):
             self.runtime_seconds = 0.0
             self.runtime_seconds_display = "0.0"
             self.token_usage = {}
-            self.token_usage_donut_rows = []
+            self.token_usage_rows = []
             self.cleaning_summary = {}
             self.changed_cell_count = 0
             self.logs = []
@@ -2725,7 +2645,7 @@ class State(rx.State):
                     self.runtime_seconds = 0.0
                     self.runtime_seconds_display = "0.0"
                     self.token_usage = {}
-                    self.token_usage_donut_rows = []
+                    self.token_usage_rows = []
                     self.cleaning_summary = {}
                     self.report_code_keys = []
                     self.selected_report_code_key = ""
@@ -2743,7 +2663,7 @@ class State(rx.State):
                     self.total_rows = int(len(cleaned_df))
                     self.changed_cell_count = self._count_changed_cells(self._orig_df, cleaned_df)
                     self.token_usage = (report or {}).get("token_usage", {})
-                    self._build_token_usage_donut_rows(report or {})
+                    self.token_usage_rows = token_usage_rows(self.token_usage)
                     self.runtime_seconds = float((report or {}).get("runtime_seconds", end - start))
                     self.runtime_seconds_display = f"{self.runtime_seconds:.1f}"
                     self.cleaning_summary = report or {}
@@ -2784,7 +2704,7 @@ class State(rx.State):
                 self._refresh_current_page()
                 self.changed_cell_count = 0
                 self.token_usage = {}
-                self.token_usage_donut_rows = []
+                self.token_usage_rows = []
                 self.logs = []
                 self.cleaning_summary = {}
                 self.report_code_keys = []

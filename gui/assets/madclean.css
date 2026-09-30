@@ -73,7 +73,7 @@ code,.mono{font-family:var(--mono);font-size:12.5px}
 svg.i{width:16px;height:16px;flex:none;stroke:currentColor;stroke-width:1.75;fill:none;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- shell ---------- */
-.app{--rail:232px;display:grid;grid-template-columns:var(--rail) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100%;transition:grid-template-columns .18s ease}
+.app{--rail:232px;display:grid;grid-template-columns:var(--rail) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100vh;height:100dvh;transition:grid-template-columns .18s ease}
 .app.collapsed{--rail:60px}
 .topbar{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);min-width:0}
 .brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:16px;letter-spacing:-.01em;white-space:nowrap}
@@ -117,7 +117,7 @@ svg.i{width:16px;height:16px;flex:none;stroke:currentColor;stroke-width:1.75;fil
 .collapsed .collapse-btn svg{transform:rotate(180deg)}
 
 .main{overflow:auto;min-width:0;min-height:0;padding:22px 26px 110px}
-.view{display:none;flex-direction:column;gap:14px;max-width:1440px}
+.view{display:none;flex-direction:column;gap:14px}
 .view.is-active{display:flex}
 .view-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;min-height:32px}
 .export{position:relative}

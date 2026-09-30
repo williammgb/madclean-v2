@@ -124,7 +124,7 @@ def result_chips() -> rx.Component:
     failed = counts["failed"].to(int)
     return rx.el.div(
         rx.el.span(counts["validated"].to(str) + " validated", class_name="chip chip-green"),
-        rx.el.span(counts["not_validated"].to(str) + " not validated", class_name="chip chip-accent"),
+        rx.el.span(counts["cleaned"].to(str) + " cleaned", class_name="chip chip-accent"),
         rx.el.span(counts["clean"].to(str) + " already clean", class_name="chip"),
         rx.el.span(
             failed.to(str) + " failed", class_name=rx.cond(failed > 0, "chip chip-red", "chip")

@@ -28,7 +28,7 @@ def token_split() -> rx.Component:
         panel_head(rx.el.h2("Tokens per agent")),
         rx.el.div(
             rx.foreach(
-                State.token_usage_donut_rows.to(list[dict[str, str]]),
+                State.token_usage_rows.to(list[dict[str, str]]),
                 lambda row: rx.el.div(
                     rx.el.span(row["label"], class_name="lbl"),
                     rx.el.span(

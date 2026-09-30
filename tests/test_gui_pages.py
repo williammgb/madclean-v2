@@ -153,6 +153,28 @@ def test_evaluation_splits_found_cells_into_repaired_and_still_wrong():
     assert "Changed, still wrong" not in [s["label"] for s in clean_run["bars"][0]["segments"]]
 
 
+def test_the_report_shows_each_agents_tokens():
+    """The panel once read "label" and "pct" from rows that had neither, so it showed "undefined %"."""
+    import re
+
+    from gui.state import token_usage_rows
+
+    usage = {
+        "recommender": {"input_tokens": 50, "output_tokens": 25, "total_tokens": 75},
+        "coding": {"input_tokens": 20, "output_tokens": 5},
+        "validation": {"total_tokens": 0},
+        "total_usage": {"total_tokens": 100},
+    }
+    rows = token_usage_rows(usage)
+    assert [(r["label"], r["pct"]) for r in rows] == [("Recommender · 75", "75.0"), ("Coder · 25", "25.0")]
+    assert all(r["color"] for r in rows)
+    assert token_usage_rows({}) == [] and token_usage_rows(None) == []
+
+    report_source = (GUI_DIR / "gui" / "pages" / "report.py").read_text(encoding="utf-8")
+    panel = report_source.split("def token_split", 1)[1].split("\ndef ", 1)[0]
+    assert set(re.findall(r'row\["(\w+)"\]', panel)) == set(rows[0])
+
+
 def test_the_validator_fallback_choices_are_ones_the_config_accepts():
     """The dropdown once sent "accept", which the setter silently refused."""
     import re

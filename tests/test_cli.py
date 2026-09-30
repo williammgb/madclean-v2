@@ -24,7 +24,7 @@ def config_for(*flags):
 def test_without_flags_the_settings_are_the_default_file():
     config = config_for()
     assert config.enable_validation and config.enable_multi_col_cleaning
-    assert config.sample_sizes["STRING"] == {"random_sample_size": 150, "unique_sample_size": 250}
+    assert config.sample_sizes["STRING"] == {"random_sample_size": 150, "unique_sample_size": 500}
     assert config.sampling_seed is None
 
 

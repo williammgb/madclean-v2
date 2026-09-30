@@ -28,19 +28,19 @@ class CleaningConfig:
     sample_sizes: dict = field(default_factory=lambda: {
         "NUMERIC": {
             "clean_sample_size": 50,
-            "dirty_sample_size": 250
+            "dirty_sample_size": 500
         },
         "DATETIME": {
             "clean_sample_size": 100,
-            "dirty_sample_size": 250
+            "dirty_sample_size": 500
         },
         "DIRTY_NUMERIC": { 
             "random_sample_size": 50,
-            "unique_sample_size": 250
+            "unique_sample_size": 500
         },
         "STRING": { 
             "random_sample_size": 150,
-            "unique_sample_size": 250
+            "unique_sample_size": 500
         },
         "NLT": {
             "short_sample_size": 100,

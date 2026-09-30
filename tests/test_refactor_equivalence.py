@@ -7,6 +7,7 @@ A missing reference is written and the test fails with "reference written", so r
 ever captured deliberately, on unchanged code.
 """
 
+import copy
 import hashlib
 import json
 from collections import Counter
@@ -27,6 +28,16 @@ GOLDEN_DIR = Path(__file__).resolve().parent / "golden" / "refactor"
 BEERS = Path(__file__).resolve().parents[1] / "data" / "benchmark_datasets" / "beers_dirty.csv"
 
 FD_KEY = "codex → cityx"
+
+# The sample sizes every reference was recorded with. The defaults have since moved to 500 dirty
+# values; the scenarios keep these so they still compare against the same recorded runs.
+RECORDED_SAMPLE_SIZES = {
+    "NUMERIC": {"clean_sample_size": 50, "dirty_sample_size": 250},
+    "DATETIME": {"clean_sample_size": 100, "dirty_sample_size": 250},
+    "DIRTY_NUMERIC": {"random_sample_size": 50, "unique_sample_size": 250},
+    "STRING": {"random_sample_size": 150, "unique_sample_size": 250},
+    "NLT": {"short_sample_size": 100, "long_sample_size": 20},
+}
 
 
 # --------------------------------------------------------------------------------------
@@ -186,7 +197,9 @@ def _report_dict(report) -> dict:
 def _table(cleaned: pd.DataFrame | None, digest: bool = False) -> dict:
     if cleaned is None:
         return {"csv": None, "dtypes": {}}
-    csv_text = cleaned.to_csv(index=False)
+    # The references were recorded on Windows, where pandas ends lines with \r\n; naming the ending
+    # makes Linux and macOS produce the same text.
+    csv_text = cleaned.to_csv(index=False, lineterminator="\r\n")
     return {
         "csv": hashlib.sha256(csv_text.encode("utf-8")).hexdigest() if digest else csv_text,
         "dtypes": {str(name): str(dtype) for name, dtype in cleaned.dtypes.items()},
@@ -225,6 +238,7 @@ def run_scenario(
     config = load_default_cleaning_config()
     config.verbose = False
     config.sampling_seed = 7
+    config.sample_sizes = copy.deepcopy(RECORDED_SAMPLE_SIZES)
     for name, value in overrides.items():
         if not hasattr(config, name):
             raise AssertionError(f"unknown config field: {name}")

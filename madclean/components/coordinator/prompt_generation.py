@@ -293,7 +293,9 @@ class PromptGeneration:
         fd_pair_df = df[[lhs, rhs]]
         sample_size = min(len(fd_pair_df), max_sample_size)
         fd_pair_sample = fd_pair_df.sample(n=sample_size, random_state=42)
-        fd_pair_sample_str = fd_pair_sample.to_csv(index=False).strip()
+        # pandas ends lines the operating system's way; naming \r\n, what the paper's Windows runs
+        # sent, keeps this prompt identical on every machine.
+        fd_pair_sample_str = fd_pair_sample.to_csv(index=False, lineterminator="\r\n").strip()
         # 3. Instantiate prompt template
         template = FD_RECOMMENDATION_PROMPT_TEMPLATE
         uc = (user_constraints or "").strip()

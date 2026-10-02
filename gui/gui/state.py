@@ -26,6 +26,7 @@ from madclean.evaluation import (
 from madclean.evaluation.comparison import Mode, equal_mask
 
 from madclean.notebook import merged_cleaning_code, notebook_json
+from madclean.utils.helpers import load_dataset
 
 from .session import SessionRun, session_run
 
@@ -1162,6 +1163,11 @@ class State(rx.State):
             "NATURAL_LANGUAGE_TEXT": "#ff85a1",
             "BOOLEAN": "#fb8500",
             "DATETIME": "#2d6a4f",
+            "IDENTIFIER": "#3a0ca3",
+            "CATEGORICAL": "#e85d04",
+            "EMAIL": "#0f9d58",
+            "URL": "#6a994e",
+            "MIXED": "#bc6c25",
             "STRING": "#7209b7",
             "EMPTY": "#9CA3AF",  # gray
             "UNKNOWN": "#9CA3AF",
@@ -2691,7 +2697,7 @@ class State(rx.State):
         outfile = os.path.join(upload_dir, file.filename)
         with open(outfile, "wb") as f: f.write(upload_data)
         try:
-            df = pd.read_csv(outfile) if file.filename.endswith(".csv") else pd.read_excel(outfile)
+            df = load_dataset(outfile, keep_raw_text=True)
             async with self:
                 self._orig_df = df.copy()
                 self._full_df = df

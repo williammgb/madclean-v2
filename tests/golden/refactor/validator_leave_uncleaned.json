@@ -32,7 +32,7 @@
       "reason": "Validator failed and strategy is leave_uncleaned"
     },
     "codex": {
-      "datatype": "DISCRETE_STRING",
+      "datatype": "MIXED",
       "already_clean": false,
       "cleaned": true,
       "attempts": 1,
@@ -114,14 +114,14 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 19410,
+        "input_tokens": 20387,
         "output_tokens": 737,
-        "total_tokens": 20147
+        "total_tokens": 21124
       },
       "coding": {
-        "input_tokens": 10007,
+        "input_tokens": 9997,
         "output_tokens": 952,
-        "total_tokens": 10959
+        "total_tokens": 10949
       },
       "validation": {
         "input_tokens": 45486,
@@ -130,9 +130,9 @@
       }
     },
     "total_usage": {
-      "input_tokens": 74903,
+      "input_tokens": 75870,
       "output_tokens": 2053,
-      "total_tokens": 76956
+      "total_tokens": 77923
     }
   },
   "traces": {
@@ -245,8 +245,8 @@
   },
   "prompts": {
     "coder": [
-      "3e6a32bb6fd0cd9fda1c2fe977d9010c38a0cf8c7db1e75fd495f6cac6e628f6",
       "5532f973dd5ff6264c693db4d88969b34f8080dd4a761088fdce3d112320adfb",
+      "9c71602f7dcb4a3e04f7f6545c310eef25d36eed59d0defa15ac24977d4dede9",
       "c836ba21f89d678e4cf8b51a8da3e0fa43c7345a97b0fec088f3c0528d50c6fd",
       "f14c40a487e36ea184a08f8a3ba4180b704b3875417cf5d746a6c93002c639c8"
     ],
@@ -254,9 +254,9 @@
       "6067aee1b10947b7adb94ed03fbe9414158b5a45d485005d5e62d0b31278e22d"
     ],
     "recommender": [
-      "1322fc1ce62fbb2ac945cb32dc9107ca2db044dcfb8e7cd30d4f671a53a8598f",
-      "329c101ad1bcfeaae1bc03b79f82714d3f6d27f0e1f9a5be3447011648abdc0d",
-      "45fcc6ac0c57d274a46e0e8c917b94c804da042913aafa3dec399f78712e04b3"
+      "1bf8b5a85cbd0a74219c2993efad3ffb7b12449dcaecb144f36d6bfa457984d9",
+      "8052bde119f853ab28d0071dbd4e73ff63f8bb24c68512b87eebefaf3f6ed33e",
+      "f2ab9c1307babaef387271b67ef86d74064a2132632216917466a003ce8def73"
     ],
     "validator": [
       "12efce5ab68f6465702eef4db6c843fecc690482107547ae4810444e58203d23",

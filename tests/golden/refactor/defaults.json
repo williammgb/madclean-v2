@@ -103,7 +103,7 @@
       ]
     },
     "codex": {
-      "datatype": "DISCRETE_STRING",
+      "datatype": "MIXED",
       "already_clean": false,
       "cleaned": true,
       "attempts": 1,
@@ -184,14 +184,14 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 28659,
+        "input_tokens": 30793,
         "output_tokens": 1074,
-        "total_tokens": 29733
+        "total_tokens": 31867
       },
       "coding": {
-        "input_tokens": 12541,
+        "input_tokens": 12531,
         "output_tokens": 265,
-        "total_tokens": 12806
+        "total_tokens": 12796
       },
       "validation": {
         "input_tokens": 15400,
@@ -200,9 +200,9 @@
       }
     },
     "total_usage": {
-      "input_tokens": 56600,
+      "input_tokens": 58724,
       "output_tokens": 1588,
-      "total_tokens": 58188
+      "total_tokens": 60312
     }
   },
   "traces": {
@@ -370,8 +370,8 @@
   },
   "prompts": {
     "coder": [
-      "3e6a32bb6fd0cd9fda1c2fe977d9010c38a0cf8c7db1e75fd495f6cac6e628f6",
       "5532f973dd5ff6264c693db4d88969b34f8080dd4a761088fdce3d112320adfb",
+      "9c71602f7dcb4a3e04f7f6545c310eef25d36eed59d0defa15ac24977d4dede9",
       "c836ba21f89d678e4cf8b51a8da3e0fa43c7345a97b0fec088f3c0528d50c6fd",
       "c9931a2b2d91b4d34f6ddfec728450e1fda650cd0a205c52cc7c7d8e5ab10c27",
       "f14c40a487e36ea184a08f8a3ba4180b704b3875417cf5d746a6c93002c639c8"
@@ -380,11 +380,11 @@
       "58991a43c6666811bd7e6421d31bd780f550f59b77c4a55cac81114204487eae"
     ],
     "recommender": [
-      "1322fc1ce62fbb2ac945cb32dc9107ca2db044dcfb8e7cd30d4f671a53a8598f",
-      "329c101ad1bcfeaae1bc03b79f82714d3f6d27f0e1f9a5be3447011648abdc0d",
-      "45fcc6ac0c57d274a46e0e8c917b94c804da042913aafa3dec399f78712e04b3",
-      "63a6c10cc20c28d45807572ed533dbbc85b9bab559cc28f5ee98a256b6106c7c",
-      "91bd6dc79dde1c50ad1305fd8cdec6c4a23271cccf2b6ecc1d9cd2fffba3062e"
+      "1bf8b5a85cbd0a74219c2993efad3ffb7b12449dcaecb144f36d6bfa457984d9",
+      "5237236ed429262bff05b5312b76633d5522393161eccab40e5099e97833a784",
+      "8052bde119f853ab28d0071dbd4e73ff63f8bb24c68512b87eebefaf3f6ed33e",
+      "9e6cff65f4963c54a2a83fe6ac92dec9fc804d8b2dbc935d7228e7bfbd0751fe",
+      "f2ab9c1307babaef387271b67ef86d74064a2132632216917466a003ce8def73"
     ],
     "validator": [
       "5af550954bf046d7fc1b22b2006c5c6f2f0300bb9d63a0cdfd014a744f20b2e4",

@@ -20,6 +20,12 @@ RULES
 5. The user constraints below override everything else when they are given.
 6. If no value needs to change, set "is_clean" to true and give no instructions.
 <<TYPE_PART>>
+READING THE SAMPLE
+- "value (count)": the number of rows holding that value. Lists are sorted most frequent first, so the top values show the dominant form.
+- "Possible variants of the same value": a frequent value, then rare values that closely resemble it. Merge one only when it is clearly the same value written differently.
+- "Formats by shape": each digit written as 9 and each run of letters as A (capitals), Aa (capitalised word) or a (lower case), with the row count and an example. The most frequent shape is the dominant format.
+- "Numeric summary": the range, the quartiles, and how many values have each number of decimal places.
+
 COLUMN SAMPLE
 {column_sample}
 {additional_context}
@@ -57,7 +63,7 @@ Example (dominant "mm-dd-yyyy"): "2025-10-25" → "10-25-2025"; "Feb 14, 2022" �
 
     "BOOLEAN": """
 This column holds two-state flags (Yes/No, True/False, Y/N, 1/0).
-The sample shows a random selection of values and the distinct values.
+The sample lists the distinct values with their counts, most frequent first.
 - Target: the pair of values most rows use, written exactly as there, casing included.
 - Map other common spellings of the same two states to that pair, ignoring case: "y", "yes", "true", "t", "1" for one state; "n", "no", "false", "f", "0" for the other.
 - Fix obvious typos ("Yse" → "Yes", "Flase" → "False").
@@ -113,7 +119,7 @@ The sample shows a random selection of values and the distinct values.
 
     "NAMED_ENTITY": """
 This column holds names of real-world things: people, places, organisations, products, titles.
-The sample shows a random selection of values and the distinct values.
+The sample lists the distinct values with their counts, most frequent first, and groups rare spellings with the frequent value they resemble.
 - Names vary by nature. Change only clear errors; never restyle a whole column of names.
 - Merge variants of one name only when both forms appear in this column, toward the more frequent one ("Google Inc." and "Google" → whichever is more frequent).
 - Remove what most values do not have: a code, prefix or suffix that only a minority of values carry. If most values are plain city names, "Denver CO" becomes "Denver"; if most values carry such a code, nothing is removed and nothing is added.
@@ -135,7 +141,7 @@ The sample shows short and long values.
 
     "COLLECTION": """
 This column holds collections written as strings: list, dict, set or tuple literals such as "['a', 'b']", "{'k': 1}", "(1, 2)" and "{1, 2, 3}".
-The sample shows a random selection of values and the distinct values.
+The sample lists the distinct values with their counts, most frequent first.
 - Target: the collection type, quote style, separators and spacing that most values use. If most values write "['a','b']", do not add spaces; if most write "['a', 'b']", keep them.
 - Every cleaned value stays a string that ast.literal_eval can parse. Never output Python objects.
 - Fix a malformed value only when the repair is unambiguous: a missing closing bracket, a wrong separator, stray characters.
@@ -146,7 +152,7 @@ The sample shows a random selection of values and the distinct values.
 
     "DELIMITED_STRING": """
 This column holds several tokens in one string, separated by a delimiter ("a,b,c", "a; b; c", "x|y|z").
-The sample shows a random selection of values and the distinct values.
+The sample lists the distinct values with their counts, most frequent first.
 - Target: the delimiter and the spacing around it that most values use. "a,b,c" stays without spaces when that is dominant; "a, b, c" keeps one space when that is.
 - Keep the tokens and their order. Fix only obvious typos or stray characters inside a token.
 - Every cleaned value stays one string; never turn it into a list.
@@ -155,12 +161,59 @@ The sample shows a random selection of values and the distinct values.
 
     "DISCRETE_STRING": """
 This column holds short structured strings: category labels, codes, IDs, emails, URLs, phone numbers, postal codes, or numbers with units.
-The sample shows a random selection of values and the distinct values. First decide which kind the column is:
+The sample lists the distinct values with their counts, most frequent first, and groups rare spellings with the frequent value they resemble. First decide which kind the column is:
 - Categories, a small set of labels: map variants of a label to its most frequent spelling in the column ("male", "MALE" → "Male" when "Male" dominates; "Redd" → "Red"). Merge synonyms only when both appear in the column.
 - Patterned values such as codes, emails or phone numbers: find the dominant pattern (for example four capitals and four digits) and fix values that break it by casing, spacing or one extra character ("ABcD1234" → "ABCD1234", "1234ABc" → "1234AB"). Never invent missing parts.
 - Numbers with units: when most values are a number followed by the same unit ("15 kg"), strip the unit so only the number remains, even if that changes every value. A value with several numbers or mixed units ("12 kg, 45 cm") stays unchanged.
 - Keep content in brackets or parentheses, and keep the dominant casing, punctuation and separators.
 - Placeholders ("unknown", "N/A", "") become empty. Values you cannot fix with certainty stay unchanged.
+""",
+
+    "IDENTIFIER": """
+This column holds identifiers or codes: IDs, ZIP or postal codes, phone numbers, ISBNs, product codes.
+The sample lists the distinct values with their counts and groups them by shape.
+- Target: the dominant shape. Keep every value's exact digits, length and leading zeros; never do arithmetic on them, never round them, and never write them with a decimal part.
+- Fix only what breaks the dominant shape without changing the code itself: stray spaces or characters, a separator or prefix the dominant shape lacks, a trailing ".0", letter casing ("ab-1234" → "AB-1234" when the shape is AA-9999).
+- A value with the wrong number of digits stays unchanged: never pad, cut or invent digits.
+- Placeholders ("N/A", "missing", "", "000000") become empty. Values you cannot fix with certainty stay unchanged.
+""",
+
+    "CATEGORICAL": """
+This column holds a small set of labels repeated across many rows: categories, styles, states, cities.
+The sample lists every label with its count, most frequent first, and groups rare spellings with the frequent label they resemble.
+- Target: every value is one of the frequent labels shown, written exactly as there.
+- Map a rare variant of a frequent label to that label: a typo, other casing, extra spaces, or a code or suffix the frequent label does not have ("Springfield IL" → "Springfield" when "Springfield" is the frequent form).
+- A rare value that is a real label of its own, not a variant of a frequent one, stays unchanged. Never merge two frequent labels.
+- Never rename from outside knowledge: the column's own frequent form wins over a spelling that is common elsewhere ("Mount Vernon" stays "Mount Vernon", never "Mt. Vernon").
+- Placeholders ("unknown", "N/A", "") become empty.
+""",
+
+    "EMAIL": """
+This column holds e-mail addresses.
+The sample lists the distinct values with their counts, most frequent first.
+- Remove spaces inside or around an address, and stray characters before or after it.
+- Change casing only when the dominant form shows it, such as all lower case.
+- Fix an obvious typo in a domain only toward a domain that is frequent in the column ("gmial.com" → "gmail.com" when "gmail.com" is frequent).
+- Never invent missing parts: a value without a user name, "@" or domain stays unchanged.
+- Placeholders ("N/A", "none", "") become empty.
+""",
+
+    "URL": """
+This column holds web addresses.
+The sample lists the distinct values with their counts, most frequent first.
+- Remove spaces inside or around an address.
+- Add or remove "http://", "https://", "www." or a trailing "/" only to match the form most values use.
+- Change the casing of the scheme or host only when the dominant form shows it; never change the path or query.
+- Placeholders ("N/A", "none", "") become empty. Values you cannot fix with certainty stay unchanged.
+""",
+
+    "MIXED": """
+This column mixes values of different kinds (for example dates and words, or numbers and codes), and no kind makes up most of it.
+The sample lists the distinct values with their counts and groups them by shape.
+- Keep each value's own kind: never convert a value of one kind into another kind or format.
+- Fix only clear errors inside a value: an obvious typo toward a frequent spelling in the column, extra whitespace, corrupt characters.
+- Expect most values to stay unchanged. When unsure, leave a value unchanged.
+- Placeholders ("N/A", "missing", "") become empty.
 """,
 }
 

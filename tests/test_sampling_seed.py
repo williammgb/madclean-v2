@@ -18,7 +18,8 @@ SMALL_SIZES = {
     "NLT": {"short_sample_size": 4, "long_sample_size": 2},
 }
 MIXED_TYPES = ["INTEGER", "FLOAT", "DATETIME", "BOOLEAN", "DIRTY_INTEGER", "DIRTY_FLOAT",
-               "NAMED_ENTITY", "DISCRETE_STRING", "COLLECTION", "DELIMITED_STRING"]
+               "NAMED_ENTITY", "DISCRETE_STRING", "COLLECTION", "DELIMITED_STRING",
+               "IDENTIFIER", "CATEGORICAL", "EMAIL", "URL", "MIXED"]
 
 keys = st.lists(st.one_of(st.text(max_size=10), st.integers()), max_size=4)
 

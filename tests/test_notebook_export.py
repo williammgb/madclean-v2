@@ -139,6 +139,73 @@ def test_the_gui_and_the_notebook_share_one_code_builder(tmp_path):
             assert line in cell_text
 
 
+VALUE_TABLE_ANSWER = json.dumps({
+    "analysis": "Two spellings of one town.",
+    "is_clean": False,
+    "summary": "Town names.",
+    "error_types": ["variant spelling"],
+    "examples_clean": ["Delft"],
+    "examples_dirty": ["Delft ZH → Delft"],
+    "cleaning_instructions": None,
+    "value_mapping": [{"from_value": "Delft ZH", "to_value": "Delft"}, {"from_value": "??", "to_value": None}],
+})
+
+DEPENDENCY_TABLE_ANSWER = json.dumps({
+    "analysis": "E5 is Almere twice and Lelystad once.",
+    "summary": "Each code belongs to one city.",
+    "corrections": [{"lhs_value": "E5", "correct_rhs": "Almere"}],
+    "skipped_lhs_values": None,
+    "impute_missing": True,
+})
+
+
+def test_a_run_with_a_value_table_and_a_dependency_table_exports_a_notebook_that_reproduces_it(tmp_path):
+    frame = pd.DataFrame({
+        "town": ["Delft", "Delft ZH", "Gouda", "Delft", "??", "Breda", "Delft ZH", "Gouda"] * 2 + ["Gouda"] * 4,
+        "codex": ["A1", "A1", "A1", "B2", "B2", "B2", "C3", "C3", "C3", "D4",
+                  "D4", "D4", "E5", "E5", "E5", "F6", "F6", "F6", "G7", "G7"],
+        "cityx": ["Delft", "Delft", "Delft", "Gouda", "Gouda", "Gouda", "Breda", "Breda", "Breda", "Emmen",
+                  "Emmen", "Emmen", "Almere", "Almere", "Lelystad", "Venlo", "Venlo", None, "Zwolle", "Zwolle"],
+    })
+    dirty = tmp_path / "tables_dirty.csv"
+    frame.to_csv(dirty, index=False)
+
+    def script(kind, messages):
+        text = next(m["content"] for m in messages if m["role"] == "user")
+        if kind == "recommender" and "'town'" in text:
+            return VALUE_TABLE_ANSWER
+        if kind == "fd_recommender":
+            return DEPENDENCY_TABLE_ANSWER
+        return None
+
+    fake = FakeLLMClient(script=script)
+    config = load_default_cleaning_config()
+    config.verbose = False
+    config.sampling_seed = 7
+    llm = fake.llm_config()
+    pipeline = Pipeline(
+        llm_config=llm,
+        agent_llm_configs={"recommender": llm, "coding": llm, "validation": llm},
+        config=config,
+        verbose=False,
+    )
+    cleaned, report = pipeline.run(file_path=str(dirty), save_cleaned=False)
+
+    # Both tables really did their work, so the notebook has something to reproduce.
+    assert cleaned["town"].tolist().count("Delft ZH") == 0 and cleaned["town"].isna().sum() == 2
+    assert cleaned["cityx"].tolist()[14:18] == ["Almere", "Venlo", "Venlo", "Venlo"]
+    assert "_VALUE_MAP" in report.to_dict()["town"]["generated_code"]
+
+    notebook = build_notebook(report, dataset_path=str(dirty), output_path="from_notebook.csv")
+    _execute(notebook, tmp_path)
+
+    from_notebook = pd.read_csv(tmp_path / "from_notebook.csv")
+    pd.testing.assert_frame_equal(
+        from_notebook.astype(str).reset_index(drop=True),
+        cleaned.astype(str).reset_index(drop=True),
+    )
+
+
 @pytest.mark.slow
 def test_the_beers_run_exports_a_notebook_that_reproduces_it(tmp_path):
     """The same check at real size, on the benchmark the thesis reports."""

@@ -9,7 +9,7 @@
   "hitl_column_list": [],
   "recommender_column_hints": {},
   "recommender_column_labeled_examples": {},
-  "llm_temperature": null,
+  "llm_temperature": 0.2,
   "llm_top_p": null,
   "sample_sizes": {
     "NUMERIC": {

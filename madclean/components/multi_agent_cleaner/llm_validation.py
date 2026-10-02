@@ -1,7 +1,7 @@
 import json
 import re
 import pandas as pd
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, field_validator
 from typing import Literal
 # Local imports
 from madclean.llm.llm_clients import BaseLLMClient
@@ -10,11 +10,45 @@ from madclean.components.domain.schema import MultiColumnTask
 from madclean.config.settings import CleaningConfig
 from madclean.utils.helpers import llm_sampling_kwargs_from_config, seeded_random
 
+MAX_VALIDATION_CASES = 20
+
+
+class ValidationCase(BaseModel):
+    """One cell the validator objects to, as the overview showed it."""
+    original: str | None = None
+    cleaned: str | None = None
+    expected: str | None = None
+    problem: str = ""
+
+    @field_validator("original", "cleaned", "expected", "problem", mode="before")
+    @classmethod
+    def _as_text(cls, value):
+        # Models write numeric cells as JSON numbers; the overview showed them as text.
+        if value is None or isinstance(value, str):
+            return value
+        return str(value)
+
+
 class CodeOutputValidation(BaseModel):
     """Defines the required JSON output strcuture for verification of Gemini API."""
+    # analysis comes first so the model reasons before it decides. The fields that are new in v3
+    # have defaults, so answers without them (older models, scripted fakes) still parse.
+    analysis: str = ""
     needs_correction: bool
+    issue_kind: Literal["OVER_CLEANING", "MISSED_ERRORS", "FORMAT_CHANGE", "CODE_BUG"] | None = None
     feedback_target: Literal["CODER", "RECOMMENDER"] | None
     correction_instructions: str
+    cases: list[ValidationCase] | None = None
+
+
+def validation_details(parsed_response: dict | None) -> dict:
+    """The verdict's kind and cases, which the cleaning loop words its feedback with."""
+    parsed_response = parsed_response or {}
+    cases = parsed_response.get("cases")
+    return {
+        "issue_kind": parsed_response.get("issue_kind"),
+        "cases": list(cases)[:MAX_VALIDATION_CASES] if cases else None,
+    }
 
 class LLMValidationAgent:
     """Isolated LLM agent that validates the performed cleaning operations, gives feedback if operations are incorrect."""
@@ -76,15 +110,17 @@ class LLMValidationAgent:
                column_type: str, 
                messages: list[dict[str, str]] | None = None,
                last_attempt: bool = False,
-               attempt: int = 0) -> tuple[bool, str | None, str| None, list[dict[str, str]], str]:
+               attempt: int = 0) -> tuple[bool, str | None, str| None, list[dict[str, str]], str, dict]:
         """
         Compares dirty and cleaned columns and validates cleaning operations.
         If validator detects undesired changes, it sends feedback to the corresponding LLM agent.
-        Returns (needs_correction, feedback_target, correction_instructions, messages, raw_llm_output).
+        Returns (needs_correction, feedback_target, correction_instructions, messages, raw_llm_output, details),
+        where details is {"issue_kind": ..., "cases": [...]}. The agent is shared by columns cleaned
+        concurrently, so the details travel with the answer instead of living on the agent.
         """
         # 1. Using validator for INTEGER, FLOAT and BOOLEAN types is unnecessary
         if column_type in ("INTEGER", "FLOAT", "BOOLEAN"):
-            return False, None, None, messages, ""
+            return False, None, None, messages, "", validation_details(None)
         # 2. Create validation prompt
         if messages is None:
             messages = [{"role": "system", "content": self.system_prompt}]
@@ -128,15 +164,20 @@ class LLMValidationAgent:
 
             # 4. If validation failed, send feedback. Otherwise accept cleaned column
             if parsed_response["needs_correction"]:
-                return True, parsed_response["feedback_target"] , parsed_response["correction_instructions"], messages, raw_response
-            return False, None, None, messages, raw_response
+                return (True, parsed_response["feedback_target"] , parsed_response["correction_instructions"], messages,
+                        raw_response, validation_details(parsed_response))
+            return False, None, None, messages, raw_response, validation_details(None)
         except Exception:
-            strategy = getattr(self.config, "validator_failure_strategy", "accept_cleaned")
-            if strategy == "leave_uncleaned":
-                return True, "RECOMMENDER", "__VALIDATOR_FAILURE_LEAVE_UNCLEANED__", messages, ""
-            if strategy == "ask_user":
-                return True, "RECOMMENDER", "__VALIDATOR_FAILURE_ASK_USER__", messages, ""
-            return False, None, None, messages, ""
+            return self._failure_verdict(messages)
+
+    def _failure_verdict(self, messages) -> tuple:
+        """What a validator that could not answer returns, by validator_failure_strategy."""
+        strategy = getattr(self.config, "validator_failure_strategy", "accept_cleaned")
+        if strategy == "leave_uncleaned":
+            return True, "RECOMMENDER", "__VALIDATOR_FAILURE_LEAVE_UNCLEANED__", messages, "", validation_details(None)
+        if strategy == "ask_user":
+            return True, "RECOMMENDER", "__VALIDATOR_FAILURE_ASK_USER__", messages, "", validation_details(None)
+        return False, None, None, messages, "", validation_details(None)
 
     async def validate_multi_col_async(self,
                 dirty_targets: pd.DataFrame,
@@ -144,11 +185,12 @@ class LLMValidationAgent:
                 task_info: MultiColumnTask,
                 messages: list[dict[str, str]] | None = None,
                 last_attempt: bool = False,
-                attempt: int = 0) -> tuple[bool, str | None, str | None, list[dict[str, str]], str]:
+                attempt: int = 0) -> tuple[bool, str | None, str | None, list[dict[str, str]], str, dict]:
         """
         Compares dirty and cleaned column pairs and validates cleaning operations.
         If validator detects undesired changes, it sends feedback to the corresponding LLM agent.
-        """      
+        Returns the same six elements as validate_async.
+        """
         # 1. Create validation prompt
         if messages is None:
             messages = [{"role": "system", "content": self.system_prompt}]
@@ -168,12 +210,8 @@ class LLMValidationAgent:
             parsed_response, raw_response = await self._call_llm_with_parsing(messages, schema=CodeOutputValidation)
             messages.append({"role": self.llm_role, "content": raw_response})
             if parsed_response["needs_correction"]:
-                return True, parsed_response["feedback_target"], parsed_response["correction_instructions"], messages, raw_response
-            return False, None, None, messages, raw_response
+                return (True, parsed_response["feedback_target"], parsed_response["correction_instructions"], messages,
+                        raw_response, validation_details(parsed_response))
+            return False, None, None, messages, raw_response, validation_details(None)
         except Exception:
-            strategy = getattr(self.config, "validator_failure_strategy", "accept_cleaned")
-            if strategy == "leave_uncleaned":
-                return True, "RECOMMENDER", "__VALIDATOR_FAILURE_LEAVE_UNCLEANED__", messages, ""
-            if strategy == "ask_user":
-                return True, "RECOMMENDER", "__VALIDATOR_FAILURE_ASK_USER__", messages, ""
-            return False, None, None, messages, ""
+            return self._failure_verdict(messages)

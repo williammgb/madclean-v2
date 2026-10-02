@@ -36,25 +36,25 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 11561,
+        "input_tokens": 4865,
         "output_tokens": 188,
-        "total_tokens": 11749
+        "total_tokens": 5053
       },
       "coding": {
-        "input_tokens": 2548,
+        "input_tokens": 2542,
         "output_tokens": 238,
-        "total_tokens": 2786
+        "total_tokens": 2780
       },
       "validation": {
-        "input_tokens": 23904,
+        "input_tokens": 19656,
         "output_tokens": 99,
-        "total_tokens": 24003
+        "total_tokens": 19755
       }
     },
     "total_usage": {
-      "input_tokens": 38013,
+      "input_tokens": 27063,
       "output_tokens": 525,
-      "total_tokens": 38538
+      "total_tokens": 27588
     }
   },
   "traces": {
@@ -98,15 +98,15 @@
   },
   "prompts": {
     "coder": [
-      "779ea69d15229470fdc977f1cde713143157d48921b14f2d0825726ce75d0631"
+      "c836ba21f89d678e4cf8b51a8da3e0fa43c7345a97b0fec088f3c0528d50c6fd"
     ],
     "recommender": [
-      "7fea477fe6d1f3a707781c0fb82ce1a65b5196c65fdcfbe7959148c8245671f4"
+      "1322fc1ce62fbb2ac945cb32dc9107ca2db044dcfb8e7cd30d4f671a53a8598f"
     ],
     "validator": [
-      "4e4ba900da4fc5b12b19bc5b4d956b8ccee1e939c0c382882f4479159ada34d9",
-      "918f4ce2c6562d2b8dafc1fb38e0502b5db881924fd67a0ea2039625fb9e2f7e",
-      "a36c9bce8c0d5efe3d74823ac2cb03ca2c6c1c53cb9f9e33510cb4ed99e7d2a4"
+      "1b1fc4863c8b0b0d51ba03c5f4799f892e829e263a4d43b5033978fb6c8243b5",
+      "6ffe564959aca2c61011dd7f1e4c221a6a3dc445399b1d4f8c25111bb79bfc9a",
+      "ca10dd65bd5db08342b1e4a59aa7ffce765e8fb1c5bd337779efe008b1506028"
     ]
   },
   "reviews": {

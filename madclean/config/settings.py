@@ -21,7 +21,7 @@ class CleaningConfig:
     recommender_column_labeled_examples: dict[str, str] = field(default_factory=dict)
 
     # LLM sampling (omit from API request when None to use provider defaults).
-    llm_temperature: Optional[float] = None
+    llm_temperature: Optional[float] = 0.2
     llm_top_p: Optional[float] = None
 
     # sampling

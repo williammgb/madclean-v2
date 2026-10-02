@@ -116,6 +116,11 @@ class PromptGeneration:
         "DISCRETE_STRING": "STRING",
         "COLLECTION": "STRING",
         "DELIMITED_STRING": "STRING",
+        "IDENTIFIER": "STRING",
+        "CATEGORICAL": "STRING",
+        "EMAIL": "STRING",
+        "URL": "STRING",
+        "MIXED": "STRING",
         "NATURAL_LANGUAGE_TEXT": "NLT"
         }
         dirty_series, cleaned_series = align_dirty_cleaned_series(dirty_series, cleaned_series)

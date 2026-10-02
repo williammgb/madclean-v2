@@ -107,7 +107,7 @@
       "reason": "RuntimeError: prompt creation broke for colboom"
     },
     "codex": {
-      "datatype": "DISCRETE_STRING",
+      "datatype": "MIXED",
       "already_clean": false,
       "cleaned": true,
       "attempts": 1,
@@ -176,14 +176,14 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 24346,
+        "input_tokens": 26033,
         "output_tokens": 940,
-        "total_tokens": 25286
+        "total_tokens": 26973
       },
       "coding": {
-        "input_tokens": 7626,
+        "input_tokens": 7616,
         "output_tokens": 714,
-        "total_tokens": 8340
+        "total_tokens": 8330
       },
       "validation": {
         "input_tokens": 0,
@@ -192,9 +192,9 @@
       }
     },
     "total_usage": {
-      "input_tokens": 31972,
+      "input_tokens": 33649,
       "output_tokens": 1654,
-      "total_tokens": 33626
+      "total_tokens": 35303
     }
   },
   "traces": {
@@ -365,7 +365,7 @@
       "0537cad4b68447368aa3664c245eabdc37e2ba1afe37f1ebcad0614289b67789",
       "0537cad4b68447368aa3664c245eabdc37e2ba1afe37f1ebcad0614289b67789",
       "0e7a705a39b4789187640a59e72de8090eabb5c9f26d9e4ceec9d802a2987a5e",
-      "3e6a32bb6fd0cd9fda1c2fe977d9010c38a0cf8c7db1e75fd495f6cac6e628f6",
+      "9c71602f7dcb4a3e04f7f6545c310eef25d36eed59d0defa15ac24977d4dede9",
       "f14c40a487e36ea184a08f8a3ba4180b704b3875417cf5d746a6c93002c639c8"
     ],
     "fd_recommender": [
@@ -377,17 +377,17 @@
       "41d925b89fe460471beb7b47e9382527d81f0eb8af3237f788e9e57a420209c2"
     ],
     "recommender": [
-      "217bd03232b099de84daa38c9eca1f78e3cabba35ebb0d0ce29af5c2be5b494f",
-      "329c101ad1bcfeaae1bc03b79f82714d3f6d27f0e1f9a5be3447011648abdc0d",
-      "45fcc6ac0c57d274a46e0e8c917b94c804da042913aafa3dec399f78712e04b3",
-      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
-      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
-      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
-      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
-      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
-      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
-      "e07770aa90488ce9b717ba15b52ad58c37ffc9bb0577ad39c96cb0c7279710c7",
-      "e64ab1f62f973c01c9c9b611a2c873a6e864d68926e2e22e33dc4b13dae513c7"
+      "073420e565e23a07cabf371e678b3f07391f9fc4753bb365ccdb2ca84d4de666",
+      "1bf8b5a85cbd0a74219c2993efad3ffb7b12449dcaecb144f36d6bfa457984d9",
+      "3905f4b7b114e38a719302cdcf103a08b68dd991278e5aa828fc0052b5d19d22",
+      "8052bde119f853ab28d0071dbd4e73ff63f8bb24c68512b87eebefaf3f6ed33e",
+      "906db543880987f0e4653cf0aabbb8bec03c13138363d0d32717452141e9db0d",
+      "d0d94b33249bdb1678f00da1c505f3c5266c1255a216622e0243a0a5d5b4c20b",
+      "d0d94b33249bdb1678f00da1c505f3c5266c1255a216622e0243a0a5d5b4c20b",
+      "d0d94b33249bdb1678f00da1c505f3c5266c1255a216622e0243a0a5d5b4c20b",
+      "d0d94b33249bdb1678f00da1c505f3c5266c1255a216622e0243a0a5d5b4c20b",
+      "d0d94b33249bdb1678f00da1c505f3c5266c1255a216622e0243a0a5d5b4c20b",
+      "d0d94b33249bdb1678f00da1c505f3c5266c1255a216622e0243a0a5d5b4c20b"
     ]
   },
   "reviews": {}

@@ -155,7 +155,7 @@ class Pipeline:
         try:
             # 1. Load file into DataFrame, return None if failed or empty
             try:
-                dirty_df = load_dataset(file_path)
+                dirty_df = load_dataset(file_path, keep_raw_text=True)
             except (FileNotFoundError, ValueError, Exception) as e:
                 if self.verbose:
                     self._log(f"Loading Failed for {file_path}. {type(e).__name__}: {e}")

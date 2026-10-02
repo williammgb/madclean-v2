@@ -48,22 +48,42 @@ def seeded_generator(seed: int | None, *keys: Any) -> np.random.Generator | None
         return None
     return np.random.default_rng(_seed_digest(seed, keys))
 
-def load_dataset(file_path: Union[str, Path]) -> Optional[pd.DataFrame]:
-    """Load a dataset from CSV, JSON or XLSX into a pandas DataFrame."""
+def _leading_zero_columns(raw: pd.DataFrame) -> list:
+    """Columns whose non-empty values are all digits and at least one starts with a zero (ZIP codes, IDs)."""
+    columns = []
+    for col in raw.columns:
+        values = raw[col].dropna().astype(str).str.strip()
+        values = values[values != ""]
+        if not values.empty and values.str.fullmatch(r"\d+").all() and values.str.match(r"0\d").any():
+            columns.append(col)
+    return columns
+
+
+def load_dataset(file_path: Union[str, Path], keep_raw_text: bool = False) -> Optional[pd.DataFrame]:
+    """
+    Load a dataset from CSV, JSON or XLSX into a pandas DataFrame.
+    keep_raw_text=True (CSV and XLSX) keeps placeholder text such as "N/A" as text instead of NaN, so only
+    empty cells are missing, and reads digit-only columns with a leading zero as text, so the zeros stay.
+    """
     file_path = Path(file_path)
     if not file_path.exists():
         msg = f"Error: File does not exist at path: {file_path}"
         raise FileNotFoundError(msg)
+    raw_text = {"keep_default_na": False, "na_values": [""]} if keep_raw_text else {}
     loaders = {
-        ".csv": lambda f: pd.read_csv(f, encoding="utf-8", on_bad_lines="skip"),
-        ".json": lambda f: pd.read_json(f, encoding="utf-8"),
-        ".xlsx": lambda f: pd.read_excel(f) # .xls?
+        ".csv": lambda f, **kw: pd.read_csv(f, encoding="utf-8", on_bad_lines="skip", **raw_text, **kw),
+        ".json": lambda f, **kw: pd.read_json(f, encoding="utf-8"),
+        ".xlsx": lambda f, **kw: pd.read_excel(f, **raw_text, **kw) # .xls?
     }
     ext = file_path.suffix.lower()
     if ext not in loaders:
         msg = f"Unsupported file type: '{ext}'. Supported types are CSV, JSON, XLSX."
         raise ValueError(msg)
     try:
+        if keep_raw_text and ext in (".csv", ".xlsx"):
+            text_columns = _leading_zero_columns(loaders[ext](file_path, dtype=str))
+            if text_columns:
+                return loaders[ext](file_path, dtype={col: str for col in text_columns})
         return loaders[ext](file_path)
     except Exception as e:
         msg = f"An error occurred while reading the file: {e}"

@@ -31,6 +31,8 @@ def _service_unavailable_recommender_payload(exc: BaseException) -> dict | None:
 
 class CodeOutputRecommendation(BaseModel):
     """Defines the required JSON output structure for cleaning instructions."""
+    # First, so the model reasons before it decides; optional, so older answers still parse.
+    analysis: str = ""
     is_clean: bool
     summary: str
     error_types: list[str] | None

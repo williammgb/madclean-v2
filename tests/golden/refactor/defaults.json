@@ -184,25 +184,25 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 59671,
+        "input_tokens": 28659,
         "output_tokens": 1074,
-        "total_tokens": 60745
+        "total_tokens": 29733
       },
       "coding": {
-        "input_tokens": 12568,
+        "input_tokens": 12541,
         "output_tokens": 265,
-        "total_tokens": 12833
+        "total_tokens": 12806
       },
       "validation": {
-        "input_tokens": 22325,
+        "input_tokens": 15400,
         "output_tokens": 249,
-        "total_tokens": 22574
+        "total_tokens": 15649
       }
     },
     "total_usage": {
-      "input_tokens": 94564,
+      "input_tokens": 56600,
       "output_tokens": 1588,
-      "total_tokens": 96152
+      "total_tokens": 58188
     }
   },
   "traces": {
@@ -370,26 +370,26 @@
   },
   "prompts": {
     "coder": [
-      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
-      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
-      "779ea69d15229470fdc977f1cde713143157d48921b14f2d0825726ce75d0631",
-      "c2b830f94be214e067dde301a6c358e377738a37f09822a9c4c1326ada7d541e",
-      "f6066f89b7145155ab397a462c943454e5831f0d3be74d60f2ecd1291c583c40"
+      "3e6a32bb6fd0cd9fda1c2fe977d9010c38a0cf8c7db1e75fd495f6cac6e628f6",
+      "5532f973dd5ff6264c693db4d88969b34f8080dd4a761088fdce3d112320adfb",
+      "c836ba21f89d678e4cf8b51a8da3e0fa43c7345a97b0fec088f3c0528d50c6fd",
+      "c9931a2b2d91b4d34f6ddfec728450e1fda650cd0a205c52cc7c7d8e5ab10c27",
+      "f14c40a487e36ea184a08f8a3ba4180b704b3875417cf5d746a6c93002c639c8"
     ],
     "fd_recommender": [
-      "7a17fb125c74b210b3637b3bb9312c2a190b6db6b752db8ebb32ba4f638df927"
+      "58991a43c6666811bd7e6421d31bd780f550f59b77c4a55cac81114204487eae"
     ],
     "recommender": [
-      "25ee6146df8c5da22019e3262906f2cc36a1b667d8a1b0716df01ecd94af6687",
-      "4a28eea90d191f28fe619a4a1293eef1fe5f1655a0ba4c4af0e4a43a363c52ce",
-      "71a06bda4a9d3e01da90d699c6cb564269e7c47bf8f9e11767df71a6afd9064d",
-      "7fea477fe6d1f3a707781c0fb82ce1a65b5196c65fdcfbe7959148c8245671f4",
-      "e4d831933a532bcdd037e58e49bd878ce17d66e5147ffbeaa9a2dac8870c0f21"
+      "1322fc1ce62fbb2ac945cb32dc9107ca2db044dcfb8e7cd30d4f671a53a8598f",
+      "329c101ad1bcfeaae1bc03b79f82714d3f6d27f0e1f9a5be3447011648abdc0d",
+      "45fcc6ac0c57d274a46e0e8c917b94c804da042913aafa3dec399f78712e04b3",
+      "63a6c10cc20c28d45807572ed533dbbc85b9bab559cc28f5ee98a256b6106c7c",
+      "91bd6dc79dde1c50ad1305fd8cdec6c4a23271cccf2b6ecc1d9cd2fffba3062e"
     ],
     "validator": [
-      "30e57fa3d3dda955bbd2b4310672ce024aef3c0ee18c328df64fd56be23ca3f4",
-      "eb7f28801690aec141335fe53d09ab136c108b48b82509c3994f089397fe452f",
-      "fcaf29633db7e39d8aba1262ff0d946283f2cee38584112c9e25ae48fb46a45f"
+      "5af550954bf046d7fc1b22b2006c5c6f2f0300bb9d63a0cdfd014a744f20b2e4",
+      "9c7bf6d83344aa52a2eee7061f08aaebc22d63e0228841e50f871b9cd635d3ed",
+      "abdd27a51b75f0b79bac6ed1b2c6fdff508441672250deb7d8a71ee3e9c161e8"
     ]
   },
   "reviews": {}

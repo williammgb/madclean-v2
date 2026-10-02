@@ -10,6 +10,7 @@ from madclean.llm.llm_clients import BaseLLMClient
 from madclean.components.multi_agent_cleaner.llm_coding import LLMCodingAgent
 from madclean.components.multi_agent_cleaner.llm_validation import LLMValidationAgent
 from madclean.components.multi_agent_cleaner.llm_recommending import LLMRecommendationAgent
+from madclean.components.coordinator.prompt_generation import PromptGeneration
 from madclean.components.domain.schema import ColumnProfile, MultiColumnTask
 from madclean.components.domain.report import (
     AgentTokenUsage,
@@ -135,17 +136,108 @@ class MultiAgentCleaning:
         return "\n\n".join(parts).strip()
 
     @staticmethod
-    def _format_validator_output(needs_correction, feedback_target, correction_instructions) -> str:
+    def _case_lines(details: dict | None) -> list[str]:
+        """The validator's cases as `original → cleaned → expected: problem`, missing values as <empty>."""
+        def shown(value):
+            return "<empty>" if value is None or value == "" else str(value)
+        lines = []
+        for case in (details or {}).get("cases") or []:
+            lines.append(
+                f"- {shown(case.get('original'))} → {shown(case.get('cleaned'))} → "
+                f"{shown(case.get('expected'))}: {case.get('problem') or ''}".rstrip()
+            )
+        return lines
+
+    @staticmethod
+    def _format_validator_output(needs_correction, feedback_target, correction_instructions, details=None) -> str:
         if not needs_correction:
             return "Validator Agent has determined the cleaning operations are valid."
         lines = ["Validation status: Needs correction"]
         if feedback_target:
             lines.append(f"Feedback target: {feedback_target}")
+        issue_kind = (details or {}).get("issue_kind")
+        if issue_kind:
+            lines.append(f"Issue kind: {issue_kind}")
         if correction_instructions:
             lines.append("")
             lines.append("Correction instructions:")
             lines.append(str(correction_instructions))
+        case_lines = MultiAgentCleaning._case_lines(details)
+        if case_lines:
+            lines += ["", "Cases (original → cleaned → expected: problem):", *case_lines]
         return "\n".join(lines).strip()
+
+    @staticmethod
+    def _feedback_message(
+        feedback_target: str | None,
+        correction_instructions: str | None,
+        details: dict | None = None,
+        *,
+        code_request: str = "Provide the new valid, executable code string.",
+    ) -> str:
+        """The feedback a rejected cleaning sends back, worded by what the validator found.
+
+        Routing stays with the caller, by feedback_target. Without an issue kind (a person's review, or a
+        model that left it out) the wording is neutral, so a complaint about over-cleaning is never passed
+        on as "you did not clean enough".
+        """
+        cases = MultiAgentCleaning._case_lines(details)
+        cases_block = ("Cases (original → cleaned → expected: problem):\n" + "\n".join(cases) + "\n\n") if cases else ""
+        if feedback_target == "CODER":
+            return (
+                "Validation Feedback: The previous code was almost correct, but it introduced undesired changes to the column format. Please fix it.\n\n"
+                f"Instructions: {correction_instructions}\n\n"
+                f"{cases_block}"
+                f"{code_request}")
+        issue_kind = (details or {}).get("issue_kind")
+        if issue_kind == "MISSED_ERRORS":
+            opening = "Your last instructions were incomplete. The Coder agent followed them, but errors from the original data remain."
+            request = "Please provide an updated and more complete set of cleaning instructions and examples based on this feedback."
+        elif issue_kind in ("OVER_CLEANING", "FORMAT_CHANGE"):
+            opening = ("your last instructions changed values that were already correct, or changed the column's format. "
+                       "Keep what worked and stop the changes listed below.")
+            request = "Please provide an updated set of cleaning instructions and examples based on this feedback."
+        else:
+            opening = "the reviewer found problems with the last cleaning."
+            request = "Please provide an updated set of cleaning instructions and examples based on this feedback."
+        return (
+            f"Validation Feedback: {opening}\n\n"
+            f"Details: {correction_instructions}\n\n"
+            f"{cases_block}"
+            f"{request}")
+
+    @staticmethod
+    def _keep_unobjected_changes(
+        dirty: pd.Series, cleaned: pd.Series, details: dict | None
+    ) -> tuple[pd.Series, int, int] | None:
+        """On the last attempt, what to keep of a rejected cleaning: (column, rewrites kept, rows reverted).
+
+        Missed errors keep every change. Otherwise the rows matching a case's (original, cleaned) pair go
+        back to the original and the rest stays. None when no case matches a row: the column stays uncleaned.
+        """
+        details = details or {}
+        dirty, cleaned = align_dirty_cleaned_series(dirty, cleaned)
+        text = PromptGeneration._overview_text
+        before = [text(v) for v in dirty.tolist()]
+        after = [text(v) for v in cleaned.tolist()]
+        changed = [PromptGeneration._cell_changed(d, c) for d, c in zip(dirty.tolist(), cleaned.tolist())]
+        if details.get("issue_kind") == "MISSED_ERRORS":
+            return cleaned, sum(changed), 0
+
+        def case_value(value):
+            return None if value is None or value in ("", "<empty>") else str(value)
+
+        objected = {
+            (case_value(case.get("original")), case_value(case.get("cleaned")))
+            for case in details.get("cases") or []
+        }
+        revert = [c and (b, a) in objected for c, b, a in zip(changed, before, after)]
+        if not any(revert):
+            return None
+        mask = pd.Series(revert, index=dirty.index)
+        result = cleaned.astype(object).copy()
+        result[mask] = dirty[mask]
+        return result, sum(changed) - sum(revert), sum(revert)
 
     @staticmethod
     def _format_recommender_output_multi(recommender_data) -> str:
@@ -207,13 +299,14 @@ class MultiAgentCleaning:
         needs_correction: bool,
         feedback_target: str | None,
         correction_instructions: str | None,
+        details: dict | None = None,
     ) -> TraceStep:
         return self._attempt_step(
             prefix,
             "Validator",
             attempt,
             "approved" if not needs_correction else "needs_correction",
-            self._format_validator_output(needs_correction, feedback_target, correction_instructions),
+            self._format_validator_output(needs_correction, feedback_target, correction_instructions, details),
         )
 
     def _emit_step(self, key: str, step: TraceStep):
@@ -786,22 +879,17 @@ class MultiAgentCleaning:
                     return col, cleaned_column, msg
                 if attempt == self.config.max_cleaning_attempts - 1:
                     break
+                # A person's review carries no issue kind, so the wording is neutral.
+                feedback_prompt = self._feedback_message(feedback_target, correction_instructions)
                 if feedback_target == 'CODER':
-                    feedback_prompt = (
-                        f"Validation Feedback: The previous code was almost correct, but it introduced undesired changes to the column format. Please fix it.\n\n"
-                        f"Instructions: {correction_instructions}\n\n"
-                        f"Provide the new valid, executable code string.")
                     coder_history.append({"role": "user", "content": feedback_prompt})
                 elif feedback_target == 'RECOMMENDER':
-                    feedback_prompt = (
-                        f"Validation Feedback: Your last instructions were incomplete. The Coder agent followed them, but errors from the original data remain.\n\n"
-                        f"Details: {correction_instructions}\n\n"
-                        f"Please provide an updated and more complete set of cleaning instructions and examples based on this feedback.")
                     recommender_history.append({"role": "user", "content": feedback_prompt})
                 continue
 
             last_attempt = attempt == (self.config.max_cleaning_attempts - 1)
-            needs_correction, feedback_target, correction_instructions, new_validator_history, validator_raw = await self.validation_agent.validate_async(
+            (needs_correction, feedback_target, correction_instructions, new_validator_history, validator_raw,
+             validation_details) = await self.validation_agent.validate_async(
                 col, df[col], cleaned_column, column_type, messages=validator_history, last_attempt=last_attempt,
                 attempt=attempt)
             validator_history = new_validator_history
@@ -810,6 +898,7 @@ class MultiAgentCleaning:
                     "validator", "Validator", attempt, "pending_hitl",
                     "Validation result is ready for human review. Open this validator step to approve or revise.",
                 ))
+                validator_verdict = (needs_correction, feedback_target, correction_instructions)
                 needs_correction, feedback_target, correction_instructions = await asyncio.to_thread(
                     self._request_hitl_validation_review,
                     col,
@@ -821,6 +910,9 @@ class MultiAgentCleaning:
                     df[col],
                     cleaned_column,
                 )
+                # The kind and cases describe the validator's verdict; a person who changed it gets none.
+                if (needs_correction, feedback_target, correction_instructions) != validator_verdict:
+                    validation_details = {}
             if correction_instructions == "__VALIDATOR_FAILURE_LEAVE_UNCLEANED__":
                 msg = f"[{col}] Validation unavailable; leaving column uncleaned."
                 self._finish_column(
@@ -845,8 +937,9 @@ class MultiAgentCleaning:
                     df[col],
                     cleaned_column,
                 )
+                validation_details = {}
             self._add_step(col, trace_steps, self._validator_step(
-                "validator", attempt, needs_correction, feedback_target, correction_instructions
+                "validator", attempt, needs_correction, feedback_target, correction_instructions, validation_details
             ))
             # 5. If validator approves cleaned column, return column. Otherwise provide feedback to corresponding Agent
             if not needs_correction:
@@ -858,19 +951,23 @@ class MultiAgentCleaning:
                 )
                 return col, cleaned_column, msg
             if attempt == self.config.max_cleaning_attempts - 1:
+                # Out of attempts: keep what the validator did not object to rather than dropping all work.
+                kept = self._keep_unobjected_changes(df[col], cleaned_column, validation_details)
+                if kept is not None:
+                    kept_column, kept_count, reverted_count = kept
+                    msg = f"[{col}] Cleaned without validation: kept {kept_count} rewrites, reverted {reverted_count}."
+                    self._finish_column(
+                        col, column_type, trace_steps, final_code_str,
+                        attempts=attempt + 1, cleaned=True, validated=False,
+                        output=f"Kept {kept_count} rewrites; reverted {reverted_count} the validator objected to.",
+                    )
+                    return col, kept_column, msg
                 break
             if self.verbose: print(f"[{col}] Validation Agent detected unintended changes or missed errors; updating cleaning operations.")
+            feedback_prompt = self._feedback_message(feedback_target, correction_instructions, validation_details)
             if feedback_target == 'CODER':
-                feedback_prompt = (
-                    f"Validation Feedback: The previous code was almost correct, but it introduced undesired changes to the column format. Please fix it.\n\n"
-                    f"Instructions: {correction_instructions}\n\n"
-                    f"Provide the new valid, executable code string.")
                 coder_history.append({"role": "user", "content": feedback_prompt})
             elif feedback_target == 'RECOMMENDER':
-                feedback_prompt = (
-                    f"Validation Feedback: Your last instructions were incomplete. The Coder agent followed them, but errors from the original data remain.\n\n"
-                    f"Details: {correction_instructions}\n\n"
-                    f"Please provide an updated and more complete set of cleaning instructions and examples based on this feedback.")
                 recommender_history.append({"role": "user", "content": feedback_prompt})
         msg = f"[{col}] FAILED cleaning after {self.config.max_cleaning_attempts} attempts."
         self._finish_column(
@@ -1011,22 +1108,18 @@ class MultiAgentCleaning:
                     return target_cols, cleaned_targets, msg
                 if attempt == self.config.max_multi_col_attempts - 1:
                     break
+                # A person's review carries no issue kind, so the wording is neutral.
+                feedback_prompt = self._feedback_message(
+                    feedback_target, correction_instructions, code_request="Provide the new valid, executable code.")
                 if feedback_target == 'CODER':
-                    feedback_prompt = (
-                        f"Validation Feedback: The previous code was almost correct, but it introduced undesired changes to the column format. Please fix it.\n\n"
-                        f"Instructions: {correction_instructions}\n\n"
-                        f"Provide the new valid, executable code.")
                     coder_history.append({"role": "user", "content": feedback_prompt})
                 elif feedback_target == 'RECOMMENDER':
-                    feedback_prompt = (
-                        f"Validation Feedback: Your last instructions were incomplete. The Coder agent followed them, but errors from the original data remain.\n\n"
-                        f"Details: {correction_instructions}\n\n"
-                        f"Please provide an updated and more complete set of cleaning instructions and examples based on this feedback.")
                     recommender_history.append({"role": "user", "content": feedback_prompt})
                 continue
 
             last_attempt = attempt == (self.config.max_multi_col_attempts - 1)
-            needs_correction, feedback_target, correction_instructions, new_validator_history, validator_raw = await self.validation_agent.validate_multi_col_async(
+            (needs_correction, feedback_target, correction_instructions, new_validator_history, validator_raw,
+             validation_details) = await self.validation_agent.validate_multi_col_async(
                 dirty_targets=df[target_cols],
                 cleaned_targets=cleaned_targets,
                 task_info=task_info,
@@ -1044,6 +1137,7 @@ class MultiAgentCleaning:
                     compared_cols = [df.columns[0]]
                 dirty_sample = df[compared_cols].astype(str).apply(lambda r: ", ".join(r.tolist()), axis=1)
                 cleaned_sample = cleaned_targets[compared_cols].astype(str).apply(lambda r: ", ".join(r.tolist()), axis=1)
+                validator_verdict = (needs_correction, feedback_target, correction_instructions)
                 needs_correction, feedback_target, correction_instructions = await asyncio.to_thread(
                     self._request_hitl_validation_review_fd,
                     task_key,
@@ -1056,6 +1150,8 @@ class MultiAgentCleaning:
                     dirty_sample,
                     cleaned_sample,
                 )
+                if (needs_correction, feedback_target, correction_instructions) != validator_verdict:
+                    validation_details = {}
             if correction_instructions == "__VALIDATOR_FAILURE_LEAVE_UNCLEANED__":
                 msg = f"[{task_key}] Validation unavailable; leaving FD task uncleaned."
                 self._finish_fd(
@@ -1085,8 +1181,9 @@ class MultiAgentCleaning:
                     dirty_sample,
                     cleaned_sample,
                 )
+                validation_details = {}
             self._add_step(task_key, trace_steps, self._validator_step(
-                "fd_validator", attempt, needs_correction, feedback_target, correction_instructions
+                "fd_validator", attempt, needs_correction, feedback_target, correction_instructions, validation_details
             ))
             # 5. If validator approves cleaned columns, return columns. Otherwise provide feedback to corresponding Agent
             if not needs_correction:
@@ -1099,18 +1196,13 @@ class MultiAgentCleaning:
                 return target_cols, cleaned_targets, msg
             if attempt == self.config.max_multi_col_attempts - 1:
                 break
+            feedback_prompt = self._feedback_message(
+                feedback_target, correction_instructions, validation_details,
+                code_request="Provide the new valid, executable code.")
             if feedback_target == 'CODER':
-                feedback_prompt = (
-                    f"Validation Feedback: The previous code was almost correct, but it introduced undesired changes to the column format. Please fix it.\n\n"
-                    f"Instructions: {correction_instructions}\n\n"
-                    f"Provide the new valid, executable code.")
                 coder_history.append({"role": "user", "content": feedback_prompt})
             elif feedback_target == 'RECOMMENDER':
-                feedback_prompt = (
-                    f"Validation Feedback: Your last instructions were incomplete. The Coder agent followed them, but errors from the original data remain.\n\n"
-                    f"Details: {correction_instructions}\n\n"
-                    f"Please provide an updated and more complete set of cleaning instructions and examples based on this feedback.")
-                recommender_history.append({"role": "user", "content": feedback_prompt})    
+                recommender_history.append({"role": "user", "content": feedback_prompt})
         msg = f"[{task_key}] FAILED cleaning after {self.config.max_multi_col_attempts} attempts."
         self._finish_fd(
             task_key, target_cols, trace_steps, _final_code_str,

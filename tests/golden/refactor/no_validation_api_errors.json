@@ -176,14 +176,14 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 57826,
+        "input_tokens": 24346,
         "output_tokens": 940,
-        "total_tokens": 58766
+        "total_tokens": 25286
       },
       "coding": {
-        "input_tokens": 7644,
+        "input_tokens": 7626,
         "output_tokens": 714,
-        "total_tokens": 8358
+        "total_tokens": 8340
       },
       "validation": {
         "input_tokens": 0,
@@ -192,9 +192,9 @@
       }
     },
     "total_usage": {
-      "input_tokens": 65470,
+      "input_tokens": 31972,
       "output_tokens": 1654,
-      "total_tokens": 67124
+      "total_tokens": 33626
     }
   },
   "traces": {
@@ -362,32 +362,32 @@
   },
   "prompts": {
     "coder": [
-      "0fe15350f4cc80d5ae202a6d1b313933aeb1c95c4fd6cdfe0715d73d1e8ab52d",
-      "0fe15350f4cc80d5ae202a6d1b313933aeb1c95c4fd6cdfe0715d73d1e8ab52d",
-      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
-      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
-      "c7067f02c2c5fd3d0e516aae287a7c4c5e2b324d383cde0d6518ec2ef74b6e4d"
+      "0537cad4b68447368aa3664c245eabdc37e2ba1afe37f1ebcad0614289b67789",
+      "0537cad4b68447368aa3664c245eabdc37e2ba1afe37f1ebcad0614289b67789",
+      "0e7a705a39b4789187640a59e72de8090eabb5c9f26d9e4ceec9d802a2987a5e",
+      "3e6a32bb6fd0cd9fda1c2fe977d9010c38a0cf8c7db1e75fd495f6cac6e628f6",
+      "f14c40a487e36ea184a08f8a3ba4180b704b3875417cf5d746a6c93002c639c8"
     ],
     "fd_recommender": [
-      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
-      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
-      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
-      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
-      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5",
-      "a42a1d8d86e999923771b2cc93cad7f741da1770805e49772cf39efe3ef9fef5"
+      "41d925b89fe460471beb7b47e9382527d81f0eb8af3237f788e9e57a420209c2",
+      "41d925b89fe460471beb7b47e9382527d81f0eb8af3237f788e9e57a420209c2",
+      "41d925b89fe460471beb7b47e9382527d81f0eb8af3237f788e9e57a420209c2",
+      "41d925b89fe460471beb7b47e9382527d81f0eb8af3237f788e9e57a420209c2",
+      "41d925b89fe460471beb7b47e9382527d81f0eb8af3237f788e9e57a420209c2",
+      "41d925b89fe460471beb7b47e9382527d81f0eb8af3237f788e9e57a420209c2"
     ],
     "recommender": [
-      "01aa53b81423ff802ed89b41d0b5549ec35b553193a92382f95bbfffe4b62bcd",
-      "6be32aaa6f94fd41b61571c6636bc24ef4da96355fdb2e8efe78e73371361ffb",
-      "71a06bda4a9d3e01da90d699c6cb564269e7c47bf8f9e11767df71a6afd9064d",
-      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
-      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
-      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
-      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
-      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
-      "8ab93490f3c3ac66fb320ac9890ef4c583d6ce45feac2fd50b0937d7e0f5e68a",
-      "8d87fd9ed58287c0ad9477a769a03a067a243a1eed85e1cd16db34f2d6004a09",
-      "e4d831933a532bcdd037e58e49bd878ce17d66e5147ffbeaa9a2dac8870c0f21"
+      "217bd03232b099de84daa38c9eca1f78e3cabba35ebb0d0ce29af5c2be5b494f",
+      "329c101ad1bcfeaae1bc03b79f82714d3f6d27f0e1f9a5be3447011648abdc0d",
+      "45fcc6ac0c57d274a46e0e8c917b94c804da042913aafa3dec399f78712e04b3",
+      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
+      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
+      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
+      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
+      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
+      "803ae37c2e6c95533f8a07778a485a53134a85218b28deca56f49f54f1a7f153",
+      "e07770aa90488ce9b717ba15b52ad58c37ffc9bb0577ad39c96cb0c7279710c7",
+      "e64ab1f62f973c01c9c9b611a2c873a6e864d68926e2e22e33dc4b13dae513c7"
     ]
   },
   "reviews": {}

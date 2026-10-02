@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 import pandas as pd
 from typing import Callable, cast
 # Local imports
@@ -104,7 +105,6 @@ class PromptGeneration:
             random_sample_size: int = 60,
             changed_sample_size: int = 90,
             rng: random.Random | None = None) -> str:
-        sampler = rng if rng is not None else random
         PROMPT_MAP = {
         "DATETIME": "DATETIME",
         "BOOLEAN": "BOOLEAN",
@@ -119,34 +119,14 @@ class PromptGeneration:
         "NATURAL_LANGUAGE_TEXT": "NLT"
         }
         dirty_series, cleaned_series = align_dirty_cleaned_series(dirty_series, cleaned_series)
-        # 1. Configure prompt based on semantic type
-        all_indices = list(dirty_series.index)
-        changed_indices = []
-        for idx in all_indices:
-            a = dirty_series.loc[idx]
-            b = cleaned_series.loc[idx]
-            if pd.isna(a) and pd.isna(b):
-                continue
-            if str(a) != str(b):
-                changed_indices.append(idx)
-        changed_take = min(len(changed_indices), max(0, changed_sample_size))
-        selected_changed = sampler.sample(changed_indices, changed_take) if changed_take > 0 else []
-        remaining = [idx for idx in all_indices if idx not in set(selected_changed)]
-        random_take = min(len(remaining), max(0, random_sample_size))
-        selected_random = sampler.sample(remaining, random_take) if random_take > 0 else []
-        sample_indices = selected_changed + selected_random
-        if not sample_indices:
-            sample_size = min(len(all_indices), max_sample_size)
-            sample_indices = sampler.sample(all_indices, sample_size) if sample_size > 0 else []
-        if max_sample_size > 0 and len(sample_indices) > max_sample_size:
-            sample_indices = sample_indices[:max_sample_size]
-        dirty_sample = dirty_series.loc[sample_indices].tolist()
-        cleaned_sample = cleaned_series.loc[sample_indices].tolist()
-        dirty_sample_fmt = format_list_for_prompt(dirty_sample)
-        cleaned_sample_fmt = format_list_for_prompt(cleaned_sample)
-        column_comparison_str = "Dirty → Cleaned\n" + "\n".join(
-            [f"{d} → {c}" for d, c in zip(dirty_sample_fmt, cleaned_sample_fmt)])
-        # 2. Add last attempt message to Validator Agent     
+        # 1. Describe the whole column. changed_sample_size only sizes the human review sample now.
+        column_comparison_str = self._column_overview(
+            dirty_series, cleaned_series,
+            max_rewrites=max_sample_size,
+            unchanged_sample_size=random_sample_size,
+            rng=rng,
+        )
+        # 2. Add last attempt message to Validator Agent
         last_attempt_msg = (
             "\nThis is the final validation attempt. "
             "If the column maintains the same dominant format and style as the original column (no undesired changes such as casing, patterns or structure), approve the column as clean (set 'needs_correction' to False) even if some minor errors remain. "
@@ -162,6 +142,104 @@ class PromptGeneration:
             column_comparison_sample=column_comparison_str
         )
         return final_prompt
+
+    OVERVIEW_TOP_VALUES = 30
+    OVERVIEW_VALUE_WIDTH = 80
+
+    @staticmethod
+    def _is_missing(value) -> bool:
+        return pd.api.types.is_scalar(value) and bool(pd.isna(value))
+
+    @classmethod
+    def _cell_changed(cls, dirty_value, cleaned_value) -> bool:
+        """Two missing values are equal; otherwise values compare as text, so 12 and "12" are unchanged."""
+        dirty_missing, cleaned_missing = cls._is_missing(dirty_value), cls._is_missing(cleaned_value)
+        if dirty_missing or cleaned_missing:
+            return dirty_missing != cleaned_missing
+        return str(dirty_value) != str(cleaned_value)
+
+    @classmethod
+    def _overview_text(cls, value) -> str | None:
+        """A value as the overview prints it: None for missing, long values cut with an ellipsis."""
+        if cls._is_missing(value):
+            return None
+        if hasattr(value, "item") and pd.api.types.is_scalar(value):
+            value = value.item()
+        text = str(value)
+        if len(text) > cls.OVERVIEW_VALUE_WIDTH:
+            text = text[:cls.OVERVIEW_VALUE_WIDTH] + "…"
+        return text
+
+    @staticmethod
+    def _shown(text: str | None, quoted: bool) -> str:
+        if text is None:
+            return "<empty>"
+        return f'"{text}"' if quoted else text
+
+    @staticmethod
+    def _by_count(counter: Counter) -> list:
+        """Most frequent first; ties keep the order in which the values first appear."""
+        return sorted(counter.items(), key=lambda item: -item[1])
+
+    def _column_overview(
+        self,
+        dirty_series: pd.Series,
+        cleaned_series: pd.Series,
+        *,
+        max_rewrites: int,
+        unchanged_sample_size: int,
+        rng: random.Random | None = None,
+    ) -> str:
+        """Whole-column facts for the validator: counts, the change share, each distinct rewrite once with its
+        row count, and a sample of unchanged values. Repeated rewrites are one line, so they cannot look like
+        the column's norm the way a sample of mostly changed rows did."""
+        sampler = rng if rng is not None else random
+        rows = len(dirty_series)
+        before = [self._overview_text(v) for v in dirty_series.tolist()]
+        after = [self._overview_text(v) for v in cleaned_series.tolist()]
+        rewrites: Counter = Counter()
+        unchanged: dict[str, None] = {}
+        emptied = 0
+        for dirty_value, cleaned_value, b, a in zip(dirty_series.tolist(), cleaned_series.tolist(), before, after):
+            if not self._cell_changed(dirty_value, cleaned_value):
+                if b is not None:
+                    unchanged.setdefault(b, None)
+                continue
+            rewrites[(b, a)] += 1
+            if a is None:
+                emptied += 1
+        changed = sum(rewrites.values())
+        share = (100.0 * changed / rows) if rows else 0.0
+        lines = [
+            f"Rows: {rows}",
+            f"Filled cells before cleaning: {sum(v is not None for v in before)}; "
+            f"after cleaning: {sum(v is not None for v in after)}",
+            f"{changed} of {rows} cells changed ({share:.1f}%)",
+            f"{emptied} cells emptied",
+        ]
+        for label, values in (("BEFORE", before), ("AFTER", after)):
+            lines += ["", f"MOST FREQUENT VALUES {label} CLEANING (value (count))"]
+            top = self._by_count(Counter(values))[:self.OVERVIEW_TOP_VALUES]
+            lines += [f"- {self._shown(value, quoted=False)} ({count})" for value, count in top]
+        if rewrites:
+            ordered = self._by_count(rewrites)
+            shown = ordered[:max(0, max_rewrites)]
+            lines += ["", "DISTINCT REWRITES (original → cleaned (rows)), most rows first"]
+            lines += [
+                f"{self._shown(old, quoted=True)} → {self._shown(new, quoted=True)} ({count} rows)"
+                for (old, new), count in shown
+            ]
+            rest = ordered[len(shown):]
+            if rest:
+                lines.append(
+                    f"… and {len(rest)} more distinct rewrites covering {sum(count for _, count in rest)} rows"
+                )
+        unchanged_values = list(unchanged)
+        take = min(len(unchanged_values), max(0, unchanged_sample_size))
+        if take:
+            lines += ["", "UNCHANGED VALUES (a sample)"]
+            lines += [self._shown(value, quoted=True) for value in sampler.sample(unchanged_values, take)]
+        return "\n".join(lines)
 
     # ===== Multi-column operations =====
     def create_prompt_recommender_multi_col(

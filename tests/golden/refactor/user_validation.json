@@ -291,14 +291,14 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 135187,
+        "input_tokens": 60738,
         "output_tokens": 2241,
-        "total_tokens": 137428
+        "total_tokens": 62979
       },
       "coding": {
-        "input_tokens": 33415,
+        "input_tokens": 33340,
         "output_tokens": 3094,
-        "total_tokens": 36509
+        "total_tokens": 36434
       },
       "validation": {
         "input_tokens": 0,
@@ -307,9 +307,9 @@
       }
     },
     "total_usage": {
-      "input_tokens": 168602,
+      "input_tokens": 94078,
       "output_tokens": 5335,
-      "total_tokens": 173937
+      "total_tokens": 99413
     }
   },
   "traces": {
@@ -718,35 +718,35 @@
   },
   "prompts": {
     "coder": [
-      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
-      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
-      "2b47bceef0fe80ca5c0a0a2fd8f59ab0e2b79b944fc65b7513f1378028b794f9",
-      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
-      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
-      "70a8fdcb649a9a7a7d1cd43723a6692f14ade9e6b8829177271da8ebb476c929",
-      "a531fedd764f808ebb063f39e3c0c88ab966b93e9509d67de4214f52cd3c699a",
-      "b35552438a15493cc3a1cb6d29c26e2291436155e5dc6b4235bbf3faaba2d097",
-      "b35552438a15493cc3a1cb6d29c26e2291436155e5dc6b4235bbf3faaba2d097",
-      "b35552438a15493cc3a1cb6d29c26e2291436155e5dc6b4235bbf3faaba2d097",
-      "f3fb69e00fb482f23eace4c00f813e13fe0727b2859869f2b6b281a6e43b16a4",
-      "f3fb69e00fb482f23eace4c00f813e13fe0727b2859869f2b6b281a6e43b16a4",
-      "f6066f89b7145155ab397a462c943454e5831f0d3be74d60f2ecd1291c583c40"
+      "3e6a32bb6fd0cd9fda1c2fe977d9010c38a0cf8c7db1e75fd495f6cac6e628f6",
+      "3e6a32bb6fd0cd9fda1c2fe977d9010c38a0cf8c7db1e75fd495f6cac6e628f6",
+      "3e6a32bb6fd0cd9fda1c2fe977d9010c38a0cf8c7db1e75fd495f6cac6e628f6",
+      "5532f973dd5ff6264c693db4d88969b34f8080dd4a761088fdce3d112320adfb",
+      "96bd58c689a321073a3059bcea801e36ca0051e589aa5cbbc108ec3309de839d",
+      "96bd58c689a321073a3059bcea801e36ca0051e589aa5cbbc108ec3309de839d",
+      "96bd58c689a321073a3059bcea801e36ca0051e589aa5cbbc108ec3309de839d",
+      "cdce4285b40c7fd27b5067fbfc06ce157c12527db2888bf4d07697a906bf0200",
+      "ed0849735084468cf0086b1cf8490e868ddaebf0b63dcd305852dc665e0c94de",
+      "ed0849735084468cf0086b1cf8490e868ddaebf0b63dcd305852dc665e0c94de",
+      "f14c40a487e36ea184a08f8a3ba4180b704b3875417cf5d746a6c93002c639c8",
+      "f14c40a487e36ea184a08f8a3ba4180b704b3875417cf5d746a6c93002c639c8",
+      "f14c40a487e36ea184a08f8a3ba4180b704b3875417cf5d746a6c93002c639c8"
     ],
     "fd_recommender": [
-      "d6fae95faaab350797686dcae24ddab267f6c2fd4f989c18b4ad037c83a9bc81"
+      "41391cc60b5b7ddbad305296bd42d9a3f3e9aa6b7857dd43d22a41da38a1e336"
     ],
     "recommender": [
-      "3f09ef1b3fbefb7bd4e2e02af75fde957bd112e370db82aa1375f96f9dbbc100",
-      "62c9a577a4a0bbcc5b7bc9e68f3b2869079b76b257edc904fa165fd1d938ab3b",
-      "71a06bda4a9d3e01da90d699c6cb564269e7c47bf8f9e11767df71a6afd9064d",
-      "7d501ec11a15933cc8b357d576c62155b17aab77aebfd89ecd2baaaa753b5a56",
-      "81f71d324cb08f5646dea72264cc110b1509209f55a80f6eb7c06c9e86143b39",
-      "853b1f3e8defddc0d3b981dd0daffdbf43a339a12c50fb6bbcb1fa8f49333d56",
-      "88abea43fed401ce10d40a6ec4e6c0f40f26a5161f2f1669423c3cd8d7301390",
-      "d5f715ffad634b29566cc42dfa4fc764b25e9181ccdd0dd949f98b1004e06ebf",
-      "e4d831933a532bcdd037e58e49bd878ce17d66e5147ffbeaa9a2dac8870c0f21",
-      "f3202be5faf41758bc10458e4f89519056ae7b19aa1b997db84ae826a7ced8eb",
-      "f9d6d71cc30d49a8aaace3a6e622b19245a92c137863d60ce346e82f2859e135"
+      "131a54964ea16a421c60a23551240abd9b2bad94b0499a35f8e29985aec6fb22",
+      "329c101ad1bcfeaae1bc03b79f82714d3f6d27f0e1f9a5be3447011648abdc0d",
+      "45fcc6ac0c57d274a46e0e8c917b94c804da042913aafa3dec399f78712e04b3",
+      "4887ed71d62a4ddeed65abed3a49bb46054d5f2843371354f505654a472ba5f6",
+      "4c6a2927c29e2d69beef21f5a31647351907d7f7941946dc297b1bfa47a2ac2a",
+      "66014d7ad423020899672fbb35e56338572435e0981eb648d8f8a2274a07083c",
+      "82bb25cbe4fa769092566d360c86afdc1a3174b7d9580d4e46e331692f763862",
+      "a024af26b25a89def806c6f73f9fd8f5a2d29ae858b80c82504354059a0d7dee",
+      "d6eeada4fb6d3f15b802f35286102234512a0142fce10299a3d793961767cdc5",
+      "db733a986177eb263710a82788808ebfd703674d5f49d804108f891b72f84c6e",
+      "f8eedeb32746bba99f5bbc1b956ef9d62303df3a80470640d6172f5398a5cf57"
     ]
   },
   "reviews": {

@@ -206,7 +206,7 @@ class State(rx.State):
     labeling_kind: str = "clean"
     labeling_expected_value: str = ""
     max_labeled_cells_per_column: int = DEFAULT_LABELED_CELLS_PER_COLUMN
-    llm_temperature_input: str = ""
+    llm_temperature_input: str = "" if _default_config.llm_temperature is None else str(_default_config.llm_temperature)
     llm_top_p_input: str = ""
 
     # Nested Dictionary for Sample Sizes

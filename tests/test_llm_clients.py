@@ -54,7 +54,10 @@ def test_openai_with_a_schema_uses_parse_without_extra_body():
     assert method == "parse"
     assert kwargs["response_format"] is CodeOutputValidation
     assert "extra_body" not in kwargs
-    assert json.loads(content) == {"needs_correction": False, "feedback_target": None, "correction_instructions": ""}
+    assert json.loads(content) == {
+        "analysis": "", "needs_correction": False, "issue_kind": None, "feedback_target": None,
+        "correction_instructions": "", "cases": None,
+    }
     assert usage == {"input_tokens": 11, "output_tokens": 7}
 
 

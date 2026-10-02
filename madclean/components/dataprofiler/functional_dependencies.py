@@ -78,8 +78,11 @@ class FunctionalDependencies:
                 violations.append({
                     'lhs': lhs_val,
                     'rhs_conflicts': conflicting_rhs_with_counts,
+                    'rows': int(rhs_counts.sum()),
                     'context': context_rows
                 })
+        # Most rows first, so a capped prompt shows the violations that matter most.
+        violations.sort(key=lambda violation: -violation['rows'])
         violation_data = {
             'count': len(violations),
             'violations': violations}        

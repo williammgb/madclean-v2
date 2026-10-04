@@ -13,6 +13,7 @@ from madclean.components.domain.schema import ColumnProfile
 from madclean.components.multi_agent_cleaner.code_checks import (
     emptied_share,
     example_cases,
+    keep_whole_numbers,
     parse_example,
     values_match,
     wrap_with_value_map,
@@ -286,6 +287,41 @@ def test_blanking_a_column_that_holds_only_the_word_empty_passes(in_process):
     cleaned, _, _, _ = _clean(agent, df, "Address2", _recommendation())
 
     assert fake.coder_calls == 1 and int(cleaned.isna().sum()) == 100
+
+
+def test_whole_numbers_turned_into_decimals_go_back_to_whole_numbers():
+    # rayyan's article_jvolumn: "64" came out as 64.0 once one cell became empty.
+    original = pd.Series(["64", "12", "abc", "", "7"], dtype=object)
+    cleaned = pd.Series([64.0, 12.0, None, None, 7.0])
+
+    kept = keep_whole_numbers(original, cleaned)
+
+    assert str(kept.dtype) == "Int64"
+    assert kept.astype(str).tolist() == ["64", "12", "<NA>", "<NA>", "7"]
+
+
+@pytest.mark.parametrize(
+    "original, cleaned",
+    [
+        (["7.0", "8.0", "6.5"], [7.0, 8.0, 7.0]),  # the original numbers were written as decimals
+        (["1.5", "2", "3"], [1.5, 2.0, 3.0]),  # a real fraction stays
+        (["x", "y", "z"], [1.0, 2.0, 3.0]),  # no original number to judge by
+        (["1", "2", "3"], ["1", "2", "3"]),  # not a decimal column
+        ([4.5, None, 30.0], [5.0, None, 30.0]),  # loaded as real decimals
+    ],
+)
+def test_decimal_columns_stay_decimal(original, cleaned):
+    cleaned = pd.Series(cleaned)
+    original = pd.Series(original, dtype=None if isinstance(original[0], float) else object)
+
+    assert keep_whole_numbers(original, cleaned) is cleaned
+
+
+def test_a_whole_number_column_loaded_as_decimals_because_of_blanks_is_whole_again():
+    # rayyan's article_jvolumn loads as 64.0 because some cells are blank.
+    original = pd.Series([64.0, None, 12.0])
+
+    assert keep_whole_numbers(original, original.copy()).astype(str).tolist() == ["64", "<NA>", "12"]
 
 
 def test_inputs_the_recommender_maps_to_empty_do_not_count():

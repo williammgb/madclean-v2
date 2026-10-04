@@ -128,6 +128,29 @@ def test_when_values_do_not_fit_rare_variants_are_kept_beside_the_frequent_ones(
     assert "Label 001 (3) ← Labl 001 (1)" in text
 
 
+def test_a_column_of_long_values_is_capped_by_length_and_says_what_it_left_out():
+    # Like a cast list: 400 distinct values of about 70 characters would be ~28,000 characters listed in full.
+    values = [f"Actor {i:03d} One,Actor {i:03d} Two,Actor {i:03d} Three,Actor {i:03d} Four" for i in range(400)]
+
+    text = sample(values * 2, "DELIMITED_STRING")
+
+    listed = counts_section(text)
+    assert 0 < len(listed) < 400
+    assert f"… {400 - len(listed)} more distinct values not listed." in text
+    assert "include ALL distinct values" not in text
+    assert len(text) < 14000
+
+
+def test_one_huge_variant_group_is_shortened():
+    variants = [f"English,Lang{i:03d}" for i in range(600)]
+    values = ["English"] * 50 + variants
+
+    text = sample(values, "CATEGORICAL")
+
+    group = next(line for line in text.splitlines() if line.startswith("English (50) ←"))
+    assert len(group) < 2000 and group.endswith("more")
+
+
 def test_identifier_and_mixed_samples_carry_shapes():
     assert "Formats by shape" in sample(["01234", "02345", "12345"], "IDENTIFIER")
     assert "Formats by shape" in sample(["2021-01-01", "apple", "pear"], "MIXED")

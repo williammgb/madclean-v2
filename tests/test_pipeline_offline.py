@@ -102,7 +102,9 @@ def test_fake_beers_run_cleans_every_column_and_keeps_the_data(beers_run):
     dirty = load_dataset(BEERS)
     cleaned, report = beers_run.cleaned, beers_run.report
 
-    pd.testing.assert_frame_equal(cleaned, dirty)
+    # ibu holds whole numbers and blanks, so it loads as decimals (45.0); the run writes it back whole.
+    expected = dirty.assign(ibu=dirty["ibu"].astype("Int64"))
+    pd.testing.assert_frame_equal(cleaned, expected)
     for column in dirty.columns:
         entry = report.entries[column]
         if entry.datatype in ("EMPTY", "UNKNOWN"):

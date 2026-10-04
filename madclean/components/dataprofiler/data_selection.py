@@ -23,6 +23,11 @@ VARIANT_SCORE_CUTOFF = 90
 VARIANT_RARE_COUNT = 2
 RARE_SLOTS = 100
 MAX_SHAPES = 50
+# Characters each part of a counted sample may take, so a column of long values (cast lists, titles)
+# costs about as much as a column of short ones.
+VALUES_CHAR_BUDGET = 8000
+VARIANTS_CHAR_BUDGET = 3000
+RANDOM_CHAR_BUDGET = 2000
 _LETTER_RUN = re.compile(r"[^\W\d_]+")
 _FIRST_NUMBER = re.compile(r"[-+]?\d*\.?\d+")
 
@@ -49,6 +54,17 @@ def value_shape(value) -> str:
             return "a"
         return "Aa"
     return _LETTER_RUN.sub(_letters, re.sub(r"\d", "9", str(value)))
+
+
+def _within_budget(items: list[str], budget: int) -> list[str]:
+    """The leading items whose combined length stays within `budget` characters; always at least one."""
+    kept, used = [], 0
+    for item in items:
+        used += len(item) + 2
+        if kept and used > budget:
+            break
+        kept.append(item)
+    return kept
 
 
 def _ranked_counts(series: pd.Series) -> list[tuple]:
@@ -143,22 +159,30 @@ class DataSampler:
             fill = [(v, c) for v, c in ranked[limit - rare_slots:] if v not in kept][:limit - len(frequent) - len(rare)]
             chosen = {v for v, _ in frequent + rare + fill}
             listed = [(v, c) for v, c in ranked if v in chosen]
-        lines = ["Values with counts (most frequent first):"]
-        lines += [f"{_display(v)} ({c})" for v, c in listed]
+        value_lines = _within_budget([f"{_display(v)} ({c})" for v, c in listed], VALUES_CHAR_BUDGET)
+        lines = ["Values with counts (most frequent first):"] + value_lines
+        if len(value_lines) < len(listed):
+            all_included = False
         if all_included:
             lines.append("Values with counts include ALL distinct values present in the dataset.")
+        else:
+            lines.append(f"… {len(ranked) - len(value_lines)} more distinct values not listed.")
         if groups:
             lines.append("Possible variants of the same value:")
+            variant_lines = []
             for (anchor, anchor_count), variants in groups[:VARIANT_MAX_LINES]:
-                joined = ", ".join(f"{_display(v)} ({c})" for v, c in variants)
-                lines.append(f"{_display(anchor)} ({anchor_count}) ← {joined}")
+                shown = _within_budget([f"{_display(v)} ({c})" for v, c in variants], VARIANTS_CHAR_BUDGET // 2)
+                more = f", … {len(variants) - len(shown)} more" if len(shown) < len(variants) else ""
+                variant_lines.append(f"{_display(anchor)} ({anchor_count}) ← {', '.join(shown)}{more}")
+            lines += _within_budget(variant_lines, VARIANTS_CHAR_BUDGET)
         prompt = "\n".join(lines)
         if column_type in SHAPE_TYPES:
             prompt += self._shape_lines(series)
         if not all_included:
             random_sample = series.sample(n=min(cfg['random_sample_size'], len(series)), replace=False,
                                           random_state=rng).tolist()
-            prompt += f"\nRandom Sample: [{', '.join(format_list_for_prompt(random_sample))}]"
+            shown = _within_budget(format_list_for_prompt(random_sample), RANDOM_CHAR_BUDGET)
+            prompt += f"\nRandom Sample: [{', '.join(shown)}]"
         return prompt
 
     @staticmethod

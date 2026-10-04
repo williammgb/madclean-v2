@@ -126,6 +126,32 @@ def wrap_with_value_map(code: str | None, value_mapping) -> str:
     return "import pandas as pd\n\n\n" + wrapper.strip() + "\n"
 
 
+def keep_whole_numbers(original: pd.Series, cleaned: pd.Series) -> pd.Series:
+    """`cleaned` as whole numbers when its only decimals are whole numbers written as 64.0.
+
+    That happens when loading reads a whole-number column with blank cells as decimals, or when the
+    cleaning code returns decimals. A decimal column whose filled values are all whole goes back to whole
+    numbers when the original numbers were whole too, or were mostly written without a decimal point.
+    Missing cells stay missing.
+    """
+    if not pd.api.types.is_float_dtype(cleaned):
+        return cleaned
+    filled = cleaned.dropna()
+    if filled.empty or not (filled == filled.round()).all() or filled.abs().max() >= 2**53:
+        return cleaned
+    before = original.dropna()
+    if pd.api.types.is_bool_dtype(before) or before.empty:
+        return cleaned
+    if pd.api.types.is_numeric_dtype(before):
+        # Read as decimals only because some cells are blank: 64 is loaded as 64.0.
+        whole_before = bool((before == before.round()).all())
+    else:
+        text = before.astype(str).str.strip()
+        numbers = text[pd.to_numeric(text, errors="coerce").notna()]
+        whole_before = not numbers.empty and numbers.str.contains(r"[.eE]").mean() < 0.5
+    return cleaned.astype("Int64") if whole_before else cleaned
+
+
 # ---------------------------------------------------------------------------------------------
 # Example check
 # ---------------------------------------------------------------------------------------------

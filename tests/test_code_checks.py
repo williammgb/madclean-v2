@@ -277,6 +277,17 @@ def test_blanking_a_column_that_is_mostly_placeholders_passes(in_process):
     assert fake.coder_calls == 1 and int(cleaned.isna().sum()) == 70
 
 
+def test_blanking_a_column_that_holds_only_the_word_empty_passes(in_process):
+    # hospital's Address2 and Sample hold the word "empty" in every row; the truth is a blank cell.
+    df = pd.DataFrame({"Address2": ["empty"] * 100})
+    code = "def clean_column(column):\n    return column.where(column != 'empty')\n"
+    agent, fake = _coder([code_answer(code)])
+
+    cleaned, _, _, _ = _clean(agent, df, "Address2", _recommendation())
+
+    assert fake.coder_calls == 1 and int(cleaned.isna().sum()) == 100
+
+
 def test_inputs_the_recommender_maps_to_empty_do_not_count():
     original = pd.Series(["gone"] * 8 + ["kept"] * 2)
     cleaned = pd.Series([None] * 8 + ["kept"] * 2)

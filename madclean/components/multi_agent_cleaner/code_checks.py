@@ -15,7 +15,8 @@ ARROWS = (" → ", " -> ")
 MISSING_WORDS = {"nan", "nat", "none", "null", "empty", "<empty>", ""}
 # Cells holding these (trimmed, lower-cased) may become empty without counting against the code.
 PLACEHOLDER_WORDS = {
-    "n/a", "na", "nan", "none", "null", "-", "--", "?", "missing", "unknown", "not available", "tbd", "#n/a", "",
+    "n/a", "na", "nan", "none", "null", "empty", "blank", "-", "--", "?", "missing", "unknown", "not available",
+    "tbd", "#n/a", "",
 }
 MAX_VALUE_MAP_ENTRIES = 500
 VALUE_MAP_ENTRIES_IN_PROMPT = 50

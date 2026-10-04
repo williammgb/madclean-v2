@@ -9,13 +9,13 @@
     }
   },
   "report": {
-    "colcoder": {
-      "datatype": "DISCRETE_STRING",
+    "codex": {
+      "datatype": "MIXED",
       "already_clean": false,
-      "cleaned": true,
+      "cleaned": false,
       "attempts": 3,
       "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
-      "cleaning_validated": true,
+      "cleaning_validated": false,
       "trace_steps": [
         {
           "id": "recommender_1",
@@ -33,7 +33,13 @@
           "id": "validator_1",
           "title": "Validator (attempt 1)",
           "status": "needs_correction",
-          "output": "Validation status: Needs correction\nFeedback target: CODER\n\nCorrection instructions:\nKeep the spacing."
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+        },
+        {
+          "id": "recommender_2",
+          "title": "Recommender (attempt 2)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
         },
         {
           "id": "coder_2",
@@ -45,7 +51,7 @@
           "id": "validator_2",
           "title": "Validator (attempt 2)",
           "status": "needs_correction",
-          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nBe precise."
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
         },
         {
           "id": "recommender_3",
@@ -62,8 +68,8 @@
         {
           "id": "validator_3",
           "title": "Validator (attempt 3)",
-          "status": "approved",
-          "output": "Validator Agent has determined the cleaning operations are valid."
+          "status": "needs_correction",
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
         }
       ]
     },
@@ -131,13 +137,13 @@
         }
       ]
     },
-    "codex": {
-      "datatype": "MIXED",
+    "colcoder": {
+      "datatype": "DISCRETE_STRING",
       "already_clean": false,
-      "cleaned": false,
+      "cleaned": true,
       "attempts": 3,
       "generated_code": "import pandas as pd\n\ndef clean_column(data):\n    if isinstance(data, pd.DataFrame):\n        return data.apply(lambda s: s.str.upper() if s.dtype == object else s)\n    return data.str.upper() if data.dtype == object else data",
-      "cleaning_validated": false,
+      "cleaning_validated": true,
       "trace_steps": [
         {
           "id": "recommender_1",
@@ -155,13 +161,7 @@
           "id": "validator_1",
           "title": "Validator (attempt 1)",
           "status": "needs_correction",
-          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
-        },
-        {
-          "id": "recommender_2",
-          "title": "Recommender (attempt 2)",
-          "status": "ok",
-          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+          "output": "Validation status: Needs correction\nFeedback target: CODER\n\nCorrection instructions:\nKeep the spacing."
         },
         {
           "id": "coder_2",
@@ -173,7 +173,7 @@
           "id": "validator_2",
           "title": "Validator (attempt 2)",
           "status": "needs_correction",
-          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER\n\nCorrection instructions:\nBe precise."
         },
         {
           "id": "recommender_3",
@@ -190,8 +190,8 @@
         {
           "id": "validator_3",
           "title": "Validator (attempt 3)",
-          "status": "needs_correction",
-          "output": "Validation status: Needs correction\nFeedback target: RECOMMENDER"
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
         }
       ]
     },
@@ -291,9 +291,9 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 72205,
+        "input_tokens": 74570,
         "output_tokens": 2304,
-        "total_tokens": 74509
+        "total_tokens": 76874
       },
       "coding": {
         "input_tokens": 33519,
@@ -307,9 +307,9 @@
       }
     },
     "total_usage": {
-      "input_tokens": 105724,
+      "input_tokens": 108089,
       "output_tokens": 5160,
-      "total_tokens": 110884
+      "total_tokens": 113249
     }
   },
   "traces": {
@@ -735,17 +735,17 @@
       "6c2404abbe1b813681b0396e099f5d1a766968d809e3d7682e50e36b6deaa2f2"
     ],
     "recommender": [
-      "00fe19afd53a61723440588ef3958ad8068eb8ba030bf6c81d7ba15c0753dcbd",
-      "1973c8a178a4a081fa238eb21a41833b799109f7aa6f825c4c3d5a983dda743e",
-      "4b127d4a233d400373730ac66987911a822077339bba5f3c3148ef5bc2dcd327",
-      "5b35996d52693315198fb485450ff849008433d689202bd88b08a93155257ce8",
-      "74e408f89281fb14ff196adb6674b6c9bade40202f4302a15fa5699b5c60bbfa",
-      "768856b122d29165b89a0accac224ceb057314e362d45f824c709259beb9b260",
-      "7b1c976bc52b7723ba6ebd16e741ea9dcdcdf852f5c6b0d66a60fc2245120d77",
-      "cdff2df987f552e3065fdeb2c111342f521d7604121809141b33fc7c83cdad95",
-      "e74bb294348cfdaf3843321f5e8ee9f7dd9205004f49546808c3d18132057ea5",
-      "f1b0d634e68ac336870fcce3d210220797abb5659bda7073043e36916a19484e",
-      "fbe89f482ebc8ecbf1132c069093db062359278cff17b6e80cb689ed91d71e85"
+      "07e25108accdd1b6a0a70b013e5d11603e9ae91d15af4a3725dc6d7b0968a8d5",
+      "26b48bd696e040acc2530a3f08839be078de28c86f66fefc140f6069c682b5c5",
+      "89098febf7bf90dbecd3fd7027e313bf02f234341fcb5084be1d74a13c187c9c",
+      "987129c8a5ae926251ff16701b67d282274356b3da4063fb1f13bfbb96ee4d4d",
+      "a7088d18145ea0aa1738d8a033eb31b631c0306ab3c684f0497c2adb9273716c",
+      "b945f7cf32801f9bf6a21f0b597a94dfd6fec3ffebe81750d4fa34aca418a0dd",
+      "d2cce7d0360973cca962c452c3f5bd177fdae625875283272bacafc1c8b25b6e",
+      "d3532bb7e6005c643c30b178553aa7e9bd0cc934b5ffa04dfa8e9627c4c67fb5",
+      "d784186754c302d2333d57afdf70ba7025a14090fe88e53c0b6e2722527607b5",
+      "d7f2183b80d64b197968291cf33cb2f9da09d6f168a99adaea59fc578a995a07",
+      "f76d6f92444b3176435fc658c130c12ce1ba36f24fa360211f0a1d9b840d4335"
     ]
   },
   "reviews": {

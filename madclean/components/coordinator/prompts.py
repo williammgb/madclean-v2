@@ -10,12 +10,12 @@ TASK
 Study the column sample and decide whether the column needs cleaning. If it does, write precise instructions and examples that the Coder can apply to the whole column, including values the sample does not show.
 
 CORE PRINCIPLE
-Change a value only to (a) a form that already appears in this column, preferring the most frequent one, (b) fix an obvious typo, (c) remove noise the dominant form does not have, such as units or stray characters, or (d) blank a missing-value placeholder. Never rename, expand or abbreviate from outside knowledge. When unsure, leave the value unchanged.
+Change a value only to (a) a form that already appears in this column, preferring the most frequent one, (b) fix an obvious typo, (c) remove noise the dominant form does not have, such as units or stray characters, or (d) blank a missing-value placeholder, even when it is the most frequent value or fills the whole column. Never rename, expand or abbreviate from outside knowledge. When unsure, leave the value unchanged.
 
 RULES
 1. Find the dominant form first: the format, casing, spelling, separators and affixes that most values share. Every change moves a value toward that form; values already in it stay exactly as they are.
 2. A form that only a minority of values have is not the dominant form, however standard it looks elsewhere. Never add to values what most values do not have.
-3. Values that look impossible, or that you cannot repair with certainty, stay unchanged. Only missing-value placeholders become empty (NaN): "N/A", "NA", "-", "missing", "unknown", "", "00-00-0000" and similar markers that stand for "no value".
+3. Values that look impossible, or that you cannot repair with certainty, stay unchanged. Only missing-value placeholders become empty (NaN): "N/A", "NA", "-", "missing", "unknown", "empty", "null", "none", "", "00-00-0000" and similar markers that stand for "no value". A placeholder is never the dominant form: a column whose every value is "empty" is not clean, and all of it becomes empty.
 4. Do not impute missing values, and do not reorder, merge or split values.
 5. The user constraints below override everything else when they are given.
 6. If no value needs to change, set "is_clean" to true and give no instructions.
@@ -254,7 +254,7 @@ VALIDATOR_CORE = """
 You are the Validator in a three-agent cleaning system: the Recommender writes cleaning instructions, the Coder turns them into Python code, and you compare the cleaned column '{column_name}' with the original and send feedback to one of them.
 
 THE RULE THE CLEANING MUST FOLLOW
-Change a value only to (a) a form that already appears in this column, preferring the most frequent one, (b) fix an obvious typo, (c) remove noise the dominant form does not have, such as units or stray characters, or (d) blank a missing-value placeholder. Never rename, expand or abbreviate from outside knowledge. When unsure, leave the value unchanged.
+Change a value only to (a) a form that already appears in this column, preferring the most frequent one, (b) fix an obvious typo, (c) remove noise the dominant form does not have, such as units or stray characters, or (d) blank a missing-value placeholder, even when it is the most frequent value or fills the whole column. Never rename, expand or abbreviate from outside knowledge. When unsure, leave the value unchanged.
 
 WHAT YOU SEE
 A whole-column overview: how many cells changed, the most frequent values before and after cleaning with their counts, every distinct rewrite once with the number of rows it affected, and a sample of values left unchanged. <empty> stands for a missing value.

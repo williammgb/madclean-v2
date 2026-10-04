@@ -1,6 +1,6 @@
 import json
 import re
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 import pandas as pd
 # Local imports
 from madclean.llm.llm_clients import BaseLLMClient
@@ -29,6 +29,14 @@ def _service_unavailable_recommender_payload(exc: BaseException) -> dict | None:
     }
 
 
+class ValueChange(BaseModel):
+    """One exact replacement: every cell whose original value (as text) is from_value becomes to_value."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+    from_value: str
+    # None makes the cell empty.
+    to_value: str | None
+
+
 class CodeOutputRecommendation(BaseModel):
     """Defines the required JSON output structure for cleaning instructions."""
     # First, so the model reasons before it decides; optional, so older answers still parse.
@@ -39,12 +47,24 @@ class CodeOutputRecommendation(BaseModel):
     examples_clean: list[str] | None
     examples_dirty: list[str] | None
     cleaning_instructions: list[str] | None
+    # Only the values that change, exactly as the sample shows them; applied after the Coder's code.
+    value_mapping: list[ValueChange] | None = None
+
+
+class DependencyCorrection(BaseModel):
+    """The right-hand value every row with this left-hand value (as text) gets."""
+    model_config = ConfigDict(coerce_numbers_to_str=True)
+    lhs_value: str
+    correct_rhs: str
+
 
 class CodeOutputFDRecommendation(BaseModel):
-    """Defines the required JSON output structure for FD instructions."""
+    """The dependency answer: a table the system turns into code itself, with no Coder in between."""
+    analysis: str = ""
     summary: str
-    violation_instructions: str
-    imputation_instructions: str
+    corrections: list[DependencyCorrection] | None
+    skipped_lhs_values: list[str] | None
+    impute_missing: bool
 
 class LLMRecommendationAgent:
     """Isolated LLM Agent that analyses data provided by DataProfiler and generates cleaning instructions for LLMCodingAgent."""
@@ -67,7 +87,7 @@ class LLMRecommendationAgent:
                 'schema': CodeOutputFDRecommendation,
                 'system_prompt' : (
                     "You are an expert data analyst specializing in enforcing functional dependencies (FDs) in tabular data. "
-                    "Your role is to analyze an FD and provide clear instructions for resolving violations and imputing missing values. "
+                    "Your role is to analyze an FD and give the exact table of corrections for its violations, and say whether missing values may be imputed. "
                     "You MUST respond in the specified JSON format.")
             }
             # Example of future extension
@@ -113,17 +133,14 @@ class LLMRecommendationAgent:
                 # Validate against schema
                 validated_data = schema(**parsed_data)
 
-                # Check that instructions are actually present
+                # Check that instructions or a value table are actually present. A dependency answer
+                # with no corrections and no imputation is valid: the dependency already holds.
                 is_clean_val = getattr(validated_data, 'is_clean', False)
-                # single columns
                 if hasattr(validated_data, 'cleaning_instructions'):
                     instr = validated_data.cleaning_instructions
-                    if not is_clean_val and (not instr or all(not s.strip() for s in instr)):
-                        raise ValueError("Column marked as 'dirty' but instructions are missing or empty.")
-                # FDs
-                if hasattr(validated_data, 'violation_instructions'):
-                    if not validated_data.violation_instructions.strip() and not validated_data.imputation_instructions.strip():
-                        raise ValueError("FD task requires explicit instructions.")
+                    has_instructions = bool(instr) and any(s.strip() for s in instr)
+                    if not is_clean_val and not has_instructions and not validated_data.value_mapping:
+                        raise ValueError("Column marked as 'dirty' but instructions and value_mapping are missing or empty.")
                 return validated_data.model_dump(), raw_response
             
             except (json.JSONDecodeError, ValueError, ValidationError, KeyError) as e:
@@ -205,6 +222,7 @@ class LLMRecommendationAgent:
                 task_info,
                 user_constraints=extra,
                 labeled_examples=labeled,
+                max_violations=self.config.max_fd_violations_in_prompt,
             )
             messages.append({"role": "user", "content": initial_prompt})
         

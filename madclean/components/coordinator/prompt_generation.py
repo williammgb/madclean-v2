@@ -11,6 +11,7 @@ from madclean.utils.helpers import (
     align_dirty_cleaned_dataframe,
 )
 from madclean.components.domain.schema import ColumnProfile, OutlierResult, MultiColumnTask, FDResult
+from madclean.components.multi_agent_cleaner.code_checks import value_table_for_prompt
 
 class PromptGeneration:
     "Instantiates all prompt templates with the provided data for downstream LLM use."""
@@ -95,6 +96,7 @@ class PromptGeneration:
                                                      examples_clean=format_data(recommender_data['examples_clean']),
                                                      examples_dirty=format_data(recommender_data['examples_dirty']),
                                                      cleaning_instructions=format_data(recommender_data['cleaning_instructions']),
+                                                     value_mapping=value_table_for_prompt(recommender_data.get('value_mapping')),
                                                      allowed_packages=allowed_packages)
         return final_prompt
 
@@ -255,6 +257,7 @@ class PromptGeneration:
         *,
         user_constraints: str = "",
         labeled_examples: str = "",
+        max_violations: int = 100,
     ) -> str:
         """Enables multiple multi-column cleaning components to use this function."""
         task_type = task_info.task_type
@@ -263,15 +266,8 @@ class PromptGeneration:
                 df, task_info, max_sample_size,
                 user_constraints=user_constraints,
                 labeled_examples=labeled_examples,
+                max_violations=max_violations,
             )
-        else:
-            raise ValueError(f"Unsupported multi-column task type: {task_type}")
-
-    def create_prompt_coding_multi_col(self, task_info: MultiColumnTask, recommender_data: dict, allowed_packages: str) -> str:
-        """Enables multiple multi-column cleaning components to use this function."""
-        task_type = task_info.task_type
-        if task_type == 'FD':
-            return self._create_prompt_coding_fd(task_info, recommender_data, allowed_packages)
         else:
             raise ValueError(f"Unsupported multi-column task type: {task_type}")
 
@@ -353,10 +349,14 @@ class PromptGeneration:
         *,
         user_constraints: str = "",
         labeled_examples: str = "",
+        max_violations: int = 100,
     ) -> str:
         def _format_violations_for_prompt(violations: list[dict]) -> str:
+            # Violations come most rows first; only the first max_violations are listed and fixed.
+            shown = violations[:max(0, max_violations)]
+            hidden = violations[len(shown):]
             formatted_output = []
-            for violation in violations:
+            for violation in shown:
                 lhs_val = violation['lhs']
                 conflicting_rhs = violation['rhs_conflicts']
                 context_rows = violation['context']
@@ -364,6 +364,11 @@ class PromptGeneration:
                 formatted_output.append(violation_header)
                 for row_list in context_rows:
                     formatted_output.append(",".join(format_list_for_prompt(row_list)))
+            if hidden:
+                hidden_rows = sum(int(v.get('rows') or sum(count for _, count in v['rhs_conflicts'])) for v in hidden)
+                formatted_output.append(
+                    f"{len(hidden)} more violations covering {hidden_rows} rows are not shown and will be left unchanged."
+                )
             return "\n".join(formatted_output).strip()
         # 1. Unpack data
         fd_data = cast(FDResult, task_info.data)
@@ -410,17 +415,6 @@ class PromptGeneration:
                 violations="No violations",
             )
 
-    def _create_prompt_coding_fd(self, task_info: MultiColumnTask, recommender_data: dict, allowed_packages: str) -> str:
-        fd_data = cast(FDResult, task_info.data)
-        return format_prompt_template(
-            FD_CODING_PROMPT_TEMPLATE,
-            lhs=fd_data.lhs,
-            rhs=fd_data.rhs,
-            summary=recommender_data['summary'],
-            violation_fix_instructions=recommender_data['violation_instructions'],
-            missing_values_imputation_instructions=recommender_data['imputation_instructions'],
-            allowed_packages=allowed_packages)
-    
     def _create_prompt_validation_fd(self, task_info: MultiColumnTask, 
                                     last_attempt: bool, comparison_str: str) -> str:
         fd_data = cast(FDResult, task_info.data)

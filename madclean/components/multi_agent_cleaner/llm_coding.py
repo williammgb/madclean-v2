@@ -9,10 +9,22 @@ import pandas as pd
 # Local imports
 from madclean.llm.llm_clients import BaseLLMClient
 from madclean.components.coordinator.prompt_generation import PromptGeneration
-from madclean.components.domain.schema import MultiColumnTask
 from madclean.config.settings import CleaningConfig
 from madclean.utils.helpers import llm_sampling_kwargs_from_config
+from madclean.components.multi_agent_cleaner.code_checks import (
+    emptied_feedback,
+    emptied_inputs,
+    emptied_share,
+    example_cases,
+    example_failures,
+    example_feedback,
+    example_inputs,
+    example_note,
+    wrap_with_value_map,
+)
 
+GENERATED_CODE_FILE = "generated_code.py"
+TRACEBACK_LINES = 15
 
 def _service_unavailable_coder_message(exc: BaseException) -> str | None:
     """Map HTTP 503 (and similar upstream overload) to a user-facing coder error message."""
@@ -105,6 +117,8 @@ class LLMCodingAgent:
         # 2. Create temporary directory to isolate code script from the current working environment
         with tempfile.TemporaryDirectory() as tmpdir:
             script_path = os.path.join(tmpdir, "temp_script.py")
+            # The code gets a file of its own, so a traceback names its own line numbers ("line 3").
+            code_path = os.path.join(tmpdir, GENERATED_CODE_FILE)
             input_file = os.path.join(tmpdir, 'input.pkl')
             output_file = os.path.join(tmpdir, 'result.pkl')
             input_dict = {
@@ -113,6 +127,8 @@ class LLMCodingAgent:
             }
             with open(input_file, 'wb') as f:
                 pickle.dump(input_dict, f)
+            with open(code_path, "w", encoding="utf-8") as f:
+                f.write(code_str)
             input_file_safe = input_file.replace(os.sep, '/')
             output_file_safe = output_file.replace(os.sep, '/')
             # 3. Add script wrapper to import required packages, define variables and handle output
@@ -131,7 +147,8 @@ is_series_input = input_dict['is_series_input']
 expected_type = pd.Series if is_series_input else pd.DataFrame
 expected_type_name = "Series" if is_series_input else "DataFrame"
 
-{code_str}
+with open("{GENERATED_CODE_FILE}", encoding="utf-8") as f:
+    exec(compile(f.read(), "{GENERATED_CODE_FILE}", "exec"))
 
 if 'clean_column' not in locals() and 'clean_column' not in globals():
     raise NameError("LLM code did not define the 'clean_column' function.")
@@ -153,7 +170,8 @@ sys.exit(0)
                     timeout=timeout,
                     check=True,
                     capture_output=True,
-                    text=True
+                    text=True,
+                    cwd=tmpdir,
                 )
                 result_file = os.path.join(tmpdir, "result.pkl")
                 with open(result_file, "rb") as f:
@@ -161,9 +179,9 @@ sys.exit(0)
             except subprocess.TimeoutExpired:
                 return f"Execution did not finish before {timeout} seconds timeout. Check for blocking statements."
             except subprocess.CalledProcessError as e:
-                stderr_text = e.stderr.strip()
-                error_msg = stderr_text.split("\n")[-1]
-                return error_msg
+                # The tail of the traceback: the failing line of the code and the value that broke it.
+                stderr_lines = e.stderr.strip().splitlines()
+                return "\n".join(stderr_lines[-TRACEBACK_LINES:])
 
     async def clean_column_async(self, 
                             df: pd.DataFrame, 
@@ -171,8 +189,26 @@ sys.exit(0)
                             column_type: str,
                             recommender_data: dict | None = None,
                             messages: list[dict[str, str]] | None = None
-                            ) -> tuple[pd.Series | None, str | None, list[dict] | None]:
-        """Generates and executes cleaning code for single column. With retries for code-level errors."""
+                            ) -> tuple[pd.Series | None, str | None, list[dict] | None, str | None]:
+        """Generates and executes cleaning code for single column. With retries for code-level errors.
+
+        Each attempt: wrap the code with the value table, run it, reject it if it empties filled cells,
+        then check it against the Recommender's examples. Returns the column, the final code, the coder
+        history and a note for the trace (the example check), or None for the column when nothing passed.
+        A value table without instructions needs no Coder: the code is the table alone and history is None.
+        """
+        recommender_data = recommender_data or {}
+        value_mapping = recommender_data.get("value_mapping")
+        instructions = [s for s in recommender_data.get("cleaning_instructions") or [] if str(s).strip()]
+        if value_mapping and not instructions and messages is None:
+            table_code = wrap_with_value_map(None, value_mapping)
+            exec_result = await self._execute_code_async(table_code, df, col)
+            if isinstance(exec_result, pd.Series):
+                return exec_result, table_code, None, "Value table only: the Coder was not called."
+            return None, f"The value table's code failed: {exec_result}", None, None
+        cases = example_cases(recommender_data)
+        empty_inputs = emptied_inputs(recommender_data)
+        best = None  # (failed examples, column, code, coder answer) of the closest attempt
         if messages is None:
             # 1. First time coder is called. Provide instructions
             messages = [{"role": "system", "content": self.system_prompt}]
@@ -199,67 +235,42 @@ sys.exit(0)
                     fix_prompt = f"The previous attempt resulted in an API error. Please regenerate the entire valid code string now. The error was: {llm_error_msg}"
                 retries_messages.append({"role": "user", "content": fix_prompt})
                 continue
-            # 3. Execute the LLM-generated code. If correct output type, return
-            exec_result = await self._execute_code_async(code_str, df, col)
-            if isinstance(exec_result, pd.Series):
-                messages.append({"role": self.llm_role, "content": llm_output})
-                return exec_result, code_str, messages
-            else:
-                exec_error_msg = exec_result
+            # 3. Wrap the code with the value table and run it. Wrong output type or a crash goes back.
+            final_code = wrap_with_value_map(code_str, value_mapping)
+            exec_result = await self._execute_code_async(final_code, df, col)
+            if not isinstance(exec_result, pd.Series):
                 fix_prompt = (
                     f"The Python code provided in the previous step failed during execution with the following error:"
-                    f"\n\n{exec_error_msg}\n\n"
+                    f"\n\n{exec_result}\n\n"
                     f"Please correct the code and provide the full, fixed executable code string again.")
-                retries_messages.append({"role": "user", "content": fix_prompt})
-        if last_api_unavailable_msg:
-            return None, last_api_unavailable_msg, messages
-        return None, None, messages
-    
-    async def clean_multi_col_async(self, 
-                            df: pd.DataFrame, 
-                            task_info: MultiColumnTask,
-                            recommender_data: dict | None = None,
-                            messages: list[dict[str, str]] | None = None
-                            ) -> tuple[pd.DataFrame | None, str | None, list[dict] | None]:
-        """Generates and executes cleaning code for multi-column operations. With retries for code-level errors."""
-        target_cols = task_info.target_columns
-        if messages is None:
-            # 1. First time coder is called. Provide instructions
-            messages = [{"role": "system", "content": self.system_prompt}]
-            initial_prompt = self.prompt_generator.create_prompt_coding_multi_col(
-                task_info, recommender_data, str(self.ALLOWED_PACKAGES))
-            messages.append({"role": "user", "content": initial_prompt})
-        # 2. Call LLM to generate code. With retries for incorrectly generated code
-        retries_messages = messages.copy()
-        last_api_unavailable_msg: str | None = None
-        for attempt in range(1, self.config.max_coding_attempts + 1):
-            code_str, llm_output, llm_error_msg = await self._call_llm_for_code_async(retries_messages)
-            if llm_output:
-                retries_messages.append({"role": self.llm_role, "content": llm_output})
-            if llm_error_msg:
-                if llm_error_msg.startswith("API error (HTTP 503 Service Unavailable)"):
-                    last_api_unavailable_msg = llm_error_msg
-                    if attempt < self.config.max_coding_attempts:
-                        await asyncio.sleep(3)
-                    continue
-                if llm_output:
-                    fix_prompt = f"The previous attempt resulted in an empty code string. Please regenerate the entire valid code string now. The error was: {llm_error_msg}"
-                else:             
-                    fix_prompt = f"The previous attempt resulted in an API error. Please regenerate the entire valid code string now. The error was: {llm_error_msg}"
                 retries_messages.append({"role": "user", "content": fix_prompt})
                 continue
-            # 3. Execute the LLM-generated code. If result is correct output type, return it
-            exec_result = await self._execute_code_async(code_str, df, target_cols)
-            if isinstance(exec_result, pd.DataFrame):
-                messages.append({"role": self.llm_role, "content": llm_output})
-                return exec_result, code_str, messages
-            else:
-                exec_error_msg = exec_result
+            # 4. Reject code that empties most filled cells that were not placeholders.
+            emptied, filled = emptied_share(df[col], exec_result, empty_inputs)
+            if filled and emptied / filled > self.config.max_emptied_share:
                 fix_prompt = (
-                    f"The Python code provided in the previous step failed during execution with the following error:"
-                    f"\n\n{exec_error_msg}\n\n"
-                    f"Please correct the code and provide the full, fixed executable code string again.")
+                    f"{emptied_feedback(emptied, filled)}\n\n"
+                    "Please correct the code and provide the full, fixed executable code string again.")
                 retries_messages.append({"role": "user", "content": fix_prompt})
+                continue
+            # 5. The Recommender's examples must come out as it said.
+            note = None
+            if cases:
+                inputs = pd.DataFrame({col: example_inputs(df[col], [source for source, _ in cases])})
+                failures = example_failures(await self._execute_code_async(final_code, inputs, col), cases)
+                note = example_note(len(failures), len(cases))
+                if failures:
+                    if best is None or len(failures) < best[0]:
+                        best = (len(failures), exec_result, final_code, llm_output)
+                    retries_messages.append({"role": "user", "content": example_feedback(failures, len(cases))})
+                    continue
+            messages.append({"role": self.llm_role, "content": llm_output})
+            return exec_result, final_code, messages, note
+        # 6. No attempt passed every example: the closest one that ran and passed the guard goes on.
+        if best is not None:
+            failed, exec_result, final_code, llm_output = best
+            messages.append({"role": self.llm_role, "content": llm_output})
+            return exec_result, final_code, messages, example_note(failed, len(cases))
         if last_api_unavailable_msg:
-            return None, last_api_unavailable_msg, messages
-        return None, None, messages
+            return None, last_api_unavailable_msg, messages, None
+        return None, None, messages, None

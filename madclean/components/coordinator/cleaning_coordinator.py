@@ -2,6 +2,7 @@ import asyncio
 import pandas as pd
 # Local imports
 from madclean.components.multi_agent_cleaner.multi_agent_cleaning import MultiAgentCleaning
+from madclean.components.multi_agent_cleaner.code_checks import keep_whole_numbers
 from madclean.components.dataprofiler.dataprofiler import MultiColumnCleaner
 from madclean.components.domain.schema import MultiColumnTask, ColumnProfile
 from madclean.components.domain.report import (
@@ -230,6 +231,9 @@ class CleaningCoordinator:
                 if final_cleaned_column is not None and col not in successfully_applied_cols:
                     df_cleaned[col] = final_cleaned_column
                     successfully_applied_cols.add(col)
+            # 6. Whole numbers the cleaning turned into decimals (64 into 64.0) go back to whole numbers.
+            for col in df_cleaned.columns:
+                df_cleaned[col] = keep_whole_numbers(df[col], df_cleaned[col])
 
             self.progress["status"] = "finished"
             return df_cleaned, CleaningReport(

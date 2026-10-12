@@ -62,6 +62,12 @@ class CleaningConfig:
     max_parse_attempts: int = 3
     max_coding_attempts: int = 3
 
+    # code checks
+    # Code that empties more than this share of the filled cells (placeholders left out) goes back to the coder.
+    max_emptied_share: float = 0.5
+    # Dependency violations listed in the recommender prompt, most rows first; the rest stay unchanged.
+    max_fd_violations_in_prompt: int = 100
+
     # concurrency
     semaphore_limit: int = 15
 

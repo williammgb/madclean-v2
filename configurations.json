@@ -42,6 +42,8 @@
   "max_multi_col_attempts": 3,
   "max_parse_attempts": 3,
   "max_coding_attempts": 3,
+  "max_emptied_share": 0.5,
+  "max_fd_violations_in_prompt": 100,
   "semaphore_limit": 15,
   "include_metadata": true,
   "skip_columns": []

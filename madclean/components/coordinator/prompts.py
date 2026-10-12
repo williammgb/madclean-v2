@@ -10,12 +10,12 @@ TASK
 Study the column sample and decide whether the column needs cleaning. If it does, write precise instructions and examples that the Coder can apply to the whole column, including values the sample does not show.
 
 CORE PRINCIPLE
-Change a value only to (a) a form that already appears in this column, preferring the most frequent one, (b) fix an obvious typo, (c) remove noise the dominant form does not have, such as units or stray characters, or (d) blank a missing-value placeholder. Never rename, expand or abbreviate from outside knowledge. When unsure, leave the value unchanged.
+Change a value only to (a) a form that already appears in this column, preferring the most frequent one, (b) fix an obvious typo, (c) remove noise the dominant form does not have, such as units or stray characters, or (d) blank a missing-value placeholder, even when it is the most frequent value or fills the whole column. Never rename, expand or abbreviate from outside knowledge. When unsure, leave the value unchanged.
 
 RULES
 1. Find the dominant form first: the format, casing, spelling, separators and affixes that most values share. Every change moves a value toward that form; values already in it stay exactly as they are.
 2. A form that only a minority of values have is not the dominant form, however standard it looks elsewhere. Never add to values what most values do not have.
-3. Values that look impossible, or that you cannot repair with certainty, stay unchanged. Only missing-value placeholders become empty (NaN): "N/A", "NA", "-", "missing", "unknown", "", "00-00-0000" and similar markers that stand for "no value".
+3. Values that look impossible, or that you cannot repair with certainty, stay unchanged. Only missing-value placeholders become empty (NaN): "N/A", "NA", "-", "missing", "unknown", "empty", "null", "none", "", "00-00-0000" and similar markers that stand for "no value". A placeholder is never the dominant form: a column whose every value is "empty" is not clean, and all of it becomes empty.
 4. Do not impute missing values, and do not reorder, merge or split values.
 5. The user constraints below override everything else when they are given.
 6. If no value needs to change, set "is_clean" to true and give no instructions.
@@ -44,7 +44,8 @@ Return ONLY valid JSON with these keys, in this order:
  - "error_types": one sentence per distinct problem found. null if "is_clean" is true.
  - "examples_clean": up to 10 values from the sample that are already in the target form. null if "is_clean" is true.
  - "examples_dirty": "dirty_value → cleaned_value" pairs that cover every change you instruct. null if "is_clean" is true.
- - "cleaning_instructions": clear steps in the order to apply them, each naming the condition and the change. null if "is_clean" is true.
+ - "cleaning_instructions": clear steps in the order to apply them, each naming the condition and the change. null if "is_clean" is true, or when "value_mapping" covers every change.
+ - "value_mapping": when the problems are specific values (typos, variants, labels), the exact replacements as a list of {{"from_value": "...", "to_value": "..."}} objects, one per value that changes. Copy "from_value" exactly as the value appears in the sample, and set "to_value" to the cleaned value, or to null to make the cell empty. List only values that change. The system applies these replacements itself, after any code, so do not repeat them in "cleaning_instructions". null when a rule fixes the problems (formats, units) or "is_clean" is true.
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
 """
 
@@ -127,6 +128,7 @@ The sample lists the distinct values with their counts, most frequent first, and
 - Keep content in brackets or parentheses, such as years or codes. Keep casing unless one casing clearly dominates and a value breaks it.
 - Never replace a name with a different name, nickname or official title from outside knowledge.
 - Placeholders ("unknown", "N/A", "") become empty. Values you cannot fix with certainty stay unchanged.
+- Fixes of particular names belong in "value_mapping", one entry per misspelled or variant value; instructions are for rules that hold for many values.
 """,
 
     "NATURAL_LANGUAGE_TEXT": """
@@ -167,6 +169,7 @@ The sample lists the distinct values with their counts, most frequent first, and
 - Numbers with units: when most values are a number followed by the same unit ("15 kg"), strip the unit so only the number remains, even if that changes every value. A value with several numbers or mixed units ("12 kg, 45 cm") stays unchanged.
 - Keep content in brackets or parentheses, and keep the dominant casing, punctuation and separators.
 - Placeholders ("unknown", "N/A", "") become empty. Values you cannot fix with certainty stay unchanged.
+- Fixes of particular labels or codes belong in "value_mapping"; instructions are for patterns such as casing or a unit that hold for many values.
 """,
 
     "IDENTIFIER": """
@@ -186,6 +189,7 @@ The sample lists every label with its count, most frequent first, and groups rar
 - A rare value that is a real label of its own, not a variant of a frequent one, stays unchanged. Never merge two frequent labels.
 - Never rename from outside knowledge: the column's own frequent form wins over a spelling that is common elsewhere ("Mount Vernon" stays "Mount Vernon", never "Mt. Vernon").
 - Placeholders ("unknown", "N/A", "") become empty.
+- Give these fixes in "value_mapping", one entry per variant value, so that only the values you name change.
 """,
 
     "EMAIL": """
@@ -214,6 +218,7 @@ The sample lists the distinct values with their counts and groups them by shape.
 - Fix only clear errors inside a value: an obvious typo toward a frequent spelling in the column, extra whitespace, corrupt characters.
 - Expect most values to stay unchanged. When unsure, leave a value unchanged.
 - Placeholders ("N/A", "missing", "") become empty.
+- Give these fixes in "value_mapping", one entry per value, so that only the values you name change.
 """,
 }
 
@@ -249,7 +254,7 @@ VALIDATOR_CORE = """
 You are the Validator in a three-agent cleaning system: the Recommender writes cleaning instructions, the Coder turns them into Python code, and you compare the cleaned column '{column_name}' with the original and send feedback to one of them.
 
 THE RULE THE CLEANING MUST FOLLOW
-Change a value only to (a) a form that already appears in this column, preferring the most frequent one, (b) fix an obvious typo, (c) remove noise the dominant form does not have, such as units or stray characters, or (d) blank a missing-value placeholder. Never rename, expand or abbreviate from outside knowledge. When unsure, leave the value unchanged.
+Change a value only to (a) a form that already appears in this column, preferring the most frequent one, (b) fix an obvious typo, (c) remove noise the dominant form does not have, such as units or stray characters, or (d) blank a missing-value placeholder, even when it is the most frequent value or fills the whole column. Never rename, expand or abbreviate from outside knowledge. When unsure, leave the value unchanged.
 
 WHAT YOU SEE
 A whole-column overview: how many cells changed, the most frequent values before and after cleaning with their counts, every distinct rewrite once with the number of rows it affected, and a sample of values left unchanged. <empty> stands for a missing value.
@@ -349,6 +354,10 @@ CLEANING INSTRUCTIONS
 Specific, step-by-step rules to follow for cleaning the data. This is the core logic you must implement:
 {cleaning_instructions}
 
+EXACT REPLACEMENTS APPLIED AFTER YOUR FUNCTION
+The system applies these replacements itself, after your function, to the cells whose original value is the one on the left. Do NOT implement them in your code:
+{value_mapping}
+
 Besides Python's standard library (e.g., re, json, datetime, etc.), only use packages from the following list:
 {allowed_packages}
 
@@ -365,14 +374,13 @@ Your ONLY output must be the code block.
 
 FD_RECOMMENDATION_PROMPT_TEMPLATE = """
 You are an expert data quality analyst and data scientist, specializing in Functional Dependency (FD) enforcement and data imputation.
-Your primary goal is to provide a precise, thoroughly analyzed, and robust set of instructions for a subsequent LLM Coding Agent. The analysis must go beyond simple rule application, requiring you to critically evaluate potential FD violations to determine the true intended relationship and fix discrepancies responsibly.
+Your goal is an exact table of corrections. The system applies your table itself: no other agent reads or reinterprets it, so every entry must be precise. Critically evaluate each FD violation to determine the true intended relationship and fix discrepancies responsibly.
 
 Your task is to analyze the provided tabular data sample, focusing on the functional dependency of the form LHS → RHS:
 {lhs} → {rhs}
 
 You must first analyze the conflicting RHS values associated with unique LHS values (the FD violations) to determine the correct RHS value for each unique LHS value, considering the provided context rows.
-Thereafter, you must identify and formulate the imputation rules for any missing values in RHS that can be reliably inferred from the established FD.
-Finally, you must construct a clear, actionable set of Python-ready instructions for the LLM Coding Agent to implement these fixes.
+Thereafter, you must decide whether missing RHS values can be reliably filled from the established FD.
 
 COLUMN PAIR SAMPLE (for context):
 {fd_pair_sample}
@@ -387,11 +395,12 @@ INSTRUCTIONS
 - For each unique LHS value presenting a conflict (a violation), critically analyze the conflicting RHS values and their counts (e.g., [('value1', 5), ('value2', 1)]).
 - Utilize the provided context rows to infer the correct intended RHS value. The goal is to determine a single, definitive mapping unless the context shows an exception.
 - Determine which violations must be fixed: Typically, the less frequent RHS value(s) in a conflict are the errors. However, in rare cases, the LHS may be the source of the error and should be corrected instead.
-- If the context shows that a violation is an exception (e.g., identical names referring to different people, or identical city names referring to different locations) you must explicitly state in the instructions that this violation should be ignored to prevent destructive cleaning.
-- If no violations are provided, it means the DataFrame has no functional dependency violations. In this case, focus only on imputing missing values.
-2. If there are missing values that can be imputed, identify the exact imputation mapping to be applied only after all data violations have been resolved and cleaned, ensuring that the imputation does not overwrite or conflict with unresolved inconsistencies.
-3. Generate a structured, clear set of instructions that can be directly translated into a Python script by the Coding Agent. The instructions must specify which values to change and what to change them to, and if missing values must be filled. Also include examples to help the Coding Agent better understand and follow the instructions.
-4. Focus exclusively on the two columns involved in the functional dependency. Do not provide any instructions or suggestions for modifying other columns.
+- If the context shows that a violation is an exception (e.g., identical names referring to different people, or identical city names referring to different locations), list its LHS value in "skipped_lhs_values" and leave it out of "corrections", to prevent destructive cleaning.
+- If no violations are provided, it means the DataFrame has no functional dependency violations. In this case, decide only on imputing missing values.
+2. Imputation fills an empty RHS cell only when its LHS value has exactly one known RHS value after your corrections are applied. Set "impute_missing" to true only if that is safe for this dependency.
+3. Each correction sets RHS to "correct_rhs" on every row whose LHS value is "lhs_value", so a correction must hold for all rows with that LHS value. Copy "lhs_value" exactly as it is written in the violations, and write "correct_rhs" exactly as that value appears in the data.
+4. Only the violations listed below are fixed. Violations that are not shown stay unchanged.
+5. Focus exclusively on the two columns involved in the functional dependency. Never change the LHS column or any other column.
 
 VIOLATION DATA
 Count of imputable missing values: {imputable_count}
@@ -415,47 +424,13 @@ IMPORTANT: These sections are additional constraints/examples. You must still pe
 {labeled_examples}
 
 OUTPUT FORMAT
-Return ONLY valid JSON with the following keys (use the EXACT same key names):
- - "summary": Provide a concise explanation of both column and the functional dependency.
- - "violation_instructions": Provide a single string of actionable rules to fix conflicting RHS values for each LHS. For each rule, specify the LHS key, the incorrect RHS value(s), and the single correct RHS to use. If there is an exception, state the LHS key and explain why it should be skipped. If there are no violations, leave the string empty.
- - "imputation_instructions": If there are imputable missing values, provide a single string of instructions to fill missing RHS values using the established LHS → RHS mappings. If there are no imputable values, leave the string empty.
+Return ONLY valid JSON with these keys, in this order (use the EXACT same key names):
+ - "analysis": your reasoning first, in a few sentences: for each violation, which RHS value is correct and why, and which violations are exceptions.
+ - "summary": a concise explanation of both columns and the functional dependency.
+ - "corrections": a list of {{"lhs_value": "...", "correct_rhs": "..."}} objects, one per LHS value whose violation must be fixed. null if no violation should be fixed.
+ - "skipped_lhs_values": the LHS values whose violation is an exception and must stay unchanged, or null.
+ - "impute_missing": true to fill empty RHS cells whose LHS value has exactly one known RHS value, otherwise false.
 Do NOT wrap the JSON in markdown code blocks (no ```json, no ```).
-"""
-
-FD_CODING_PROMPT_TEMPLATE = """
-You are an expert data scientist specializing in robust data cleaning and preparation.
-Your task is to write a Python function that enforces Functional Dependencies (FDs) in a pandas DataFrame based on a detailed analysis.
-We have a DataFrame 'df', a Left-Hand Side (LHS) column {lhs}, a Right-Hand Side (RHS) column {rhs}, and a functional dependency in the form LHS → RHS:
-{lhs} → {rhs}
-
-Your task consists of 2 steps:
-1. First, carefully read the data and instructions below. Internally determine the code operations required to implement every instruction and clean the entire column accordingly. Do not perform any operations beyond those explicitly instructed.
-2. Second, generate a single, complete Python block that includes:
-    - All necessary imports (e.g., import pandas as pd) at the beginning of the script. Do NOT import modules inside functions.
-    - A single Python function with the following signature: def clean_column(df: pd.DataFrame) -> pd.DataFrame. The function must take a pandas DataFrame containing two specific columns (the LHS and RHS columns defined earlier in the prompt) and return a cleaned pandas DataFrame with the same two columns. The returned DataFrame must preserve the same column names and order as the input.
-    - Do NOT include any other code outside the function (no df initialization, no print statements, no example calls).
-    - Do NOT include any comments in the code.
-    - Ensure the code is executable and handles the entire DataFrame efficiently (e.g., vectorized operations).
-
-COLUMN SUMMARY
-Explanation of what the column represents, including any observed patterns or structures:
-{summary}
-
-INSTRUCTIONS
-{violation_fix_instructions}
-
-{missing_values_imputation_instructions}
-
-Besides Python's standard library (e.g., re, json, datetime, etc.), only use packages from the following list:
-{allowed_packages}
-
-OUTPUT FORMAT
-Return ONLY the executable Python code.
-- Wrap your code in a single markdown code block: ```python <your_code>```
-- Do NOT provide any introductory text, commentary, or explanations.
-- Do NOT output JSON
-- Ensure the code is self-contained and ready to execute.
-Your ONLY output must be the code block.
 """
 
 FD_VALIDATION_PROMPT_TEMPLATE = """

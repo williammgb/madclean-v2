@@ -74,15 +74,23 @@ class FakeLLMClient(BaseLLMClient):
                 "cleaning_instructions": ["Return the column unchanged."],
             })
         if kind == "fd_recommender":
+            # No corrections and no imputation: the dependency is left as it is.
             return json.dumps({
+                "analysis": "Fake dependency analysis.",
                 "summary": "Fake dependency recommendation.",
-                "violation_instructions": "Leave conflicting values unchanged.",
-                "imputation_instructions": "Leave missing values unchanged.",
+                "corrections": None,
+                "skipped_lhs_values": None,
+                "impute_missing": False,
             })
         return json.dumps({"needs_correction": False, "feedback_target": None, "correction_instructions": ""})
 
     def calls_for(self, kind: str) -> list[list[dict]]:
         return [messages for call_kind, messages in self.calls if call_kind == kind]
+
+    @property
+    def coder_calls(self) -> int:
+        """How many times the Coder was asked for code."""
+        return len(self.calls_for("coder"))
 
     def llm_config(self) -> LLMSpec:
         """A registry entry, as Pipeline expects from LLM_CLIENT_MAP."""

@@ -55,6 +55,16 @@ CLEAN_RECOMMENDATION = json.dumps({
 
 NOT_JSON = "I am afraid I cannot answer that."
 
+# The dependency answer is a table the system turns into code: E5's "Lelystad" becomes "Almere", and
+# F6's empty city is filled from its one known city.
+FD_TABLE = json.dumps({
+    "analysis": "E5 is Almere twice and Lelystad once; F6 has one known city.",
+    "summary": "Each code belongs to one city.",
+    "corrections": [{"lhs_value": "E5", "correct_rhs": "Almere"}],
+    "skipped_lhs_values": None,
+    "impute_missing": True,
+})
+
 UPPER_CODE = (
     "import pandas as pd\n"
     "\n"
@@ -104,12 +114,13 @@ class Script:
 
     def __call__(self, kind, messages):
         key = (kind, self.key_for(messages))
+        # Every call is counted, scripted or not, so a scenario can assert an agent was never asked.
+        index = self.seen[key]
+        self.seen[key] += 1
         answers = self.answers.get(key)
         if not answers:
             return None
-        index = min(self.seen[key], len(answers) - 1)
-        self.seen[key] += 1
-        return answers[index]
+        return answers[min(index, len(answers) - 1)]
 
 
 # --------------------------------------------------------------------------------------
@@ -317,7 +328,7 @@ def test_defaults(tmp_path, fast_env):
         **dependency_columns(),
     })
     script = Script(
-        {("recommender", "colclean"): [CLEAN_RECOMMENDATION]},
+        {("recommender", "colclean"): [CLEAN_RECOMMENDATION], ("fd_recommender", FD_KEY): [FD_TABLE]},
         columns=("colstr", "colnum", "colclean", "colskip", "colempty", "codex", "cityx"),
         fd_key=FD_KEY,
     )
@@ -344,6 +355,11 @@ def test_defaults(tmp_path, fast_env):
     }
     assert report[FD_KEY]["cleaned"] is True and report[FD_KEY]["cleaning_validated"] is False
     assert report[FD_KEY]["target_columns"] == ["codex", "cityx"]
+    # The table reached the data without a dependency coder: Lelystad became Almere, F6 got Venlo.
+    assert [step["id"] for step in report[FD_KEY]["trace_steps"]] == ["fd_recommender_1", "fd_code_1"]
+    assert script.seen[("coder", FD_KEY)] == 0
+    rows = recording["table"]["csv"].splitlines()[1:]
+    assert [row.split(",")[-1] for row in rows][14:18] == ["Almere", "Venlo", "Venlo", "Venlo"]
 
     compare_with_reference("defaults", recording)
 
@@ -368,6 +384,7 @@ def test_feedback_loops(tmp_path, fast_env):
             # Three invalid answers exhaust the parse retries, so the loop itself asks again.
             ("recommender", "colbadjson"): [NOT_JSON, NOT_JSON, NOT_JSON, None],
             ("coder", "colbreak"): [code_answer(BROKEN_CODE), code_answer(IDENTITY_CODE)],
+            ("fd_recommender", FD_KEY): [FD_TABLE],
             ("validator", FD_KEY): [validator_answer(True, "CODER", "Impute the missing city."), validator_answer(False)],
         },
         columns=("colcoder", "colreject", "colbadjson", "colbreak", "codex", "cityx"),
@@ -389,6 +406,12 @@ def test_feedback_loops(tmp_path, fast_env):
     assert report["colbreak"]["trace_steps"][1]["status"] == "failed"
     assert report[FD_KEY]["cleaned"] is True and report[FD_KEY]["cleaning_validated"] is True
     assert report[FD_KEY]["attempts"] == 2
+    # Feedback meant for a coder went to the Recommender: there is no dependency coder.
+    assert script.seen[("fd_recommender", FD_KEY)] == 2
+    assert script.seen[("coder", FD_KEY)] == 0
+    assert [step["id"] for step in report[FD_KEY]["trace_steps"]] == [
+        "fd_recommender_1", "fd_code_1", "fd_validator_1", "fd_recommender_2", "fd_code_2", "fd_validator_2",
+    ]
 
     compare_with_reference("feedback_loops", recording)
 
@@ -397,7 +420,7 @@ def test_validator_leave_uncleaned(tmp_path, fast_env):
     """A validator that never answers leaves both the column and the FD task uncleaned."""
     frame = pd.DataFrame({"colstr": string_column("colstr"), **dependency_columns()})
     script = Script(
-        {("validator", "colstr"): [NOT_JSON], ("validator", FD_KEY): [NOT_JSON]},
+        {("validator", "colstr"): [NOT_JSON], ("fd_recommender", FD_KEY): [FD_TABLE], ("validator", FD_KEY): [NOT_JSON]},
         columns=("colstr", "codex", "cityx"),
         fd_key=FD_KEY,
     )
@@ -411,6 +434,7 @@ def test_validator_leave_uncleaned(tmp_path, fast_env):
     assert report["colstr"]["cleaned"] is False
     assert report["colstr"]["reason"] == "Validator failed and strategy is leave_uncleaned"
     assert report[FD_KEY]["reason"] == "Validator failed and strategy is leave_uncleaned"
+    assert script.seen[("coder", FD_KEY)] == 0
     # The column was left uncleaned, so the uppercase code did not reach the table.
     assert recording["table"]["csv"].splitlines()[1].startswith("colstr_anna")
 
@@ -468,8 +492,14 @@ def test_user_validation(tmp_path, fast_env):
         seen[column] += 1
         return answers[index]
 
+    script = Script(
+        {("fd_recommender", FD_KEY): [FD_TABLE]},
+        columns=("colcoder", "colfail", "codex", "cityx"),
+        fd_key=FD_KEY,
+    )
+
     recording, report = run_scenario(
-        tmp_path, frame, coder_code=UPPER_CODE, user_validation=decide,
+        tmp_path, frame, script=script, coder_code=UPPER_CODE, user_validation=decide,
         max_cleaning_attempts=3, max_multi_col_attempts=2,
         enable_user_validation=True, enable_validation_multi=True,
     )
@@ -477,6 +507,7 @@ def test_user_validation(tmp_path, fast_env):
     assert report["colcoder"]["attempts"] == 3 and report["colcoder"]["cleaning_validated"] is True
     assert report["colfail"]["cleaned"] is False and report["colfail"]["attempts"] == 3
     assert report[FD_KEY]["cleaned"] is True and report[FD_KEY]["cleaning_validated"] is True
+    assert script.seen[("coder", FD_KEY)] == 0
     assert len(recording["reviews"]["user_validation::colcoder"]) == 3
     assert recording["reviews"]["user_validation::colcoder"][0]["sample_rows"], "the review sample must not be empty"
 

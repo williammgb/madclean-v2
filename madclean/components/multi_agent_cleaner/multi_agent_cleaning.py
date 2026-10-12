@@ -21,6 +21,14 @@ from madclean.components.domain.report import (
     TraceStep,
 )
 from madclean.utils.helpers import align_dirty_cleaned_series, seeded_random
+from madclean.components.multi_agent_cleaner.code_checks import (
+    MAX_VALUE_MAP_ENTRIES,
+    dependency_code_from_table,
+    dependency_table,
+    quoted,
+    unmatched_lhs_values,
+    value_table,
+)
 
 # Which column or dependency task the calls of this asyncio task belong to. Columns are cleaned
 # concurrently through one shared set of agents, so the task's own context is the only place that
@@ -133,6 +141,12 @@ class MultiAgentCleaning:
             else:
                 rendered = str(val)
             parts.append(f"{label}:\n{rendered}")
+        table, left_out = value_table(recommender_data.get("value_mapping"))
+        if table:
+            rows = [f"- {quoted(old)} → {quoted(new)}" for old, new in table.items()]
+            if left_out:
+                rows.append(f"- … {left_out} more entries ignored (only the first {MAX_VALUE_MAP_ENTRIES} are used)")
+            parts.append("Value Table:\n" + "\n".join(rows))
         return "\n\n".join(parts).strip()
 
     @staticmethod
@@ -251,22 +265,14 @@ class MultiAgentCleaning:
         summary = str(recommender_data.get("summary", "") or "").strip()
         if summary:
             parts.append(f"Summary:\n{summary}")
-        for label, key in [
-            ("Violation Instructions", "violation_instructions"),
-            ("Imputation Instructions", "imputation_instructions"),
-            ("Examples Dirty", "examples_dirty"),
-            ("Examples Clean", "examples_clean"),
-        ]:
-            val = recommender_data.get(key)
-            if val is None or val == "":
-                continue
-            if isinstance(val, list):
-                rendered = "\n".join(f"- {json.dumps(v, default=str) if isinstance(v, (dict, list)) else str(v)}" for v in val)
-            elif isinstance(val, dict):
-                rendered = "\n".join(f"- {k}: {v}" for k, v in val.items())
-            else:
-                rendered = str(val)
-            parts.append(f"{label}:\n{rendered}")
+        corrections = [c for c in recommender_data.get("corrections") or [] if isinstance(c, dict)]
+        if corrections:
+            parts.append("Corrections (left-hand value → correct right-hand value):\n" + "\n".join(
+                f"- {quoted(c.get('lhs_value'))} → {quoted(c.get('correct_rhs'))}" for c in corrections))
+        skipped = recommender_data.get("skipped_lhs_values") or []
+        if skipped:
+            parts.append("Skipped (exceptions left unchanged):\n" + "\n".join(f"- {quoted(v)}" for v in skipped))
+        parts.append(f"Impute missing: {'yes' if recommender_data.get('impute_missing') else 'no'}")
         return "\n\n".join(parts).strip()
 
     def _sampler(self, purpose: str, key: str, attempt: int):
@@ -779,17 +785,19 @@ class MultiAgentCleaning:
                         break
                 coder_history = None
             # 2. Pass instructions of Recommender Agent to Coding Agent
-            cleaned_column, final_code_str, new_coder_history = await self.coding_agent.clean_column_async(
-                df, col, column_type, 
-                recommender_data=recommender_data, 
+            cleaned_column, final_code_str, new_coder_history, coder_note = await self.coding_agent.clean_column_async(
+                df, col, column_type,
+                recommender_data=recommender_data,
                 messages=coder_history)
             coder_history = new_coder_history
             _coder_status = "ok" if cleaned_column is not None else (
                 "api_unavailable" if isinstance(final_code_str, str) and final_code_str.startswith("API error (HTTP 503 Service Unavailable)")
                 else "failed"
             )
+            coder_output = self._trace_text(final_code_str)
             coder_step = self._add_step(col, trace_steps, self._attempt_step(
-                "coder", "Coder", attempt, _coder_status, self._trace_text(final_code_str)
+                "coder", "Coder", attempt, _coder_status,
+                f"{coder_note}\n\n{coder_output}" if coder_note else coder_output,
             ))
             if cleaned_column is not None and self._hitl_applies_to_column(col):
                 reviewed_code = await asyncio.to_thread(
@@ -879,6 +887,9 @@ class MultiAgentCleaning:
                     return col, cleaned_column, msg
                 if attempt == self.config.max_cleaning_attempts - 1:
                     break
+                # A value table alone had no Coder, so its feedback goes to the Recommender.
+                if feedback_target == 'CODER' and coder_history is None:
+                    feedback_target = 'RECOMMENDER'
                 # A person's review carries no issue kind, so the wording is neutral.
                 feedback_prompt = self._feedback_message(feedback_target, correction_instructions)
                 if feedback_target == 'CODER':
@@ -964,6 +975,8 @@ class MultiAgentCleaning:
                     return col, kept_column, msg
                 break
             if self.verbose: print(f"[{col}] Validation Agent detected unintended changes or missed errors; updating cleaning operations.")
+            if feedback_target == 'CODER' and coder_history is None:
+                feedback_target = 'RECOMMENDER'
             feedback_prompt = self._feedback_message(feedback_target, correction_instructions, validation_details)
             if feedback_target == 'CODER':
                 coder_history.append({"role": "user", "content": feedback_prompt})
@@ -978,10 +991,34 @@ class MultiAgentCleaning:
         )
         return col, None, msg
 
+    @staticmethod
+    async def _run_dependency_table(
+        df: pd.DataFrame, task_info: MultiColumnTask, recommender_data: dict
+    ) -> tuple[pd.DataFrame | str | None, str | None, str]:
+        """Builds the dependency code from the Recommender's table and runs it.
+
+        Returns the result (an error message when the code failed), the code, and a note for the trace
+        naming corrections that match no row. The code is None when the table changes nothing.
+        """
+        lhs, rhs = task_info.target_columns
+        table, unusable = dependency_table(recommender_data.get("corrections"), df[rhs].dtype)
+        impute_missing = bool(recommender_data.get("impute_missing"))
+        notes = []
+        unmatched = unmatched_lhs_values(df[lhs], table)
+        if unmatched:
+            notes.append(f"Unmatched left-hand values (no row has them): {', '.join(quoted(v) for v in unmatched)}")
+        if unusable:
+            notes.append(f"Left out, correct value is not a number for '{rhs}': {', '.join(quoted(v) for v in unusable)}")
+        note = "\n".join(notes)
+        if not table and not impute_missing:
+            return None, None, note
+        code = dependency_code_from_table(lhs, rhs, table, impute_missing)
+        result = await LLMCodingAgent._execute_code_async(code, df, [lhs, rhs])
+        return result, code, note
+
     async def _run_multi_col_cleaning_async(self, df: pd.DataFrame, task_info: MultiColumnTask) -> tuple[list[str], pd.DataFrame | None, str]:
-        """Manages the cleaning and verification workflow for a multi-column operations. This is the core interaction loop."""          
+        """Manages the cleaning and verification workflow for a multi-column operations. This is the core interaction loop."""
         recommender_history = None
-        coder_history = None
         validator_history = None
         recommender_data = None
         cleaned_targets = None 
@@ -1023,17 +1060,26 @@ class MultiAgentCleaning:
                         continue
                     else:
                         break
-                coder_history = None
-            # 2. Pass instructions of Recommender Agent to Coding Agent
-            cleaned_targets, _final_code_str, new_coder_history = await self.coding_agent.clean_multi_col_async( 
-                df, task_info, recommender_data, messages=coder_history)
-            coder_history = new_coder_history
-            _fd_coder_status = "ok" if cleaned_targets is not None else (
-                "api_unavailable" if isinstance(_final_code_str, str) and _final_code_str.startswith("API error (HTTP 503 Service Unavailable)")
-                else "failed"
-            )
+            # 2. The Recommender's table becomes code the system writes and runs itself; there is no Coder here.
+            run_result, table_code, table_note = await self._run_dependency_table(df, task_info, recommender_data)
+            if table_code is None:
+                self._add_step(task_key, trace_steps, self._attempt_step(
+                    "fd_code", "Code from table", attempt, "ok",
+                    "\n\n".join(filter(None, ["No corrections and no imputation: nothing to change.", table_note])),
+                ))
+                msg = f"[{task_key}] The dependency needs no change."
+                self._finish_fd(
+                    task_key, target_cols, trace_steps, None,
+                    attempts=attempt + 1, cleaned=False, validated=False,
+                    output="The Recommender found nothing to change.",
+                )
+                return target_cols, None, msg
+            _final_code_str = table_code
+            cleaned_targets = run_result if isinstance(run_result, pd.DataFrame) else None
+            table_error = None if cleaned_targets is not None else str(run_result)
             fd_coder_step = self._add_step(task_key, trace_steps, self._attempt_step(
-                "fd_coder", "Coder", attempt, _fd_coder_status, self._trace_text(_final_code_str)
+                "fd_code", "Code from table", attempt, "ok" if cleaned_targets is not None else "failed",
+                "\n\n".join(filter(None, [table_error, table_note, self._trace_text(_final_code_str)])),
             ))
             if cleaned_targets is not None and self._hitl_applies_to_fd_task(target_cols):
                 reviewed_code = self._request_hitl_code_review_fd(task_key, target_cols, attempt, _final_code_str or "")
@@ -1047,21 +1093,21 @@ class MultiAgentCleaning:
                         self._emit_step(task_key, fd_coder_step)
                     else:
                         self._emit_step(task_key, TraceStep(
-                            id=f"fd_coder_user_edit_{attempt + 1}",
+                            id=f"fd_code_user_edit_{attempt + 1}",
                             title="User code review",
                             status="needs_correction",
-                            output=f"Edited code failed to execute: {exec_result!s}. Using coder output.",
+                            output=f"Edited code failed to execute: {exec_result!s}. Using the code from the table.",
                         ))
-            # 3. If Coding Agent could not generate valid code, send feedback to Recommender to provide better instructions
-            if cleaned_targets is None: 
+            # 3. If the code from the table failed, the Recommender gets the error and gives a new table
+            if cleaned_targets is None:
                 if attempt == self.config.max_multi_col_attempts -1:
                     break
                 feedback_target = 'RECOMMENDER'
                 feedback_prompt = (
-                    "Validation Feedback: Your last set of instructions caused the Coding Agent to fail. "
-                    "It produced invalid code. "
-                    "This often means the instructions were too complex or ambiguous. "
-                    "Please re-write your instructions."
+                    "Validation Feedback: The code built from your corrections failed with this error:\n\n"
+                    f"{table_error}\n\n"
+                    "Write every lhs_value and correct_rhs exactly as the values appear in the data, "
+                    "and give the full answer again."
                 )
                 if recommender_history:
                     recommender_history.append({"role": "user", "content": feedback_prompt})
@@ -1108,13 +1154,11 @@ class MultiAgentCleaning:
                     return target_cols, cleaned_targets, msg
                 if attempt == self.config.max_multi_col_attempts - 1:
                     break
-                # A person's review carries no issue kind, so the wording is neutral.
-                feedback_prompt = self._feedback_message(
-                    feedback_target, correction_instructions, code_request="Provide the new valid, executable code.")
-                if feedback_target == 'CODER':
-                    coder_history.append({"role": "user", "content": feedback_prompt})
-                elif feedback_target == 'RECOMMENDER':
-                    recommender_history.append({"role": "user", "content": feedback_prompt})
+                # There is no Coder on this path, so every review goes to the Recommender. A person's
+                # review carries no issue kind, so the wording is neutral.
+                feedback_target = 'RECOMMENDER'
+                feedback_prompt = self._feedback_message(feedback_target, correction_instructions)
+                recommender_history.append({"role": "user", "content": feedback_prompt})
                 continue
 
             last_attempt = attempt == (self.config.max_multi_col_attempts - 1)
@@ -1196,13 +1240,10 @@ class MultiAgentCleaning:
                 return target_cols, cleaned_targets, msg
             if attempt == self.config.max_multi_col_attempts - 1:
                 break
-            feedback_prompt = self._feedback_message(
-                feedback_target, correction_instructions, validation_details,
-                code_request="Provide the new valid, executable code.")
-            if feedback_target == 'CODER':
-                coder_history.append({"role": "user", "content": feedback_prompt})
-            elif feedback_target == 'RECOMMENDER':
-                recommender_history.append({"role": "user", "content": feedback_prompt})
+            # There is no Coder on this path: feedback meant for it goes to the Recommender.
+            feedback_target = 'RECOMMENDER'
+            feedback_prompt = self._feedback_message(feedback_target, correction_instructions, validation_details)
+            recommender_history.append({"role": "user", "content": feedback_prompt})
         msg = f"[{task_key}] FAILED cleaning after {self.config.max_multi_col_attempts} attempts."
         self._finish_fd(
             task_key, target_cols, trace_steps, _final_code_str,

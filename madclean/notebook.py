@@ -8,10 +8,13 @@ so it runs anywhere, costs nothing and gives the same answer every time.
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 from dataclasses import asdict, is_dataclass
 from typing import Any
+
+from madclean.components.multi_agent_cleaner.code_checks import keep_whole_numbers
 
 # Cells are plain Jupyter v4; no notebook library is needed to write one.
 NOTEBOOK_FORMAT = {"nbformat": 4, "nbformat_minor": 5}
@@ -75,6 +78,11 @@ def cleaning_functions(report: Any) -> tuple[list[str], list[str], list[str]]:
 
     if functions and "import pandas as pd" not in imports:
         imports.insert(0, "import pandas as pd")
+    if functions:
+        # The run's last step: whole numbers the cleaning turned into decimals go back to whole numbers.
+        functions.append(inspect.getsource(keep_whole_numbers).strip())
+        calls.insert(0, "    dirty = df.copy()")
+        calls += ["    for column in df.columns:", "        df[column] = keep_whole_numbers(dirty[column], df[column])"]
     return imports, functions, calls
 
 

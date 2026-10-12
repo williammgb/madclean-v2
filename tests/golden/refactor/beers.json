@@ -43,8 +43,30 @@
         }
       ]
     },
-    "state": {
-      "datatype": "CATEGORICAL",
+    "abv": {
+      "datatype": "FLOAT",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        }
+      ]
+    },
+    "ounces": {
+      "datatype": "DIRTY_FLOAT",
       "already_clean": false,
       "cleaned": true,
       "attempts": 1,
@@ -71,52 +93,8 @@
         }
       ]
     },
-    "abv": {
-      "datatype": "FLOAT",
-      "already_clean": false,
-      "cleaned": true,
-      "attempts": 1,
-      "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": false,
-      "trace_steps": [
-        {
-          "id": "recommender_1",
-          "title": "Recommender (attempt 1)",
-          "status": "ok",
-          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
-        },
-        {
-          "id": "coder_1",
-          "title": "Coder (attempt 1)",
-          "status": "ok",
-          "output": "def clean_column(data):\n    return data"
-        }
-      ]
-    },
-    "ibu": {
-      "datatype": "INTEGER",
-      "already_clean": false,
-      "cleaned": true,
-      "attempts": 1,
-      "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": false,
-      "trace_steps": [
-        {
-          "id": "recommender_1",
-          "title": "Recommender (attempt 1)",
-          "status": "ok",
-          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
-        },
-        {
-          "id": "coder_1",
-          "title": "Coder (attempt 1)",
-          "status": "ok",
-          "output": "def clean_column(data):\n    return data"
-        }
-      ]
-    },
-    "ounces": {
-      "datatype": "DIRTY_FLOAT",
+    "state": {
+      "datatype": "CATEGORICAL",
       "already_clean": false,
       "cleaned": true,
       "attempts": 1,
@@ -171,6 +149,34 @@
         }
       ]
     },
+    "brewery_id": {
+      "datatype": "IDENTIFIER",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
     "id": {
       "datatype": "IDENTIFIER",
       "already_clean": false,
@@ -199,13 +205,13 @@
         }
       ]
     },
-    "brewery_id": {
-      "datatype": "IDENTIFIER",
+    "ibu": {
+      "datatype": "INTEGER",
       "already_clean": false,
       "cleaned": true,
       "attempts": 1,
       "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": true,
+      "cleaning_validated": false,
       "trace_steps": [
         {
           "id": "recommender_1",
@@ -218,12 +224,6 @@
           "title": "Coder (attempt 1)",
           "status": "ok",
           "output": "def clean_column(data):\n    return data"
-        },
-        {
-          "id": "validator_1",
-          "title": "Validator (attempt 1)",
-          "status": "approved",
-          "output": "Validator Agent has determined the cleaning operations are valid."
         }
       ]
     },
@@ -288,22 +288,22 @@
         "brewery_name",
         "brewery_id"
       ],
-      "cleaned": true,
+      "cleaned": false,
       "attempts": 1,
       "cleaning_validated": false,
-      "generated_code": "def clean_column(data):\n    return data",
+      "generated_code": null,
       "trace_steps": [
         {
           "id": "fd_recommender_1",
           "title": "Recommender (attempt 1)",
           "status": "ok",
-          "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+          "output": "Summary:\nFake dependency recommendation.\n\nImpute missing: no"
         },
         {
-          "id": "fd_coder_1",
-          "title": "Coder (attempt 1)",
+          "id": "fd_code_1",
+          "title": "Code from table (attempt 1)",
           "status": "ok",
-          "output": "def clean_column(data):\n    return data"
+          "output": "No corrections and no imputation: nothing to change."
         }
       ]
     },
@@ -312,22 +312,22 @@
         "brewery_id",
         "state"
       ],
-      "cleaned": true,
+      "cleaned": false,
       "attempts": 1,
       "cleaning_validated": false,
-      "generated_code": "def clean_column(data):\n    return data",
+      "generated_code": null,
       "trace_steps": [
         {
           "id": "fd_recommender_1",
           "title": "Recommender (attempt 1)",
           "status": "ok",
-          "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+          "output": "Summary:\nFake dependency recommendation.\n\nImpute missing: no"
         },
         {
-          "id": "fd_coder_1",
-          "title": "Coder (attempt 1)",
+          "id": "fd_code_1",
+          "title": "Code from table (attempt 1)",
           "status": "ok",
-          "output": "def clean_column(data):\n    return data"
+          "output": "No corrections and no imputation: nothing to change."
         }
       ]
     },
@@ -336,46 +336,46 @@
         "brewery_id",
         "city"
       ],
-      "cleaned": true,
+      "cleaned": false,
       "attempts": 1,
       "cleaning_validated": false,
-      "generated_code": "def clean_column(data):\n    return data",
+      "generated_code": null,
       "trace_steps": [
         {
           "id": "fd_recommender_1",
           "title": "Recommender (attempt 1)",
           "status": "ok",
-          "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+          "output": "Summary:\nFake dependency recommendation.\n\nImpute missing: no"
         },
         {
-          "id": "fd_coder_1",
-          "title": "Coder (attempt 1)",
+          "id": "fd_code_1",
+          "title": "Code from table (attempt 1)",
           "status": "ok",
-          "output": "def clean_column(data):\n    return data"
+          "output": "No corrections and no imputation: nothing to change."
         }
       ]
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 144096,
-        "output_tokens": 2399,
-        "total_tokens": 146495
+        "input_tokens": 151121,
+        "output_tokens": 2363,
+        "total_tokens": 153484
       },
       "coding": {
-        "input_tokens": 32561,
-        "output_tokens": 689,
-        "total_tokens": 33250
+        "input_tokens": 27530,
+        "output_tokens": 530,
+        "total_tokens": 28060
       },
       "validation": {
-        "input_tokens": 51189,
+        "input_tokens": 51725,
         "output_tokens": 664,
-        "total_tokens": 51853
+        "total_tokens": 52389
       }
     },
     "total_usage": {
-      "input_tokens": 227846,
-      "output_tokens": 3752,
-      "total_tokens": 231598
+      "input_tokens": 230376,
+      "output_tokens": 3557,
+      "total_tokens": 233933
     }
   },
   "traces": {
@@ -671,21 +671,21 @@
         "step_id": "fd_recommender_1",
         "title": "Recommender (attempt 1)",
         "status": "ok",
-        "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+        "output": "Summary:\nFake dependency recommendation.\n\nImpute missing: no"
       },
       {
         "column": "brewery_name → brewery_id",
-        "step_id": "fd_coder_1",
-        "title": "Coder (attempt 1)",
+        "step_id": "fd_code_1",
+        "title": "Code from table (attempt 1)",
         "status": "ok",
-        "output": "def clean_column(data):\n    return data"
+        "output": "No corrections and no imputation: nothing to change."
       },
       {
         "column": "brewery_name → brewery_id",
         "step_id": "finished",
         "title": "Finished",
         "status": "completed",
-        "output": "FD task cleaned successfully."
+        "output": "The Recommender found nothing to change."
       }
     ],
     "brewery_id → state": [
@@ -694,21 +694,21 @@
         "step_id": "fd_recommender_1",
         "title": "Recommender (attempt 1)",
         "status": "ok",
-        "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+        "output": "Summary:\nFake dependency recommendation.\n\nImpute missing: no"
       },
       {
         "column": "brewery_id → state",
-        "step_id": "fd_coder_1",
-        "title": "Coder (attempt 1)",
+        "step_id": "fd_code_1",
+        "title": "Code from table (attempt 1)",
         "status": "ok",
-        "output": "def clean_column(data):\n    return data"
+        "output": "No corrections and no imputation: nothing to change."
       },
       {
         "column": "brewery_id → state",
         "step_id": "finished",
         "title": "Finished",
         "status": "completed",
-        "output": "FD task cleaned successfully."
+        "output": "The Recommender found nothing to change."
       }
     ],
     "brewery_id → city": [
@@ -717,66 +717,63 @@
         "step_id": "fd_recommender_1",
         "title": "Recommender (attempt 1)",
         "status": "ok",
-        "output": "Summary:\nFake dependency recommendation.\n\nViolation Instructions:\nLeave conflicting values unchanged.\n\nImputation Instructions:\nLeave missing values unchanged."
+        "output": "Summary:\nFake dependency recommendation.\n\nImpute missing: no"
       },
       {
         "column": "brewery_id → city",
-        "step_id": "fd_coder_1",
-        "title": "Coder (attempt 1)",
+        "step_id": "fd_code_1",
+        "title": "Code from table (attempt 1)",
         "status": "ok",
-        "output": "def clean_column(data):\n    return data"
+        "output": "No corrections and no imputation: nothing to change."
       },
       {
         "column": "brewery_id → city",
         "step_id": "finished",
         "title": "Finished",
         "status": "completed",
-        "output": "FD task cleaned successfully."
+        "output": "The Recommender found nothing to change."
       }
     ]
   },
   "prompts": {
     "coder": [
-      "56ddbe7dff92ae1df73173389d09f8225825af4f3ebe87c914dc494aedb84379",
-      "77571ffe1edf95b0a6969cb92abfce064b8638e3337d37b343f93e6a6c4ca2fe",
-      "9efaa65c9fcf22bc80e90eede7626c3ed95407c86915429c52801ea80004deb6",
-      "bc167fb45d22d99edbc63b16152ca2640847dd0345683a0eeb7613181a5530dc",
-      "bc6d941ec35c32f993d19f39d4febd4195af47f5b1b65125665d83f939638d52",
-      "bd12a85f020fbc7570f2535b4dc095aa667ef7c5ea12bf6b7cc81b67f56164d3",
-      "c500614303f12487f7c1dbf5bfce26654eb149a5205021031bf806eca6b834f8",
-      "ca90d56fbbba52a4aaff7ac7d836dab30440d104fc64446bd8ab1ff1b3ddf844",
-      "d0cd552886fcaf698a41f924204722a4782f530ac559ecdbb551fc0f69fb1c3f",
-      "d281c45d81f3cf8584c363080eb843b62e9bbdc0015cc8319a4f76edbd7d1d7d",
-      "d42ce5ddf3d455505e83490f35e3c0c63e5e1889858f51d4ed6b0692a50ea96d",
-      "d598fb1a07632363d5a00b17a64c5efa3360aba77247df308263a453de34e2ba",
-      "dcdd93f843f1af49522edb1cf13aa8972d3888ec3cdeb308b868451881e55900"
+      "0a2bf4e8accabd91a6e02716df5b6e7dac4a2035e43852b596d94c2726075824",
+      "2e1a343e25c543d165a6da91f881eebf70fceb5545d9d95b7caf3e2e2c4b7060",
+      "5168196f3ca15a5330610ad95b123f3a137036e0f601029aa134ee4aea2691a8",
+      "5b44b99554f09a4fee70db6a06ebe458c5700a606bdc5cf4d39069ae44d995fb",
+      "9af568e476815dc1bf35adf6e739a259edbfd8c923d27add718f281c4201e26c",
+      "9d0d1a35144fc997a2e11e16717a7993bf7c7e1bb68fdeca9a5bc0b9d9d53a28",
+      "cc2a7c0382d82e3ad4a880bc8077b62d80a0d01afa2dad9d5518b002addfc071",
+      "de3e1ab6d10726065c6eed36f64ed648447423239c89ccf784fcec9aace7e086",
+      "e00b5560ab352377480863bfcdb6cd972f0611656ceecc1f0ca8b55856fabe81",
+      "feb2ca3d40ac106629f23ecac7ea5a1bd25e67cbd44138c60eddd6cc94f49ad1"
     ],
     "fd_recommender": [
-      "18b22856db62c2a06739a2ec5a555c6844eeac24c4c2a797ecf04aa2019c82ca",
-      "8a7291a28e6900018e01cf42e5027e214a09659050a8fb98f29a6732dc4dd8c3",
-      "b35a16819d4854d93e5368d2dce6249417fb51731d179def8c939f5906f5207c"
+      "24c8d65137714ae89bd3a14586f19d9349ff3e425a857beab349f7dba0144890",
+      "8361bd3b9658c9c5b761136f64cdb416f36ef0d6119352394e740b2b4f3fbb3e",
+      "ddbcd66347864210c499af27cee1cb7155a68dee3351ad873f80fd0d23189ba1"
     ],
     "recommender": [
-      "072e0da9b03b857f4f0ad517d9b82030af1fdb2263154f2835307c658c1cb1ab",
-      "66bb5086096c2e872d40e4081ff9d17b79853e27f6edff4e545ba00829910623",
-      "6d5752c12f784ea85bb225e89ce35bd975a868dbbab25de88578459ec0493f15",
-      "8305e1c79c68ecc9f4e66d0ec8122e0a1a5c4bb0673b0231d0560afc6438206d",
-      "ba91c993c78d6d17e259dfd418bcda4d1fcdc9487b39b83a8ff9a4654cbaf795",
-      "c64ab0aafc9a8f860957ece9b006b85ff08cf8a1ad2067b30e428d8bb9b3d00b",
-      "e29930e4e6f8f0580f14d4f198199a1d3ebb8f07116b7a9873f3707cf7c69edb",
-      "e38192ff7c737edd91eb22d7a6e3f5cc2a7481a555140083ad8c5a345332b949",
-      "ec83ffb5d2493fb42c2295cee9baa48f4db38d85268c87831a4ff87461ad9d18",
-      "ef38285b61cf05aef7414bff21875608197f10fec1abd4b4a8bd489d31e765f4"
+      "07510b84119cf765257708b73b4df8118553109952fdb5e608392f48f275d43c",
+      "13acab405a3fe777eaa38426a3003b5cf9f9464f42df5dc099f131fb28cd661c",
+      "1b880756c38508a8474258dbdf9547a4b1ed12c9da10e78c3b4e50f204a6b5c6",
+      "29bbe3ecca56ff59a944502802aec476364e1d154b745bf7c5ff35fe918120d4",
+      "4b3ff49a84cb12bfaf0818f591c2c136829e4b6d0e2e26dfa53e9b3fa63ba809",
+      "732ca73d121fdaa1f8b6598e81871b2fefd0d2ade26c1846bafec1f317d8a16a",
+      "80468c85151df5c98b93225f5f03007be248be3b28c7a67dec98f6b5a54185d5",
+      "afa5b0e1cb1cba40b5e10e93fa13b283862154f3f9e249f7e4dae9ac117745e8",
+      "c662e98a1897a292268b6e793002e6cfbd882a4bd59e7c7141cf03fec798251f",
+      "e6fe2978e70ebeab492bef0c4fae9579e32a0ad557956d77938c341ba039fb77"
     ],
     "validator": [
-      "179d230ba6c6af6b7414d694698a0c01c85024343e813c945c7538b70f233dd5",
-      "1bbabf8e1769c283165fc6b9eb87ccd2fbabae2f3666f83fe1fc6fcc77049821",
-      "1ca97dd69bb481c376dc61fe0603607dcfcb85fb16320192b48b4787a756e15b",
-      "34b59082d21166ccb03dead5cf15ebc0c4879213a05302888f705ac28130bf06",
-      "b93bf7126534ea0041786f5123c0cccb3cb22596315493811851cd238e66fe70",
-      "e28311bbb5095e4ece61d5e7810e164f8384709f79e6370ca84587dcd1bcded8",
-      "e647a45eedade123c95095713fde3d3213b5ef169a245e8c71c715fce30c6189",
-      "ecb2a1ab54ac0dd2b2636467ce584d447a6c493399eb8223164466bfe238eddb"
+      "1787541f439ef0bedec561748f92ec0c030f91c32c71e484015ef11598e16568",
+      "22b2c32c3d2c59fa9bccd3c24c08b949ba203064720a4b12015ebde0c0585686",
+      "5caea045794149b8cec7a11ecb1e45fd0f1796fd3e3dc763a29cf329b13f6d6f",
+      "5db847b7603a50e7f22ef8b6dbfc802515e7467a0be27263e184f94d430efec4",
+      "6341d8afe00717de30dfb71d6bbdc11f5ed77de7ef4aa487175b626f2c56f534",
+      "bf3eb2b059677dd3e2cf06b0855ef9582c77654e483970fbed5c2f0ea166e575",
+      "c2edac507e668beecd0d6d61f1a308b9a49515ec681919fa7db48ca78211c6fb",
+      "ec5adf443f21bd7135b340e70f9d372fe663427a3c9f81e33b028e4033083513"
     ]
   },
   "reviews": {}

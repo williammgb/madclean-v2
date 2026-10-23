@@ -5,7 +5,9 @@ from types import SimpleNamespace
 import pytest
 
 from madclean.components.multi_agent_cleaner.llm_validation import CodeOutputValidation
-from madclean.llm.llm_clients import OpenAIClient
+from google.genai import errors as genai_errors
+
+from madclean.llm.llm_clients import GeminiClient, OpenAIClient
 from madclean.llm.llm_registry import LLM_CLIENT_MAP
 
 MESSAGES = [{"role": "system", "content": "s"}, {"role": "user", "content": "u"}]
@@ -99,3 +101,68 @@ def test_other_parse_errors_are_raised():
 
 def test_qwen_9b_uses_the_real_openrouter_model_id():
     assert LLM_CLIENT_MAP["Qwen_9B"].default_model == "qwen/qwen3.5-9b"
+
+
+class _StubGeminiModels:
+    """Plays one scripted outcome per call: "hang", an exception, or a reply."""
+
+    def __init__(self, outcomes):
+        self.outcomes = list(outcomes)
+        self.calls = 0
+
+    async def generate_content(self, **kwargs):
+        self.calls += 1
+        outcome = self.outcomes.pop(0)
+        if outcome == "hang":
+            await asyncio.sleep(3600)
+        if isinstance(outcome, Exception):
+            raise outcome
+        usage = SimpleNamespace(prompt_token_count=10, total_token_count=14)
+        return SimpleNamespace(text=outcome, usage_metadata=usage)
+
+
+def _gemini(outcomes):
+    client = GeminiClient.__new__(GeminiClient)
+    client.model_name = "gemini-test"
+    client.timeout_seconds = 0.05
+    client.retry_wait_seconds = 0
+    models = _StubGeminiModels(outcomes)
+    client.async_client = SimpleNamespace(models=models)
+    return client, models
+
+
+def test_gemini_retries_a_call_that_never_answers():
+    client, models = _gemini(["hang", "ok"])
+
+    content, usage = asyncio.run(client.call_llm_async(MESSAGES, response_schema="text/plain"))
+
+    assert (content, usage) == ("ok", {"input_tokens": 10, "output_tokens": 4})
+    assert models.calls == 2
+
+
+def test_gemini_gives_up_with_a_clear_error_after_three_hangs():
+    client, models = _gemini(["hang", "hang", "hang"])
+
+    with pytest.raises(TimeoutError, match="no reply within 0.05 seconds .try 3 of 3"):
+        asyncio.run(client.call_llm_async(MESSAGES, response_schema="text/plain"))
+    assert models.calls == 3
+
+
+def test_gemini_retries_a_server_fault_and_a_rate_limit():
+    unavailable = genai_errors.ServerError(503, {"error": {"message": "busy", "status": "UNAVAILABLE"}})
+    rate_limited = genai_errors.ClientError(429, {"error": {"message": "slow down", "status": "RESOURCE_EXHAUSTED"}})
+    client, models = _gemini([unavailable, rate_limited, "ok"])
+
+    content, _ = asyncio.run(client.call_llm_async(MESSAGES, response_schema="text/plain"))
+
+    assert content == "ok"
+    assert models.calls == 3
+
+
+def test_gemini_does_not_retry_a_bad_request():
+    bad = genai_errors.ClientError(400, {"error": {"message": "bad input", "status": "INVALID_ARGUMENT"}})
+    client, models = _gemini([bad, "never reached"])
+
+    with pytest.raises(genai_errors.ClientError, match="bad input"):
+        asyncio.run(client.call_llm_async(MESSAGES, response_schema="text/plain"))
+    assert models.calls == 1

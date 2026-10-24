@@ -68,7 +68,7 @@ def test_openrouter_with_a_schema_asks_for_a_json_object_and_keeps_extra_body():
     (method, kwargs), = completions.calls
     assert method == "create"
     assert kwargs["response_format"] == {"type": "json_object"}
-    assert kwargs["extra_body"] == {"enable_thinking": False}
+    assert kwargs["extra_body"] == {"reasoning": {"enabled": False}}
     assert content == '{"from": "create"}'
 
 
@@ -97,7 +97,7 @@ def test_plain_text_requests_to_openrouter_keep_its_setting():
     asyncio.run(client.call_llm_async(MESSAGES, response_schema="text/plain"))
 
     (_, kwargs), = completions.calls
-    assert kwargs["extra_body"] == {"enable_thinking": False}
+    assert kwargs["extra_body"] == {"reasoning": {"enabled": False}}
 
 
 class _HangingCompletions(_StubCompletions):

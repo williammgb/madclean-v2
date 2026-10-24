@@ -12,6 +12,9 @@ from google.genai import types
 from pydantic import BaseModel
 
 
+OPENROUTER_NO_THINKING = {"reasoning": {"enabled": False}}
+
+
 def _gemini_error_is_worth_retrying(exc: BaseException) -> bool:
     """A reply that never came, a server fault or a rate limit may pass on a second try."""
     if isinstance(exc, TimeoutError):
@@ -120,9 +123,10 @@ class OpenAIClient(BaseLLMClient):
             "model": self.model_name,
             "messages": messages,
         }
-        # Only OpenRouter accepts this setting; OpenAI rejects a request that has it.
+        # OpenRouter's own switch for hidden thinking (it ignores `enable_thinking`);
+        # OpenAI rejects a request that has it.
         if self._is_openrouter:
-            config["extra_body"] = {"enable_thinking": False}
+            config["extra_body"] = OPENROUTER_NO_THINKING
 
         use_pydantic_schema = (
             response_schema != "text/plain"

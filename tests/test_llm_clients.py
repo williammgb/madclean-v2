@@ -82,6 +82,24 @@ def test_plain_text_requests_send_no_response_format():
     assert "response_format" not in kwargs
 
 
+def test_plain_text_requests_to_openai_send_no_openrouter_setting():
+    client, completions = _client()
+
+    asyncio.run(client.call_llm_async(MESSAGES, response_schema="text/plain"))
+
+    (_, kwargs), = completions.calls
+    assert "extra_body" not in kwargs
+
+
+def test_plain_text_requests_to_openrouter_keep_its_setting():
+    client, completions = _client(base_url="https://openrouter.ai/api/v1")
+
+    asyncio.run(client.call_llm_async(MESSAGES, response_schema="text/plain"))
+
+    (_, kwargs), = completions.calls
+    assert kwargs["extra_body"] == {"enable_thinking": False}
+
+
 def test_unparseable_structured_output_falls_back_to_a_json_object_request():
     client, completions = _client(parse_error=json.JSONDecodeError("bad", "doc", 0))
 

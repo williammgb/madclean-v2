@@ -103,8 +103,10 @@ class OpenAIClient(BaseLLMClient):
         config: dict[str, Any] = {
             "model": self.model_name,
             "messages": messages,
-            "extra_body": {"enable_thinking": False},
         }
+        # Only OpenRouter accepts this setting; OpenAI rejects a request that has it.
+        if self._is_openrouter:
+            config["extra_body"] = {"enable_thinking": False}
 
         use_pydantic_schema = (
             response_schema != "text/plain"

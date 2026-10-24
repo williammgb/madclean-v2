@@ -70,14 +70,32 @@ class OpenAIClient(BaseLLMClient):
             base_url=base_url
         )
 
+    # OpenRouter can keep a connection open for good without replying, freezing the whole run.
+    timeout_seconds: float = 180.0
+    attempts: int = 3
+    retry_wait_seconds: float = 5.0
+
+    async def _within_time_limit(self, make_request):
+        """Wait up to timeout_seconds for a reply; ask again on a hang, up to `attempts` times."""
+        for attempt in range(1, self.attempts + 1):
+            try:
+                return await asyncio.wait_for(make_request(), timeout=self.timeout_seconds)
+            except TimeoutError:
+                if attempt == self.attempts:
+                    raise TimeoutError(
+                        f"{self.model_name} gave no reply within {self.timeout_seconds:g} seconds"
+                        f" (try {attempt} of {self.attempts})"
+                    ) from None
+                await asyncio.sleep(self.retry_wait_seconds * attempt)
+
     async def _openai_create(
         self,
         config: dict[str, Any],
         sampling: dict[str, float],
     ):
-        if sampling:
-            return await self.async_client.chat.completions.create(**config, **sampling)
-        return await self.async_client.chat.completions.create(**config)
+        return await self._within_time_limit(
+            lambda: self.async_client.chat.completions.create(**config, **sampling)
+        )
 
     async def _openai_parse(
         self,
@@ -85,12 +103,10 @@ class OpenAIClient(BaseLLMClient):
         response_schema: type[BaseModel],
         sampling: dict[str, float],
     ):
-        if sampling:
-            return await self.async_client.chat.completions.parse(
+        return await self._within_time_limit(
+            lambda: self.async_client.chat.completions.parse(
                 **config, response_format=response_schema, **sampling
             )
-        return await self.async_client.chat.completions.parse(
-            **config, response_format=response_schema
         )
 
     async def call_llm_async(

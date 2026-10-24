@@ -100,6 +100,46 @@ def test_plain_text_requests_to_openrouter_keep_its_setting():
     assert kwargs["extra_body"] == {"enable_thinking": False}
 
 
+class _HangingCompletions(_StubCompletions):
+    """Never replies to the first `hangs` requests, then answers normally."""
+
+    def __init__(self, hangs: int):
+        super().__init__()
+        self.hangs = hangs
+
+    async def create(self, **kwargs):
+        if len(self.calls) < self.hangs:
+            self.calls.append(("create", kwargs))
+            await asyncio.sleep(3600)
+        return await super().create(**kwargs)
+
+
+def _hanging_client(hangs):
+    client, _ = _client(base_url="https://openrouter.ai/api/v1")
+    completions = _HangingCompletions(hangs)
+    client.async_client = SimpleNamespace(chat=SimpleNamespace(completions=completions))
+    client.timeout_seconds, client.attempts, client.retry_wait_seconds = 0.05, 3, 0
+    return client, completions
+
+
+def test_a_reply_that_hangs_once_is_asked_for_again():
+    client, completions = _hanging_client(hangs=1)
+
+    content, _ = asyncio.run(client.call_llm_async(MESSAGES, response_schema="text/plain"))
+
+    assert len(completions.calls) == 2
+    assert content == '{"from": "create"}'
+
+
+def test_a_reply_that_never_comes_gives_up_after_three_tries():
+    client, completions = _hanging_client(hangs=99)
+
+    with pytest.raises(TimeoutError, match="no reply within 0.05 seconds"):
+        asyncio.run(client.call_llm_async(MESSAGES, response_schema="text/plain"))
+
+    assert len(completions.calls) == 3
+
+
 def test_unparseable_structured_output_falls_back_to_a_json_object_request():
     client, completions = _client(parse_error=json.JSONDecodeError("bad", "doc", 0))
 

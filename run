@@ -45,7 +45,7 @@ gate() {
   code=$(cat "$log.code" 2>/dev/null || echo 1)
   took=$(( $(date +%s) - started ))
   if [ "$code" -eq 0 ]; then result=passed; stamp "$name"; else result=failed; fi
-  said=$(grep -v '^[[:space:]]*$' "$log" | tail -n 1 | tr -d '\033' | cut -c1-160)
+  said=$(tr -d '\000' < "$log" | grep -av '^[[:space:]]*$' | tail -n 1 | tr -d '\033' | cut -c1-160)
   journal "$name gate $result (${took}s): $said"
   return "$code"
 }
@@ -64,34 +64,66 @@ full_gate() {
   py ruff check . && py python -m pytest -q "$@"
 }
 
+# port_from_log <log> <text before the url>: the port Reflex says it is using.
+port_from_log() {
+  sed 's/\x1b\[[0-9;]*[A-Za-z]//g' "$1" | tr -d '\r' | grep -ao "$2 http://[^:/]*:[0-9]*" | grep -o '[0-9]*$' | tail -n 1
+}
+
 # Starts the GUI the way a person does (madclean-ui), waits until the page and the
-# backend answer, then stops the whole process tree again.
+# backend answer, then stops every process it started.
+#
+# Reflex moves to the next free port when 3000 or 8000 is taken — by another
+# checkout's smoke gate running at the same time, or by the demo app — so the gate
+# reads the ports from the app's own log instead of assuming them. The app runs
+# inside scripts/run_in_job.py: creating the stop file ends it and every process it
+# started, and it ends by itself after 10 minutes, even when nothing is left to
+# create the stop file.
 smoke_gate() {
   py madclean --help > /dev/null || return 1
   echo "cli: madclean --help ran"
   mkdir -p .work/gates
   ui_log=.work/gates/smoke-ui.log
-  py madclean-ui > "$ui_log" 2>&1 &
+  stop=.work/gates/smoke-ui.stop
+  rm -f "$stop"
+  py python scripts/run_in_job.py --stop-file "$stop" --max-seconds 600 -- madclean-ui > "$ui_log" 2>&1 &
   ui_pid=$!
+  front=""; back=""; waited=0
+  while [ -z "$front" ] || [ -z "$back" ]; do
+    kill -0 "$ui_pid" 2> /dev/null || break
+    [ "$waited" -lt 300 ] || break
+    sleep 2
+    waited=$((waited + 2))
+    front=$(port_from_log "$ui_log" "App running at:")
+    back=$(port_from_log "$ui_log" "Backend running at:")
+  done
   up=0
-  if curl -fsS -o /dev/null --retry 120 --retry-delay 5 --retry-connrefused --retry-all-errors --max-time 10 http://localhost:3000/ \
-     && curl -fsS -o /dev/null --max-time 10 http://localhost:8000/ping; then
-    up=1
-    browser_check || up=0
+  if [ -n "$front" ] && [ -n "$back" ]; then
+    echo "gui: app on port $front, backend on port $back (after ${waited}s)"
+    if curl -fsS --retry 30 --retry-delay 2 --retry-connrefused --retry-all-errors --max-time 10 "http://localhost:$front/" > /dev/null \
+       && curl -fsS --max-time 10 "http://localhost:$back/ping" > /dev/null; then
+      up=1
+      browser_check "$front" || up=0
+    fi
+  else
+    echo "gui: the app did not say which ports it uses within ${waited}s"
   fi
-  winpid=$(cat "/proc/$ui_pid/winpid" 2>/dev/null || true)
-  if [ -n "$winpid" ]; then taskkill //F //T //PID "$winpid" > /dev/null 2>&1 || true; fi
-  kill "$ui_pid" 2> /dev/null || true
+  touch "$stop"
   tries=0
-  while curl -fsS -o /dev/null --max-time 2 http://localhost:8000/ping 2> /dev/null \
-     || curl -fsS -o /dev/null --max-time 2 http://localhost:3000/ 2> /dev/null; do
+  while kill -0 "$ui_pid" 2> /dev/null; do
     tries=$((tries + 1))
     if [ "$tries" -ge 15 ]; then
-      echo "gui: still answering 15s after shutdown, a process was left running"
+      kill "$ui_pid" 2> /dev/null || true
+      echo "gui: still running 15s after the stop file, a process was left running"
       return 1
     fi
     sleep 1
   done
+  rm -f "$stop"
+  if [ -n "$front" ] && { curl -fsS --max-time 2 "http://localhost:$back/ping" > /dev/null 2>&1 \
+     || curl -fsS --max-time 2 "http://localhost:$front/" > /dev/null 2>&1; }; then
+    echo "gui: ports $front/$back still answer after shutdown, a process was left running"
+    return 1
+  fi
   if [ "$up" -eq 1 ]; then
     echo "gui: page rendered in the browser with no console errors; backend /ping answered"
   else
@@ -101,24 +133,27 @@ smoke_gate() {
   fi
 }
 
-# Renders the page in headless Microsoft Edge, then fails on a missing app title or
-# any console error the page itself logged.
+# browser_check <port>: renders the page in headless Microsoft Edge, then fails on a
+# missing app title or any console error the page itself logged. Each checkout gets
+# its own Edge profile folder, so two gates at once do not share one.
 browser_check() {
+  port=$1
   edge="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
   if [ ! -x "$edge" ]; then
     echo "browser: Microsoft Edge not found at $edge"
     return 1
   fi
+  mkdir -p .work/tmp
   "$edge" --headless=new --disable-gpu --enable-logging=stderr --v=0 \
-    --user-data-dir="${TEMP:-/tmp}/madclean-smoke-edge" --virtual-time-budget=20000 \
-    --dump-dom http://localhost:3000/ > .work/gates/smoke-dom.html 2> .work/gates/smoke-console.log || true
+    --user-data-dir="$(pwd -W)/.work/tmp/smoke-edge" --virtual-time-budget=20000 \
+    --dump-dom "http://localhost:$port/" > .work/gates/smoke-dom.html 2> .work/gates/smoke-console.log || true
   if ! grep -q "MADClean" .work/gates/smoke-dom.html; then
     echo "browser: rendered page does not contain MADClean"
     return 1
   fi
-  if grep "CONSOLE" .work/gates/smoke-console.log | grep "localhost:3000" | grep -qi "ERROR\|Uncaught"; then
+  if grep "CONSOLE" .work/gates/smoke-console.log | grep "localhost:$port" | grep -qi "ERROR\|Uncaught"; then
     echo "browser: console errors from the page:"
-    grep "CONSOLE" .work/gates/smoke-console.log | grep "localhost:3000" | grep -i "ERROR\|Uncaught" | cut -c1-240
+    grep "CONSOLE" .work/gates/smoke-console.log | grep "localhost:$port" | grep -i "ERROR\|Uncaught" | cut -c1-240
     return 1
   fi
   echo "browser: page rendered, $(grep -c "CONSOLE" .work/gates/smoke-console.log) console messages, none are errors"

@@ -11,6 +11,7 @@ from madclean.llm.llm_settings import LLM_CLIENT_NAME
 from madclean.pipeline import Pipeline
 from madclean.utils.console import configure_console
 from madclean.evaluation import Evaluator
+from madclean.evaluation.agent_stats import agent_stats
 from madclean.evaluation.datasets import BENCHMARKS, DATA_DIR, as_paths
 
 BASE_DIR = DATA_DIR
@@ -53,7 +54,9 @@ class EvaluationPipeline:
         total_usage = report.total_usage if report is not None else None
         performance_dict = {**asdict(eval_results),
                             "token_usage": asdict(total_usage) if total_usage is not None else {},
-                            "runtime_seconds": runtime}
+                            "runtime_seconds": runtime,
+                            "report": report.to_dict() if report is not None else None,
+                            "agent_stats": asdict(agent_stats(report)) if report is not None else None}
         return performance_dict
 
     def evaluate_baselines(self, baseline: str, dataset: str, evaluator: Evaluator):

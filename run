@@ -69,8 +69,10 @@ port_from_log() {
   sed 's/\x1b\[[0-9;]*[A-Za-z]//g' "$1" | tr -d '\r' | grep -ao "$2 http://[^:/]*:[0-9]*" | grep -o '[0-9]*$' | tail -n 1
 }
 
-# Starts the GUI the way a person does (madclean-ui), waits until the page and the
-# backend answer, then stops every process it started.
+# app_start <name>: starts the GUI the way a person does (madclean-ui), logging to
+# .work/gates/<name>-ui.log, and sets front and back to the ports it says it uses.
+# smoke_gate: waits until the page and the backend answer, then stops every process
+# it started.
 #
 # Reflex moves to the next free port when 3000 or 8000 is taken — by another
 # checkout's smoke gate running at the same time, or by the demo app — so the gate
@@ -78,12 +80,10 @@ port_from_log() {
 # inside scripts/run_in_job.py: creating the stop file ends it and every process it
 # started, and it ends by itself after 10 minutes, even when nothing is left to
 # create the stop file.
-smoke_gate() {
-  py madclean --help > /dev/null || return 1
-  echo "cli: madclean --help ran"
+app_start() {
   mkdir -p .work/gates
-  ui_log=.work/gates/smoke-ui.log
-  stop=.work/gates/smoke-ui.stop
+  ui_log=".work/gates/$1-ui.log"
+  stop=".work/gates/$1-ui.stop"
   rm -f "$stop"
   py python scripts/run_in_job.py --stop-file "$stop" --max-seconds 600 -- madclean-ui > "$ui_log" 2>&1 &
   ui_pid=$!
@@ -96,17 +96,17 @@ smoke_gate() {
     front=$(port_from_log "$ui_log" "App running at:")
     back=$(port_from_log "$ui_log" "Backend running at:")
   done
-  up=0
-  if [ -n "$front" ] && [ -n "$back" ]; then
-    echo "gui: app on port $front, backend on port $back (after ${waited}s)"
-    if curl -fsS --retry 30 --retry-delay 2 --retry-connrefused --retry-all-errors --max-time 10 "http://localhost:$front/" > /dev/null \
-       && curl -fsS --max-time 10 "http://localhost:$back/ping" > /dev/null; then
-      up=1
-      browser_check "$front" || up=0
-    fi
-  else
-    echo "gui: the app did not say which ports it uses within ${waited}s"
-  fi
+}
+
+# app_up: the app app_start started said its ports, and both answer.
+app_up() {
+  [ -n "$front" ] && [ -n "$back" ] \
+    && curl -fsS --retry 30 --retry-delay 2 --retry-connrefused --retry-all-errors --max-time 10 "http://localhost:$front/" > /dev/null \
+    && curl -fsS --max-time 10 "http://localhost:$back/ping" > /dev/null
+}
+
+# app_stop: ends the app app_start started, then fails when anything is left running.
+app_stop() {
   touch "$stop"
   tries=0
   while kill -0 "$ui_pid" 2> /dev/null; do
@@ -124,6 +124,23 @@ smoke_gate() {
     echo "gui: ports $front/$back still answer after shutdown, a process was left running"
     return 1
   fi
+}
+
+smoke_gate() {
+  py madclean --help > /dev/null || return 1
+  echo "cli: madclean --help ran"
+  app_start smoke
+  up=0
+  if [ -n "$front" ] && [ -n "$back" ]; then
+    echo "gui: app on port $front, backend on port $back (after ${waited}s)"
+    if app_up; then
+      up=1
+      browser_check "$front" || up=0
+    fi
+  else
+    echo "gui: the app did not say which ports it uses within ${waited}s"
+  fi
+  app_stop || return 1
   if [ "$up" -eq 1 ]; then
     echo "gui: page rendered in the browser with no console errors; backend /ping answered"
   else
@@ -159,6 +176,36 @@ browser_check() {
   echo "browser: page rendered, $(grep -c "CONSOLE" .work/gates/smoke-console.log) console messages, none are errors"
 }
 
+# Starts the app with the offline demo model — MADCLEAN_DEMO_LLM_SECONDS, 5 s a reply
+# unless set, so no paid call is ever made — runs every browser script in tests/ui/
+# against it with its address, then stops it. The scripts drive the installed
+# Microsoft Edge through Playwright, which uv adds for this run only; each saves its
+# screenshots under .work/screens/.
+ui_gate() {
+  MADCLEAN_DEMO_LLM_SECONDS="${MADCLEAN_DEMO_LLM_SECONDS:-5}"
+  export MADCLEAN_DEMO_LLM_SECONDS
+  mkdir -p .work/screens
+  app_start ui
+  ok=0
+  if app_up; then
+    echo "gui: app on port $front, backend on port $back (after ${waited}s), demo model answers in ${MADCLEAN_DEMO_LLM_SECONDS}s"
+    ok=1
+    for script in tests/ui/*.py; do
+      echo "ui: $script"
+      py --with playwright python "$script" "http://localhost:$front/" || ok=0
+    done
+  else
+    echo "gui: did not come up, last lines of $ui_log:"
+    tail -n 20 "$ui_log"
+  fi
+  app_stop || return 1
+  if [ "$ok" -ne 1 ]; then
+    echo "ui: a browser script failed"
+    return 1
+  fi
+  echo "ui: every browser script in tests/ui passed"
+}
+
 # One benchmark run of one dataset with the real model from .env (costs API tokens).
 # Not a gate: it never stamps, but its result line goes into the journal.
 live_run() {
@@ -184,6 +231,7 @@ usage: ./run <task> [args]
   fast    the fast gate — ruff, then tests not marked slow (under ~60s, no network)
   full    the full gate — ruff, then every test at real size
   smoke   run madclean --help, start madclean-ui and wait until it answers
+  ui      start madclean-ui with the free demo model and run the browser scripts in tests/ui
   check   lint one file:  ./run check path/to/file.py
   score   re-score every stored MADClean run and baseline, offline, in both modes
   live    one real-model benchmark run, costs API tokens:  ./run live beers
@@ -199,6 +247,7 @@ case "$task" in
   fast)  gate fast fast_gate "$@" ;;
   full)  gate full full_gate "$@" ;;
   smoke) gate smoke smoke_gate ;;
+  ui)    gate ui ui_gate ;;
   score) py python -m madclean.evaluation.scoreboard "$@" ;;
   live)
     if [ -z "${1:-}" ]; then echo "usage: ./run live <dataset>" >&2; exit 1; fi

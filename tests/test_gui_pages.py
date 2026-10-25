@@ -65,6 +65,70 @@ def test_a_repaired_column_shows_validator_repair_validator_with_a_violet_repair
     assert css.count("--violet-soft:") == 3 and css.count("--violet-text:") == 3
 
 
+def _open_call(agent, task, seconds, attempt=1, try_no=1, tries=None, reason=None):
+    """One open call as `LLMActivity.snapshot()` lists it."""
+    return {
+        "agent": agent, "task": task, "attempt": attempt, "model": "gemini-2.5-pro",
+        "seconds": seconds, "try_no": try_no, "tries": tries, "reason": reason,
+    }
+
+
+def test_the_api_line_says_which_model_how_many_calls_and_how_long():
+    from gui.state import api_activity_view
+
+    two = api_activity_view({
+        "open": [_open_call("Recommender", "abv", 31.2), _open_call("Validator", "city", 48.6, attempt=2)],
+        "last_reply_seconds": 3.0,
+    })
+    assert two["api_line_text"] == "gemini-2.5-pro · 2 calls · 0:48"
+    assert (two["api_line_bold"], two["api_line_rest"]) == ("gemini-2.5-pro", " · 2 calls · 0:48")
+    assert two["api_line_class"] == "api"
+    # The hover lists every open call, oldest first.
+    assert two["api_line_title"] == "Validator · city · 0:48\nRecommender · abv · 0:31"
+    assert two["api_open_by_task"] == {
+        "city": {"label": "Validator 2", "secs": "0:48", "chip": "running"},
+        "abv": {"label": "Recommender", "secs": "0:31", "chip": "running"},
+    }
+
+    slow = api_activity_view({"open": [_open_call("Coder", "pages", 134.0)], "last_reply_seconds": 1.0})
+    assert slow["api_line_text"] == "gemini-2.5-pro · 1 call · 2:14"
+    assert slow["api_line_class"] == "api slow"
+    assert slow["api_open_by_task"]["pages"]["chip"] == "slow"
+    # Two minutes on the dot is not slow yet.
+    assert api_activity_view({"open": [_open_call("Coder", "pages", 120.0)]})["api_line_class"] == "api"
+
+    local = api_activity_view({"open": [], "last_reply_seconds": 3.7})
+    assert local["api_line_text"] == "Working locally · last reply 0:03"
+    assert local["api_line_class"] == "api local" and local["api_open_by_task"] == {}
+    before_first = api_activity_view({"open": [], "last_reply_seconds": None})
+    assert before_first["api_line_text"] == "Working locally"
+
+    retry = api_activity_view({
+        "open": [
+            _open_call("Recommender", "abv", 50.0),
+            _open_call("Coder", "pages", 9.0, try_no=2, tries=3, reason="timed out"),
+        ],
+        "last_reply_seconds": 2.0,
+    })
+    assert retry["api_line_text"] == "gemini-2.5-pro · timed out · try 2 of 3"
+    assert retry["api_line_class"] == "api retry"
+    assert retry["api_line_title"].splitlines()[1] == "Coder · pages · try 2 of 3 · 0:09"
+    assert retry["api_open_by_task"]["pages"] == {"label": "Coder · try 2 of 3", "secs": "0:09", "chip": "slow"}
+
+
+def test_an_open_call_ends_its_task_row_with_a_pulsing_chip():
+    from gui.state import State
+
+    chip = State._open_call_chip({"label": "Recommender", "secs": "0:31", "chip": "running"})
+    assert (chip["label"], chip["secs"], chip["chip"], chip["mark"]) == ("Recommender", "0:31", "running", "pulse")
+    assert State._open_call_chip({"label": "Coder", "secs": "2:14", "chip": "slow"})["chip"] == "slow"
+    # Every other chip has no clock, so the row draws none.
+    assert State._step_chip("coder_1", "Coder (attempt 1)", "ok", False)["secs"] == ""
+    css = (GUI_DIR / "assets" / "madclean.css").read_text(encoding="utf-8")
+    assert ".step.slow{" in css and ".api.slow" in css and ".api .ring{" in css
+    assert "@media (prefers-reduced-motion:reduce){.pulse{animation:none}}" in css
+
+
 @pytest.mark.parametrize("name", sorted(VIEWS))
 def test_every_view_builds(name):
     component = VIEWS[name].page()

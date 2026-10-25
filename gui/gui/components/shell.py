@@ -254,6 +254,21 @@ def top_bar() -> rx.Component:
                 ),
                 rx.fragment(),
             ),
+            rx.cond(
+                State.is_cleaning & (State.api_line_text != ""),
+                rx.el.span(
+                    rx.cond(
+                        State.api_line_class == "api local",
+                        rx.el.span(class_name="ring"),
+                        rx.el.span(class_name="dot pulse"),
+                    ),
+                    rx.el.b(State.api_line_bold),
+                    State.api_line_rest,
+                    class_name=State.api_line_class,
+                    title=State.api_line_title,
+                ),
+                rx.fragment(),
+            ),
             class_name="status",
         ),
         rx.el.div(

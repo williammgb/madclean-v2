@@ -820,6 +820,9 @@ class MultiAgentCleaning:
         # Repair and stop state lives in this column's own loop, so columns cleaned at once never share it.
         coder_failures_in_a_row = 0
         this_round_objected: set = set()
+        # The validator's last verdict on this column: the rewrites it judged and the cases it listed.
+        previous_rewrites: set | None = None
+        previous_cases: list | None = None
         # 1. Run multi-agent cleaning loop. Start with Recommender Agent to generate instructions
         feedback_target = 'RECOMMENDER'
         for attempt in range(self.config.max_cleaning_attempts):
@@ -1033,7 +1036,7 @@ class MultiAgentCleaning:
             (needs_correction, feedback_target, correction_instructions, new_validator_history, validator_raw,
              validation_details) = await self.validation_agent.validate_async(
                 col, df[col], cleaned_column, column_type, messages=validator_history, last_attempt=last_attempt,
-                attempt=attempt)
+                attempt=attempt, previous_rewrites=previous_rewrites, previous_cases=previous_cases)
             validator_history = new_validator_history
             if self._hitl_applies_to_column(col) and not self.config.enable_user_validation:
                 self._emit_step(col, self._attempt_step(
@@ -1108,7 +1111,8 @@ class MultiAgentCleaning:
                     (repair_needs_correction, repair_target, repair_instructions, validator_history, _repair_raw,
                      repair_details) = await self.validation_agent.validate_async(
                         col, df[col], repaired_column, column_type, messages=validator_history,
-                        last_attempt=False, attempt=attempt, note=self._repair_note(repair_output))
+                        last_attempt=False, attempt=attempt, note=self._repair_note(repair_output),
+                        previous_rewrites=previous_rewrites, previous_cases=previous_cases)
                     if repair_instructions in _VALIDATOR_FAILURES:
                         self._add_step(col, trace_steps, TraceStep(
                             id=f"validator_repair_{attempt + 1}",
@@ -1138,6 +1142,9 @@ class MultiAgentCleaning:
                         feedback_target, correction_instructions = repair_target, repair_instructions
                         validation_details = repair_details
                         this_round_objected = this_round_objected | self._objected_pairs(repair_details)
+            # What the next round's validator is told it judged: the last column it saw and its cases.
+            previous_rewrites = PromptGeneration.rewrite_pairs(df[col], cleaned_column)
+            previous_cases = list((validation_details or {}).get("cases") or [])
             if last_attempt or stalled:
                 # Out of attempts, or a repeated objection: keep what the validator did not object to.
                 kept = self._keep_unobjected_changes(df[col], cleaned_column, validation_details)

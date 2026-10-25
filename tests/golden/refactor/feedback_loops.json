@@ -323,15 +323,15 @@
         "total_tokens": 31219
       },
       "validation": {
-        "input_tokens": 107619,
+        "input_tokens": 74969,
         "output_tokens": 1153,
-        "total_tokens": 108772
+        "total_tokens": 76122
       }
     },
     "total_usage": {
-      "input_tokens": 233827,
+      "input_tokens": 201177,
       "output_tokens": 4200,
-      "total_tokens": 238027
+      "total_tokens": 205377
     }
   },
   "traces": {
@@ -699,18 +699,18 @@
       "d784186754c302d2333d57afdf70ba7025a14090fe88e53c0b6e2722527607b5"
     ],
     "validator": [
-      "143c5d118cc0ed8029282b099bd211b572a23a6820fc6d3d94a8dbb48d0ce9bc",
+      "0491857f95e3fd4a32fa60dae149a5caaddf1c7b164f8e2087512f596bf869c9",
+      "1160b62f02e73ef7055163e39da8730c4cbc0826496c842e8d80015542972ed3",
       "17126c467e3051dcf603da72ce4067c1b7763ddf23492eeb578934f5f5e91a34",
-      "43e5bb102705bf4c6eb892dccc6eef0b01e1a9f91e26a5a3f34b635f131f2a7d",
-      "498d73f3d5d3800aeb3ad2f18fce855192c30a9aa563da8b7787cf21d558cb28",
-      "4e28c57babeb2ec54947abe10a69e8271d133cd55a2e70ec16c6e2e1c2b71de2",
+      "4b1007ecf4cd96e65d4fe2be52b088c6133148515a43fc43f19cd9bef62e0a83",
+      "4b63b067dd91a220503c30e2492e49854d50c3aa26ae6fc641091f0c22671a5c",
       "586923c266cf601f7dd703d9f9de69dca743432b900a895badfd49ec16d18c12",
-      "6493a7c13b684946bd1594972d7a7894abae6c4184aeb727c1c94f60ec01d8a8",
-      "710e08b1acba2c2e5fcc243b3e4dde202395d4e61396df37c7f0723b55efaf68",
-      "8a485422827b64e1563f417181ca1675b0a5ffa52c112923e5ec6ca6ff70009d",
-      "d08df54436e5d076ea766ac2d7c48d2383d4e429c759023ded2b8ac0caddda4e",
-      "e81ac0789145434b3e104f6b6ff75f4e45b7c8c454880ceaaae14b67e732713f",
-      "f74fa8f13afd6018bb3c93a8f710700592a26f9a1267af6591cb9a676eff5a79"
+      "6e591157134da05ae65119be85a138a1614925942ab33c2e497a46a03e564ebf",
+      "7e959a93a57467d7db81dfd23b7ab8ec433b759741ae537d4ff9ee40eaa75200",
+      "9ba711b86744853651069ed2eb21fe637b084de53bc348bc12ec945ac5633aaa",
+      "c27473e5f33c319d852cef28b9ef7e80f3b9a6fe4132d24df2922f414c1663d5",
+      "d54684df2ac6a8ad6fe085aac5eb668b5096056b9e63e771a08f1dffc8f5791e",
+      "dde82bf2db72b9e6e943340cb5213205355f58b8617df414661d7b6212aa8ec6"
     ]
   },
   "reviews": {}

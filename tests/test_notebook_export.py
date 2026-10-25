@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from fake_llm import FakeLLMClient
+from fake_llm import FakeLLMClient, first_user_text
 from madclean.config.loader import load_default_cleaning_config
 from madclean.notebook import build_notebook, merged_cleaning_code, notebook_json
 from madclean.pipeline import Pipeline
@@ -171,7 +171,7 @@ def test_a_run_with_a_value_table_and_a_dependency_table_exports_a_notebook_that
     frame.to_csv(dirty, index=False)
 
     def script(kind, messages):
-        text = next(m["content"] for m in messages if m["role"] == "user")
+        text = first_user_text(messages)
         if kind == "recommender" and "'town'" in text:
             return VALUE_TABLE_ANSWER
         if kind == "fd_recommender":
@@ -224,7 +224,7 @@ def test_a_run_with_two_repaired_columns_exports_a_notebook_that_reproduces_it(t
     def script(kind, messages):
         if kind != "validator":
             return None
-        text = next(m["content"] for m in messages if m["role"] == "user")
+        text = first_user_text(messages)
         column = "achternaam" if "achternaam" in text else "voornaam"
         verdicts[column] = verdicts.get(column, 0) + 1
         if verdicts[column] > 1:

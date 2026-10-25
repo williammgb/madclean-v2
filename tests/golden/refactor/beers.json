@@ -15,57 +15,7 @@
     }
   },
   "report": {
-    "abv": {
-      "datatype": "FLOAT",
-      "already_clean": false,
-      "cleaned": true,
-      "attempts": 1,
-      "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": false,
-      "trace_steps": [
-        {
-          "id": "recommender_1",
-          "title": "Recommender (attempt 1)",
-          "status": "ok",
-          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
-        },
-        {
-          "id": "coder_1",
-          "title": "Coder (attempt 1)",
-          "status": "ok",
-          "output": "def clean_column(data):\n    return data"
-        }
-      ]
-    },
-    "city": {
-      "datatype": "NAMED_ENTITY",
-      "already_clean": false,
-      "cleaned": true,
-      "attempts": 1,
-      "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": true,
-      "trace_steps": [
-        {
-          "id": "recommender_1",
-          "title": "Recommender (attempt 1)",
-          "status": "ok",
-          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
-        },
-        {
-          "id": "coder_1",
-          "title": "Coder (attempt 1)",
-          "status": "ok",
-          "output": "def clean_column(data):\n    return data"
-        },
-        {
-          "id": "validator_1",
-          "title": "Validator (attempt 1)",
-          "status": "approved",
-          "output": "Validator Agent has determined the cleaning operations are valid."
-        }
-      ]
-    },
-    "style": {
+    "state": {
       "datatype": "CATEGORICAL",
       "already_clean": false,
       "cleaned": true,
@@ -93,7 +43,57 @@
         }
       ]
     },
-    "state": {
+    "beer_name": {
+      "datatype": "NAMED_ENTITY",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "abv": {
+      "datatype": "FLOAT",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        }
+      ]
+    },
+    "style": {
       "datatype": "CATEGORICAL",
       "already_clean": false,
       "cleaned": true,
@@ -171,7 +171,7 @@
         }
       ]
     },
-    "brewery_id": {
+    "id": {
       "datatype": "IDENTIFIER",
       "already_clean": false,
       "cleaned": true,
@@ -227,7 +227,7 @@
         }
       ]
     },
-    "id": {
+    "brewery_id": {
       "datatype": "IDENTIFIER",
       "already_clean": false,
       "cleaned": true,
@@ -255,7 +255,7 @@
         }
       ]
     },
-    "beer_name": {
+    "city": {
       "datatype": "NAMED_ENTITY",
       "already_clean": false,
       "cleaned": true,
@@ -367,15 +367,15 @@
         "total_tokens": 28060
       },
       "validation": {
-        "input_tokens": 51725,
+        "input_tokens": 52229,
         "output_tokens": 664,
-        "total_tokens": 52389
+        "total_tokens": 52893
       }
     },
     "total_usage": {
-      "input_tokens": 227230,
+      "input_tokens": 227734,
       "output_tokens": 3557,
-      "total_tokens": 230787
+      "total_tokens": 231291
     }
   },
   "traces": {
@@ -766,14 +766,14 @@
       "edb59b3a26e3f8eeffe4a056b00ace7dd40664728fc653a4290e16d9a3f0e262"
     ],
     "validator": [
-      "1787541f439ef0bedec561748f92ec0c030f91c32c71e484015ef11598e16568",
-      "22b2c32c3d2c59fa9bccd3c24c08b949ba203064720a4b12015ebde0c0585686",
-      "5caea045794149b8cec7a11ecb1e45fd0f1796fd3e3dc763a29cf329b13f6d6f",
-      "5db847b7603a50e7f22ef8b6dbfc802515e7467a0be27263e184f94d430efec4",
-      "6341d8afe00717de30dfb71d6bbdc11f5ed77de7ef4aa487175b626f2c56f534",
-      "bf3eb2b059677dd3e2cf06b0855ef9582c77654e483970fbed5c2f0ea166e575",
-      "c2edac507e668beecd0d6d61f1a308b9a49515ec681919fa7db48ca78211c6fb",
-      "ec5adf443f21bd7135b340e70f9d372fe663427a3c9f81e33b028e4033083513"
+      "3281a2637e0efcf9d032ba26718547c806b0a1c0081cd0227a2d3f6f474273f7",
+      "4ec35b4cbee4a1b75d93f6a3d85c639d47502d2926e08475a45dc205dd080b9d",
+      "5a189c5e3572f23e57633aebd83e05f01ece2615abdcd39a207e6f584c68e513",
+      "5bc9c6d8b998623070bfd1b6bb9b7d8756dcc655d1303119e10c1ec18c5b83aa",
+      "67c88bc1f0656c466a8f54b7db7f8ff33321216e7c98aada989060c5688cb1ea",
+      "a57b9fa741971b932510f0f3c245c9f89e0450643e4eb9d12303cd177ecb4ac0",
+      "ca2423b4e37b878a1abdc8b7dd64bf0334c6d02186cfdaa5ec53f8030e2c3323",
+      "cd23ed761b024431dcdebb2115c51389dac47368ba4745d7561ef0cd0eb693a8"
     ]
   },
   "reviews": {}

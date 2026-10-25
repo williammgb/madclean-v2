@@ -4,6 +4,7 @@ import pandas as pd
 from pydantic import BaseModel, ValidationError, field_validator
 from typing import Literal
 # Local imports
+from madclean.llm.activity import current_agent
 from madclean.llm.llm_clients import BaseLLMClient
 from madclean.components.coordinator.prompt_generation import PromptGeneration
 from madclean.components.domain.schema import MultiColumnTask
@@ -71,6 +72,7 @@ class LLMValidationAgent:
         working_messages = messages.copy()
         required_keys = list(schema.model_fields.keys())
         for attempt in range(self.config.max_parse_attempts):
+            current_agent.set("Validator")
             raw_response, token_usage = await self.llm_client.call_llm_async(
                 working_messages,
                 response_schema=schema,

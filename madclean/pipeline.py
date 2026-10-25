@@ -13,6 +13,8 @@ from madclean.components.multi_agent_cleaner.multi_agent_cleaning import MultiAg
 from madclean.components.coordinator.cleaning_coordinator import CleaningCoordinator
 from madclean.components.domain.report import CleaningReport
 from madclean.utils.helpers import load_dataset, save_dataset
+from madclean.llm.activity import LLMActivity
+from madclean.llm.demo_client import SlowDemoClient, demo_seconds
 from madclean.llm.llm_clients import OpenAIClient
 from madclean.llm.llm_registry import LLMSpec
 from madclean.config.settings import CleaningConfig
@@ -53,13 +55,22 @@ class Pipeline:
             print(msg)
 
         self._log = _log
+        # The model calls open right now, for the GUI to show; this Pipeline's own, never shared.
+        self.activity = LLMActivity()
+        demo_reply_seconds = demo_seconds()
+
         def _create_client(spec: LLMSpec):
-            if spec.client_class == OpenAIClient:
-                return OpenAIClient(
+            if demo_reply_seconds is not None:
+                client = SlowDemoClient(seconds=demo_reply_seconds)
+            elif spec.client_class == OpenAIClient:
+                client = OpenAIClient(
                     model_name=spec.default_model,
                     base_url=spec.base_url,
                 )
-            return spec.client_class(model_name=spec.default_model)
+            else:
+                client = spec.client_class(model_name=spec.default_model)
+            client.activity = self.activity
+            return client
 
         self.agent_llm_configs = agent_llm_configs
         # Default/single client (backwards compatible).

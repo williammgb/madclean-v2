@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 from abc import ABC, abstractmethod
+from contextvars import ContextVar
 from typing import Any, Optional
 
 from openai import AsyncOpenAI
@@ -10,6 +11,20 @@ from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types
 from pydantic import BaseModel
+
+from madclean.llm.activity import current_agent, current_attempt, current_task
+
+# The id of the call this asyncio task has open in the activity record, for the retry loop to report on.
+_open_call_id: ContextVar[int | None] = ContextVar("madclean_open_call_id", default=None)
+
+
+def _gemini_retry_reason(exc: BaseException) -> str:
+    """Which of the three passing faults made the call go again, in words for the screen."""
+    if isinstance(exc, TimeoutError):
+        return "timed out"
+    if isinstance(exc, genai_errors.ServerError):
+        return "server error"
+    return "rate limited"
 
 
 def _gemini_error_is_worth_retrying(exc: BaseException) -> bool:
@@ -34,9 +49,39 @@ def _sampling_error_retry_without(exc: BaseException) -> bool:
 
 class BaseLLMClient(ABC):
     """Abstract base class specifying how LLM APIs must be implemented."""
+    # The Pipeline's live record of open calls; None (tests, CLI) records nothing.
+    activity = None
+
     def __init__(self, model_name: str):
         self.model_name = model_name
-    
+
+    def _activity_start(self) -> int | None:
+        """Record a call as open, for the agent, task and attempt of this asyncio task."""
+        if self.activity is None:
+            return None
+        return self.activity.start(
+            current_agent.get(), current_task.get(), current_attempt.get(), self.model_name
+        )
+
+    def _activity_finish(self, call_id: int | None) -> None:
+        if self.activity is not None and call_id is not None:
+            self.activity.finish(call_id)
+
+    def _activity_retrying(self, try_no: int, tries: int, reason: str) -> None:
+        call_id = _open_call_id.get()
+        if self.activity is not None and call_id is not None:
+            self.activity.retrying(call_id, try_no, tries, reason)
+
+    async def _reporting(self, call):
+        """Run one call coroutine with it recorded as open, and closed again however it ends."""
+        call_id = self._activity_start()
+        token = _open_call_id.set(call_id)
+        try:
+            return await call
+        finally:
+            _open_call_id.reset(token)
+            self._activity_finish(call_id)
+
     @abstractmethod
     async def call_llm_async(
         self,
@@ -99,6 +144,15 @@ class OpenAIClient(BaseLLMClient):
         response_schema: Any = None,
         temperature: Optional[float] = None,
         top_p: Optional[float] = None,
+    ) -> tuple[str, dict]:
+        return await self._reporting(self._call(messages, response_schema, temperature, top_p))
+
+    async def _call(
+        self,
+        messages: list[dict],
+        response_schema: Any,
+        temperature: Optional[float],
+        top_p: Optional[float],
     ) -> tuple[str, dict]:
         config: dict[str, Any] = {
             "model": self.model_name,
@@ -197,6 +251,7 @@ class GeminiClient(BaseLLMClient):
                     )
                 if attempt == self.attempts or not _gemini_error_is_worth_retrying(exc):
                     raise exc
+                self._activity_retrying(attempt + 1, self.attempts, _gemini_retry_reason(exc))
                 await asyncio.sleep(self.retry_wait_seconds * attempt)
 
     async def call_llm_async(
@@ -205,6 +260,15 @@ class GeminiClient(BaseLLMClient):
         response_schema: Any = None,
         temperature: Optional[float] = None,
         top_p: Optional[float] = None,
+    ) -> tuple[str, dict]:
+        return await self._reporting(self._call(messages, response_schema, temperature, top_p))
+
+    async def _call(
+        self,
+        messages: list[dict],
+        response_schema: Any,
+        temperature: Optional[float],
+        top_p: Optional[float],
     ) -> tuple[str, dict]:
         system_prompt = messages[0]["content"]
         chat_messages = messages[1:]

@@ -11,6 +11,8 @@ from madclean.config.settings import CleaningConfig
 from madclean.utils.helpers import llm_sampling_kwargs_from_config, seeded_random
 
 MAX_VALIDATION_CASES = 20
+# What an earlier column overview in the validator's history becomes, so a retry does not re-send it.
+EARLIER_OVERVIEW_STUB = "(overview of an earlier attempt, left out)"
 
 
 class ValidationCase(BaseModel):
@@ -111,11 +113,15 @@ class LLMValidationAgent:
                messages: list[dict[str, str]] | None = None,
                last_attempt: bool = False,
                attempt: int = 0,
-               note: str | None = None) -> tuple[bool, str | None, str| None, list[dict[str, str]], str, dict]:
+               note: str | None = None,
+               previous_rewrites: set[tuple] | None = None,
+               previous_cases: list | None = None) -> tuple[bool, str | None, str| None, list[dict[str, str]], str, dict]:
         """
         Compares dirty and cleaned columns and validates cleaning operations.
         If validator detects undesired changes, it sends feedback to the corresponding LLM agent.
         A note, when given, tells the validator what changed since its last verdict (the system's own repair).
+        previous_rewrites and previous_cases, from the second round on, add its earlier verdict and (new) marks.
+        Earlier overviews in the history are replaced by a stub, so each retry sends only the latest one.
         Returns (needs_correction, feedback_target, correction_instructions, messages, raw_llm_output, details),
         where details is {"issue_kind": ..., "cases": [...]}. The agent is shared by columns cleaned
         concurrently, so the details travel with the answer instead of living on the agent.
@@ -136,6 +142,8 @@ class LLMValidationAgent:
             random_sample_size=self.config.sample_size_validator_random,
             changed_sample_size=self.config.sample_size_validator_changed,
             rng=seeded_random(self.config.sampling_seed, "validation", col, attempt),
+            previous_rewrites=previous_rewrites,
+            previous_cases=previous_cases,
         )
         hints = getattr(self.config, "recommender_column_hints", None) or {}
         if isinstance(hints, dict):
@@ -160,6 +168,9 @@ class LLMValidationAgent:
                 )
         if note and note.strip():
             prompt += f"\n\n### WHAT CHANGED SINCE YOUR LAST VERDICT\n{note.strip()}\n"
+        for index in range(1, len(messages)):
+            if messages[index].get("role") == "user":
+                messages[index] = {"role": "user", "content": EARLIER_OVERVIEW_STUB}
         messages.append({"role": "user", "content": prompt})
         # 3. Call Validation Agent to validate cleaning operations
         try:

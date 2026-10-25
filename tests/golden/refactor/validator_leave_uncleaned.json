@@ -124,15 +124,15 @@
         "total_tokens": 8976
       },
       "validation": {
-        "input_tokens": 45821,
+        "input_tokens": 46136,
         "output_tokens": 364,
-        "total_tokens": 46185
+        "total_tokens": 46500
       }
     },
     "total_usage": {
-      "input_tokens": 76997,
+      "input_tokens": 77312,
       "output_tokens": 1878,
-      "total_tokens": 78875
+      "total_tokens": 79190
     }
   },
   "traces": {
@@ -258,14 +258,14 @@
       "d784186754c302d2333d57afdf70ba7025a14090fe88e53c0b6e2722527607b5"
     ],
     "validator": [
+      "102d3610ebfd474c3b099c1be90bacc86b51363d10c00ad692b5bc6879871e5a",
       "35164fff38d8cde7481b981dc7b570976090ef953de4fda6482b56af26f7ce23",
-      "4a73595214fb23e4d6c971ffa74fa682cc5f988fe8a9a5f0f402bcc069807492",
+      "529a154c8e84a9c7fa659851db121248f2424508ecb3e82e6cd88a52232810d6",
       "52b35f604c723d4635194547711bcc4c2ac390c2380d2ffa23de666d558ded63",
       "551a8ff9256533ee6f3af5c4a4f2eac93081b060bb0901b11f2741cef7c38270",
-      "57344e5262fe9e4fa87c12d3c9b5d885588feb9b2fb0a4753ba375d25f639d04",
-      "8a485422827b64e1563f417181ca1675b0a5ffa52c112923e5ec6ca6ff70009d",
-      "a9957c994d0fb792c063db055327d1bcf0ff864a22dd15fef5670365568bc628",
-      "f4061fc5bc654f98a55e7697afa6825b62b9595277a5b361a08f1da9fcccb2ee"
+      "7b8983187f89b9d42a927e488e9a2b9aa1f65af4b49c97ada521dff7c20ba7cc",
+      "84bb5b61efc2f481897cc4d3336cdb9964c07e0d12e6c8c901ba1853a21a4851",
+      "c27473e5f33c319d852cef28b9ef7e80f3b9a6fe4132d24df2922f414c1663d5"
     ]
   },
   "reviews": {}

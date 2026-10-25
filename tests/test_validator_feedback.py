@@ -17,7 +17,7 @@ from madclean.components.coordinator.prompt_generation import PromptGeneration
 from madclean.components.domain.schema import ColumnProfile
 from madclean.components.multi_agent_cleaner.llm_coding import LLMCodingAgent
 from madclean.components.multi_agent_cleaner.llm_recommending import CodeOutputRecommendation
-from madclean.components.multi_agent_cleaner.llm_validation import CodeOutputValidation
+from madclean.components.multi_agent_cleaner.llm_validation import EARLIER_OVERVIEW_STUB, CodeOutputValidation
 from madclean.components.multi_agent_cleaner.multi_agent_cleaning import MultiAgentCleaning
 from madclean.config.loader import load_default_cleaning_config
 
@@ -73,6 +73,55 @@ def test_overview_cuts_long_rewrite_lists_and_long_values():
     assert "… and 50 more distinct rewrites covering 50 rows" in prompt
     assert '"' + "x" * 80 + '…"' in prompt
     assert "x" * 81 not in prompt
+
+
+def has_earlier_verdict(prompt: str) -> bool:
+    """The block's heading line, not the rule in HOW TO JUDGE that names it."""
+    return "YOUR EARLIER VERDICT" in prompt.splitlines()
+
+
+def new_marks(prompt: str) -> list[str]:
+    return [line for line in prompt.splitlines() if line.endswith(" rows) (new)")]
+
+
+def test_overview_marks_new_rewrites():
+    dirty = ["Saint Louis"] * 20 + ["Chicago IL"] * 10 + ["Chicago"] * 70
+    cleaned = ["St. Louis"] * 20 + ["Chicago"] * 80
+
+    prompt = overview(dirty, cleaned, previous_rewrites={("Chicago IL", "Chicago")}, previous_cases=[])
+
+    assert '"Saint Louis" → "St. Louis" (20 rows) (new)' in prompt.splitlines()
+    assert '"Chicago IL" → "Chicago" (10 rows)' in prompt.splitlines()
+
+
+def test_earlier_verdict_lists_the_cases():
+    cases = [SAINT_LOUIS, {"original": "N/A", "cleaned": None, "expected": "N/A", "problem": "Not a placeholder."}]
+
+    prompt = overview(["Saint Louis", "N/A"], ["St. Louis", None], previous_rewrites=set(), previous_cases=cases)
+
+    lines = prompt.splitlines()
+    assert "YOUR EARLIER VERDICT" in lines
+    assert "- Saint Louis → St. Louis: Abbreviated from outside knowledge." in lines
+    assert "- N/A → <empty>: Not a placeholder." in lines
+    assert lines.index("YOUR EARLIER VERDICT") < lines.index("COLUMN OVERVIEW")
+
+
+def test_earlier_verdict_without_cases():
+    prompt = overview(["a"], ["b"], previous_rewrites={("a", "b")}, previous_cases=[])
+
+    assert has_earlier_verdict(prompt)
+    assert "(no cases listed)" in prompt.splitlines()
+    assert not new_marks(prompt)
+
+
+def test_first_round_prompt_is_unchanged():
+    dirty, cleaned = ["Saint Louis", "Chicago IL", "Chicago"], ["St. Louis", "Chicago", "Chicago"]
+
+    first = overview(dirty, cleaned)
+
+    assert first == overview(dirty, cleaned, previous_rewrites=None, previous_cases=None)
+    assert not has_earlier_verdict(first) and not new_marks(first)
+    assert "which rule each case breaks.\n\nCOLUMN OVERVIEW" in first
 
 
 cell = st.one_of(st.none(), st.sampled_from(["a", "b", "a b", "A", "1", "1.0", ""]))
@@ -201,6 +250,34 @@ def test_over_cleaning_feedback_does_not_say_errors_remain(monkeypatch):
     assert "changed values that were already correct" in message
     assert "Saint Louis → St. Louis → Saint Louis: Abbreviated from outside knowledge." in message
     assert report.cleaning_validated is True
+
+
+def test_second_round_sends_one_overview_and_the_earlier_verdict(monkeypatch):
+    _, _, fake = clean_city(monkeypatch, [rejection("MISSED_ERRORS"), APPROVAL])
+
+    first, second = fake.calls_for("validator")
+    assert not has_earlier_verdict(first[-1]["content"]) and not new_marks(first[-1]["content"])
+    assert has_earlier_verdict(second[-1]["content"])
+    assert "(no cases listed)" in second[-1]["content"].splitlines()
+    assert sum(message["content"].count("COLUMN OVERVIEW") for message in second) == 1
+    assert {"role": "user", "content": EARLIER_OVERVIEW_STUB} in second
+    # The same code ran again: nothing is new to the validator.
+    assert not new_marks(second[-1]["content"])
+
+
+def test_second_round_lists_the_cases_after_a_rejected_repair(monkeypatch):
+    over_cleaning = rejection("OVER_CLEANING", [SAINT_LOUIS])
+    _, _, fake = clean_city(monkeypatch, [over_cleaning, over_cleaning, APPROVAL])
+
+    after_repair, second_round = fake.calls_for("validator")[1:]
+    assert not has_earlier_verdict(after_repair[-1]["content"])
+    assert sum(message["content"].count("COLUMN OVERVIEW") for message in after_repair) == 1
+    prompt = second_round[-1]["content"]
+    assert "- Saint Louis → St. Louis: Abbreviated from outside knowledge." in prompt
+    # The repair had undone it, so the rewrite is new again; the kept one is not.
+    assert '"Saint Louis" → "St. Louis" (20 rows) (new)' in prompt
+    assert '"Chicago IL" → "Chicago" (10 rows)\n' in prompt
+    assert sum(message["content"].count("COLUMN OVERVIEW") for message in second_round) == 1
 
 
 def test_missed_errors_feedback_keeps_the_old_sentence(monkeypatch):

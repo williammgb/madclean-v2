@@ -186,15 +186,15 @@
         "total_tokens": 14071
       },
       "validation": {
-        "input_tokens": 36091,
+        "input_tokens": 30763,
         "output_tokens": 446,
-        "total_tokens": 36537
+        "total_tokens": 31209
       }
     },
     "total_usage": {
-      "input_tokens": 95022,
+      "input_tokens": 89694,
       "output_tokens": 1949,
-      "total_tokens": 96971
+      "total_tokens": 91643
     }
   },
   "traces": {
@@ -458,11 +458,11 @@
       "f628367eb924a00f0fe97f1bcb38c785a5c682aafee3d3023d15afe4b6d0b56c"
     ],
     "validator": [
-      "0f1ea77f6d8bbec126c79e7e0c8218aef7a1cdf84ddf298235bf00729a90e94f",
-      "b812bfbdf148efa98623e411bb620cfad3cb8308f7629db6cdac56fe939790a2",
-      "c3abe9aeff1ee2726a3be208b455accc6e69d0212a366fca5db882a4365235da",
-      "d1cdc8092fe570573b1563daa01715addd604ecce47400f1657e3ef3dfb72010",
-      "daa2d6bd3a650b18a1fd469b97ac007227d9b99c25ee739387d0f991522d1d23"
+      "901225b6e7dcdeaa35e39bd0947234d12564936184c1b7787d16ec9444c2c421",
+      "9a743a9348d9438b06d4e16b61cb68ba573e7611e98dbce647fcefeb661b01d9",
+      "acb7aeb7c75d283cecc868107b5b25294cd2b389f01b3a694d06b16338a27619",
+      "b66890a3f080e776867e36cfdf21d395113c11dcbec2b759ecd884f17af55397",
+      "f096d294edafa4dc590ec81cd74e01990ca2901b77542ebacdd0a664032516db"
     ]
   },
   "reviews": {
@@ -868,6 +868,120 @@
         "modified_count": 0
       }
     ],
+    "validation_review::colrejected": [
+      {
+        "kind": "validation_review",
+        "column": "colrejected",
+        "attempt": 1,
+        "llm_needs_correction": true,
+        "llm_feedback_target": "RECOMMENDER",
+        "llm_correction_instructions": "Trailing spaces remain.",
+        "validator_output": "{\"needs_correction\": true, \"feedback_target\": \"RECOMMENDER\", \"correction_instructions\": \"Trailing spaces remain.\"}",
+        "sample_rows": [
+          {
+            "original": "colrejected_lars",
+            "cleaned": "colrejected_lars",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Kim ",
+            "cleaned": "colrejected_Kim ",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_gijs",
+            "cleaned": "colrejected_gijs",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_tess",
+            "cleaned": "colrejected_tess",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Dirk ",
+            "cleaned": "colrejected_Dirk ",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Quinn",
+            "cleaned": "colrejected_Quinn",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Mila",
+            "cleaned": "colrejected_Mila",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Hanna",
+            "cleaned": "colrejected_Hanna",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Femke",
+            "cleaned": "colrejected_Femke",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_pim",
+            "cleaned": "colrejected_pim",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Sam",
+            "cleaned": "colrejected_Sam",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_noor",
+            "cleaned": "colrejected_noor",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_eva",
+            "cleaned": "colrejected_eva",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_ivo",
+            "cleaned": "colrejected_ivo",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_roos",
+            "cleaned": "colrejected_roos",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_cees",
+            "cleaned": "colrejected_cees",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Olaf",
+            "cleaned": "colrejected_Olaf",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Joost",
+            "cleaned": "colrejected_Joost",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_Bram",
+            "cleaned": "colrejected_Bram",
+            "changed": "0"
+          },
+          {
+            "original": "colrejected_anna ",
+            "cleaned": "colrejected_anna ",
+            "changed": "0"
+          }
+        ],
+        "modified_count": 0
+      }
+    ],
     "validation_review::coldisagree": [
       {
         "kind": "validation_review",
@@ -1088,120 +1202,6 @@
           {
             "original": "coldisagree_Quinn",
             "cleaned": "coldisagree_Quinn",
-            "changed": "0"
-          }
-        ],
-        "modified_count": 0
-      }
-    ],
-    "validation_review::colrejected": [
-      {
-        "kind": "validation_review",
-        "column": "colrejected",
-        "attempt": 1,
-        "llm_needs_correction": true,
-        "llm_feedback_target": "RECOMMENDER",
-        "llm_correction_instructions": "Trailing spaces remain.",
-        "validator_output": "{\"needs_correction\": true, \"feedback_target\": \"RECOMMENDER\", \"correction_instructions\": \"Trailing spaces remain.\"}",
-        "sample_rows": [
-          {
-            "original": "colrejected_lars",
-            "cleaned": "colrejected_lars",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Kim ",
-            "cleaned": "colrejected_Kim ",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_gijs",
-            "cleaned": "colrejected_gijs",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_tess",
-            "cleaned": "colrejected_tess",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Dirk ",
-            "cleaned": "colrejected_Dirk ",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Quinn",
-            "cleaned": "colrejected_Quinn",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Mila",
-            "cleaned": "colrejected_Mila",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Hanna",
-            "cleaned": "colrejected_Hanna",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Femke",
-            "cleaned": "colrejected_Femke",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_pim",
-            "cleaned": "colrejected_pim",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Sam",
-            "cleaned": "colrejected_Sam",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_noor",
-            "cleaned": "colrejected_noor",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_eva",
-            "cleaned": "colrejected_eva",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_ivo",
-            "cleaned": "colrejected_ivo",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_roos",
-            "cleaned": "colrejected_roos",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_cees",
-            "cleaned": "colrejected_cees",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Olaf",
-            "cleaned": "colrejected_Olaf",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Joost",
-            "cleaned": "colrejected_Joost",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_Bram",
-            "cleaned": "colrejected_Bram",
-            "changed": "0"
-          },
-          {
-            "original": "colrejected_anna ",
-            "cleaned": "colrejected_anna ",
             "changed": "0"
           }
         ],

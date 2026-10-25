@@ -194,15 +194,15 @@
         "total_tokens": 11224
       },
       "validation": {
-        "input_tokens": 15601,
+        "input_tokens": 15790,
         "output_tokens": 249,
-        "total_tokens": 15850
+        "total_tokens": 16039
       }
     },
     "total_usage": {
-      "input_tokens": 61710,
+      "input_tokens": 61899,
       "output_tokens": 1598,
-      "total_tokens": 63308
+      "total_tokens": 63497
     }
   },
   "traces": {
@@ -386,9 +386,9 @@
       "f271f200461b34a52b1509752f9b242444041e2b129d42c3b3ff61765d27f27d"
     ],
     "validator": [
-      "483aad7cd9a56ce2e0a9fa12c41c5b3cd8a895d58da813794b1a1ba5b652954b",
-      "710e08b1acba2c2e5fcc243b3e4dde202395d4e61396df37c7f0723b55efaf68",
-      "8a485422827b64e1563f417181ca1675b0a5ffa52c112923e5ec6ca6ff70009d"
+      "125afae67d0bef322486a17a039cb1cb687345943257d010282204303be48ac7",
+      "7e959a93a57467d7db81dfd23b7ab8ec433b759741ae537d4ff9ee40eaa75200",
+      "c27473e5f33c319d852cef28b9ef7e80f3b9a6fe4132d24df2922f414c1663d5"
     ]
   },
   "reviews": {}

@@ -262,7 +262,7 @@ Judge the dominant form from the counts BEFORE cleaning, never from the rewrites
 A high share of changed cells is not wrong by itself; removing a unit from every value, for example, is legitimate.
 <<TYPE_PART>>
 HOW TO JUDGE
-1. Review your earlier messages for this column, so your verdict is consistent with the feedback you gave before.
+1. If YOUR EARLIER VERDICT is shown: object again only to a case that is still wrong or a rewrite marked (new); object to an older rewrite only when it clearly breaks the rule.
 2. Check each rewrite against the rule above and the type notes, and check the unchanged values for clear errors that remain.
 3. If the cleaning follows the rule and no clear errors remain, set "needs_correction" to false. Minor leftovers are better than a wrong change.
 4. Otherwise set "needs_correction" to true and choose the "issue_kind":
@@ -273,7 +273,7 @@ HOW TO JUDGE
 5. Set "feedback_target" to "CODER" for a CODE_BUG and to "RECOMMENDER" otherwise.
 6. List up to 20 "cases" taken from the rewrites and unchanged values shown: "original" and "cleaned" exactly as shown, "expected" the value it should have, and "problem" one short reason. For a missed error, "cleaned" equals "original".
 7. In "correction_instructions", say which changes to stop, which to keep, and which rule each case breaks.
-{last_attempt_msg}
+{last_attempt_msg}{earlier_verdict}
 COLUMN OVERVIEW
 Column Name: '{column_name}'
 {column_comparison_sample}

@@ -5,7 +5,7 @@ from madclean.components.multi_agent_cleaner.llm_recommending import (
     CodeOutputFDRecommendation,
     CodeOutputRecommendation,
 )
-from madclean.components.multi_agent_cleaner.llm_validation import CodeOutputValidation
+from madclean.components.multi_agent_cleaner.llm_validation import EARLIER_OVERVIEW_STUB, CodeOutputValidation
 from madclean.llm.llm_clients import BaseLLMClient
 from madclean.llm.llm_registry import LLMSpec
 
@@ -19,9 +19,10 @@ class ServiceUnavailable(RuntimeError):
 
 
 def first_user_text(messages) -> str:
-    """The first user turn of a prompt, which is where the agents name the column or dependency."""
+    """The first user turn of a prompt, which is where the agents name the column or dependency. The
+    validator's earlier overviews are stubs that name nothing, so the first one that is not a stub."""
     for message in messages:
-        if message.get("role") == "user":
+        if message.get("role") == "user" and message.get("content") != EARLIER_OVERVIEW_STUB:
             return str(message.get("content", ""))
     return ""
 

@@ -106,7 +106,12 @@ class PromptGeneration:
             max_sample_size: int = 150,
             random_sample_size: int = 60,
             changed_sample_size: int = 90,
-            rng: random.Random | None = None) -> str:
+            rng: random.Random | None = None,
+            previous_rewrites: set[tuple] | None = None,
+            previous_cases: list | None = None) -> str:
+        """The validator's prompt. From the second round on, previous_rewrites (the (original, cleaned) pairs
+        of the column it judged last) and previous_cases (the cases it listed then) add its earlier verdict
+        and mark the rewrites it has not seen with (new); without them the prompt is the first round's."""
         PROMPT_MAP = {
         "DATETIME": "DATETIME",
         "BOOLEAN": "BOOLEAN",
@@ -132,6 +137,7 @@ class PromptGeneration:
             max_rewrites=max_sample_size,
             unchanged_sample_size=random_sample_size,
             rng=rng,
+            previous_rewrites=previous_rewrites,
         )
         # 2. Add last attempt message to Validator Agent
         last_attempt_msg = (
@@ -145,10 +151,41 @@ class PromptGeneration:
         final_prompt = format_prompt_template(
             prompt_template,
             last_attempt_msg=last_attempt_msg if last_attempt else "",
+            earlier_verdict=self._earlier_verdict(previous_rewrites, previous_cases),
             column_name=col,
             column_comparison_sample=column_comparison_str
         )
         return final_prompt
+
+    @classmethod
+    def _earlier_verdict(cls, previous_rewrites: set[tuple] | None, previous_cases: list | None) -> str:
+        """The YOUR EARLIER VERDICT block: empty in the first round, else the cases one per line."""
+        if previous_rewrites is None and previous_cases is None:
+            return ""
+        lines = ["", "YOUR EARLIER VERDICT", "The cases you listed last time (original → cleaned: problem):"]
+        cases = list(previous_cases or [])
+        if not cases:
+            lines.append("(no cases listed)")
+        for case in cases:
+            get = case.get if isinstance(case, dict) else (lambda name, _case=case: getattr(_case, name, None))
+            original, cleaned = cls._case_text(get("original")), cls._case_text(get("cleaned"))
+            lines.append(f"- {original} → {cleaned}: {str(get('problem') or '').strip()}")
+        lines.append("Rewrites you have not seen before are marked (new) in the overview below.")
+        return "\n".join(lines) + "\n"
+
+    @staticmethod
+    def _case_text(value) -> str:
+        return "<empty>" if value is None or value == "" else str(value)
+
+    @classmethod
+    def rewrite_pairs(cls, dirty_series: pd.Series, cleaned_series: pd.Series) -> set[tuple]:
+        """The (original, cleaned) pairs of the changed cells, as the overview shows them."""
+        dirty_series, cleaned_series = align_dirty_cleaned_series(dirty_series, cleaned_series)
+        return {
+            (cls._overview_text(d), cls._overview_text(c))
+            for d, c in zip(dirty_series.tolist(), cleaned_series.tolist())
+            if cls._cell_changed(d, c)
+        }
 
     OVERVIEW_TOP_VALUES = 30
     OVERVIEW_VALUE_WIDTH = 80
@@ -196,6 +233,7 @@ class PromptGeneration:
         max_rewrites: int,
         unchanged_sample_size: int,
         rng: random.Random | None = None,
+        previous_rewrites: set[tuple] | None = None,
     ) -> str:
         """Whole-column facts for the validator: counts, the change share, each distinct rewrite once with its
         row count, and a sample of unchanged values. Repeated rewrites are one line, so they cannot look like
@@ -234,6 +272,7 @@ class PromptGeneration:
             lines += ["", "DISTINCT REWRITES (original → cleaned (rows)), most rows first"]
             lines += [
                 f"{self._shown(old, quoted=True)} → {self._shown(new, quoted=True)} ({count} rows)"
+                + (" (new)" if previous_rewrites is not None and (old, new) not in previous_rewrites else "")
                 for (old, new), count in shown
             ]
             rest = ordered[len(shown):]

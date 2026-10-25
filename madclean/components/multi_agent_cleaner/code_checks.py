@@ -85,14 +85,14 @@ _DEF_CLEAN_COLUMN = re.compile(r"\bdef\s+clean_column\s*\(")
 
 _VALUE_MAP_WRAPPER = '''
 def clean_column(column: pd.Series{base_parameter}) -> pd.Series:
-    _VALUE_MAP = {value_map}
+    {map_name} = {value_map}
     cleaned = {cleaned}
     original = column.astype(str).where(column.notna())
-    hit = original.isin(list(_VALUE_MAP)).to_numpy()
+    hit = original.isin(list({map_name})).to_numpy()
     if not hit.any() or len(cleaned) != len(column):
         return cleaned
     values = cleaned.astype(object).to_numpy(copy=True)
-    values[hit] = [_VALUE_MAP[value] for value in original[hit]]
+    values[hit] = [{map_name}[value] for value in original[hit]]
     result = pd.Series(values, index=cleaned.index, name=cleaned.name)
     result = result.where(result.notna())
     if pd.api.types.is_numeric_dtype(cleaned) and not pd.api.types.is_bool_dtype(cleaned):
@@ -118,11 +118,41 @@ def wrap_with_value_map(code: str | None, value_mapping) -> str:
         head = base if "import pandas as pd" in base else "import pandas as pd\n\n" + base
         wrapper = _VALUE_MAP_WRAPPER.format(
             base_parameter=", _clean_by_code=_clean_by_code",
+            map_name="_VALUE_MAP",
             value_map=value_map,
             cleaned="_clean_by_code(column.copy())",
         )
         return head + "\n\n" + wrapper.strip() + "\n"
-    wrapper = _VALUE_MAP_WRAPPER.format(base_parameter="", value_map=value_map, cleaned="column.copy()")
+    wrapper = _VALUE_MAP_WRAPPER.format(
+        base_parameter="", map_name="_VALUE_MAP", value_map=value_map, cleaned="column.copy()"
+    )
+    return "import pandas as pd\n\n\n" + wrapper.strip() + "\n"
+
+
+def wrap_with_repair_map(code: str | None, table: dict[str, str | None]) -> str:
+    """The column's code with the system's own repair applied last, on the original values.
+
+    `table` is {full original value: the value it gets}, None meaning "make empty". The code's
+    `clean_column` (a value table's wrapper included) is renamed `_clean_before_repair` and handed to the
+    new `clean_column` as a default argument, so the repair wins over everything before it and each
+    column's notebook cell keeps its own function and its own `_REPAIR_MAP`.
+    """
+    if not table:
+        return code or ""
+    repair_map = "{\n" + "".join(f"        {old!r}: {new!r},\n" for old, new in table.items()) + "    }"
+    if code:
+        base = _DEF_CLEAN_COLUMN.sub("def _clean_before_repair(", code.strip(), count=1)
+        head = base if "import pandas as pd" in base else "import pandas as pd\n\n" + base
+        wrapper = _VALUE_MAP_WRAPPER.format(
+            base_parameter=", _clean_before_repair=_clean_before_repair",
+            map_name="_REPAIR_MAP",
+            value_map=repair_map,
+            cleaned="_clean_before_repair(column.copy())",
+        )
+        return head + "\n\n" + wrapper.strip() + "\n"
+    wrapper = _VALUE_MAP_WRAPPER.format(
+        base_parameter="", map_name="_REPAIR_MAP", value_map=repair_map, cleaned="column.copy()"
+    )
     return "import pandas as pd\n\n\n" + wrapper.strip() + "\n"
 
 

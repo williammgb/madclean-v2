@@ -206,6 +206,67 @@ def test_a_run_with_a_value_table_and_a_dependency_table_exports_a_notebook_that
     )
 
 
+REPAIRED_CASES = {
+    "voornaam": {"original": "BRAM", "cleaned": "Bram", "expected": "BRAM", "problem": "Capitals on purpose."},
+    "achternaam": {"original": "JANSEN", "cleaned": "Jansen", "expected": "JANSEN", "problem": "Capitals on purpose."},
+}
+
+
+def test_a_run_with_two_repaired_columns_exports_a_notebook_that_reproduces_it(tmp_path):
+    frame = pd.DataFrame({
+        "voornaam": ["anna", "BRAM", "cees", "dirk", "eva", "femke", "gijs", "hanna"],
+        "achternaam": ["de vries", "JANSEN", "bakker", "visser", "smit", "meijer", "mulder", "bos"],
+    })
+    dirty = tmp_path / "names_dirty.csv"
+    frame.to_csv(dirty, index=False)
+    verdicts: dict[str, int] = {}
+
+    def script(kind, messages):
+        if kind != "validator":
+            return None
+        text = next(m["content"] for m in messages if m["role"] == "user")
+        column = "achternaam" if "achternaam" in text else "voornaam"
+        verdicts[column] = verdicts.get(column, 0) + 1
+        if verdicts[column] > 1:
+            return None  # the fake's approval
+        return json.dumps({
+            "needs_correction": True, "feedback_target": "RECOMMENDER", "correction_instructions": "Keep capitals.",
+            "issue_kind": "OVER_CLEANING", "cases": [REPAIRED_CASES[column]],
+        })
+
+    fake = FakeLLMClient(coder_code=STRIP_CODE.strip(), script=script)
+    config = load_default_cleaning_config()
+    config.verbose = False
+    config.sampling_seed = 7
+    config.enable_multi_col_cleaning = False
+    llm = fake.llm_config()
+    pipeline = Pipeline(
+        llm_config=llm,
+        agent_llm_configs={"recommender": llm, "coding": llm, "validation": llm},
+        config=config,
+        verbose=False,
+    )
+    cleaned, report = pipeline.run(file_path=str(dirty), save_cleaned=False)
+
+    # Both columns were repaired: the objected value is back, the rest is cleaned.
+    assert cleaned["voornaam"].tolist()[:3] == ["Anna", "BRAM", "Cees"]
+    assert cleaned["achternaam"].tolist()[:3] == ["De Vries", "JANSEN", "Bakker"]
+    entries = report.to_dict()
+    for column in ("voornaam", "achternaam"):
+        assert "_REPAIR_MAP" in entries[column]["generated_code"]
+        assert entries[column]["cleaning_validated"] is True
+    assert verdicts == {"voornaam": 2, "achternaam": 2}
+
+    notebook = build_notebook(report, dataset_path=str(dirty), output_path="from_notebook.csv")
+    _execute(notebook, tmp_path)
+
+    from_notebook = pd.read_csv(tmp_path / "from_notebook.csv")
+    pd.testing.assert_frame_equal(
+        from_notebook.astype(str).reset_index(drop=True),
+        cleaned.astype(str).reset_index(drop=True),
+    )
+
+
 @pytest.mark.slow
 def test_the_beers_run_exports_a_notebook_that_reproduces_it(tmp_path):
     """The same check at real size, on the benchmark the thesis reports."""

@@ -192,7 +192,9 @@ def feedback_to_recommender(fake: FakeLLMClient) -> str:
 
 
 def test_over_cleaning_feedback_does_not_say_errors_remain(monkeypatch):
-    _, report, fake = clean_city(monkeypatch, [rejection("OVER_CLEANING", [SAINT_LOUIS]), APPROVAL])
+    # The system repairs the case itself first; the validator rejecting the repair sends it to the Recommender.
+    over_cleaning = rejection("OVER_CLEANING", [SAINT_LOUIS])
+    _, report, fake = clean_city(monkeypatch, [over_cleaning, over_cleaning, APPROVAL])
 
     message = feedback_to_recommender(fake)
     assert OLD_SENTENCE not in message

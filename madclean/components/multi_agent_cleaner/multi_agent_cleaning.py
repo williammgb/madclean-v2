@@ -28,7 +28,18 @@ from madclean.components.multi_agent_cleaner.code_checks import (
     quoted,
     unmatched_lhs_values,
     value_table,
+    wrap_with_repair_map,
 )
+
+# What a validator that could not answer says, by validator_failure_strategy.
+_VALIDATOR_FAILURES = ("__VALIDATOR_FAILURE_LEAVE_UNCLEANED__", "__VALIDATOR_FAILURE_ASK_USER__")
+# How much of a failed Coder's error the Recommender is shown.
+CODER_ERROR_LINES = 15
+
+
+def _case_value(value) -> str | None:
+    """A validator case's cell as the overview showed it: None for missing."""
+    return None if value is None or value in ("", "<empty>") else str(value)
 
 # Which column or dependency task the calls of this asyncio task belong to. Columns are cleaned
 # concurrently through one shared set of agents, so the task's own context is the only place that
@@ -238,13 +249,7 @@ class MultiAgentCleaning:
         if details.get("issue_kind") == "MISSED_ERRORS":
             return cleaned, sum(changed), 0
 
-        def case_value(value):
-            return None if value is None or value in ("", "<empty>") else str(value)
-
-        objected = {
-            (case_value(case.get("original")), case_value(case.get("cleaned")))
-            for case in details.get("cases") or []
-        }
+        objected = MultiAgentCleaning._objected_pairs(details)
         revert = [c and (b, a) in objected for c, b, a in zip(changed, before, after)]
         if not any(revert):
             return None
@@ -252,6 +257,109 @@ class MultiAgentCleaning:
         result = cleaned.astype(object).copy()
         result[mask] = dirty[mask]
         return result, sum(changed) - sum(revert), sum(revert)
+
+    @staticmethod
+    def _objected_pairs(details: dict | None) -> set[tuple[str | None, str | None]]:
+        """The (original, cleaned) pairs a verdict's cases name, as the overview showed them."""
+        return {
+            (_case_value(case.get("original")), _case_value(case.get("cleaned")))
+            for case in (details or {}).get("cases") or []
+        }
+
+    @staticmethod
+    def _repair_table(
+        dirty: pd.Series, cleaned: pd.Series, details: dict | None
+    ) -> tuple[dict[str, str | None], int, int, int]:
+        """What the system may fix itself after a rejection: (table, rows reverted, rows fixed, cases skipped).
+
+        Cases are matched to rows as `_keep_unobjected_changes` does, on the values the overview showed. A
+        rewrite the validator objected to (OVER_CLEANING, FORMAT_CHANGE) goes back to its full original value.
+        A missed error (MISSED_ERRORS, a case whose cell was left unchanged) gets its expected value only when
+        that value already appears in the original column, or is empty ("" or <empty>). A verdict without a
+        kind gets both rules, case by case. Every other case is skipped and left for the Recommender. The
+        table is keyed on the full original values of the matched rows.
+        """
+        details = details or {}
+        issue_kind = details.get("issue_kind")
+        dirty, cleaned = align_dirty_cleaned_series(dirty, cleaned)
+        text = PromptGeneration._overview_text
+        originals = dirty.tolist()
+        before = [text(v) for v in originals]
+        after = [text(v) for v in cleaned.tolist()]
+        changed = [PromptGeneration._cell_changed(d, c) for d, c in zip(originals, cleaned.tolist())]
+        present = {str(v) for v in originals if not PromptGeneration._is_missing(v)}
+        table: dict[str, str | None] = {}
+        reverted = fixed = skipped = 0
+        for case in details.get("cases") or []:
+            original, rewritten = _case_value(case.get("original")), _case_value(case.get("cleaned"))
+            missed = rewritten == original
+            if (
+                original is None
+                or (missed and issue_kind not in ("MISSED_ERRORS", None))
+                or (not missed and issue_kind == "MISSED_ERRORS")
+            ):
+                skipped += 1
+                continue
+            if missed:
+                expected = case.get("expected")
+                if expected is None or (str(expected).strip() not in ("", "<empty>") and str(expected) not in present):
+                    skipped += 1
+                    continue
+                value = None if str(expected).strip() in ("", "<empty>") else str(expected)
+                rows = [i for i, (c, b) in enumerate(zip(changed, before)) if not c and b == original]
+            else:
+                rows = [i for i, (c, b, a) in enumerate(zip(changed, before, after)) if c and (b, a) == (original, rewritten)]
+            if not rows:
+                skipped += 1
+                continue
+            for i in rows:
+                full = str(originals[i])
+                table[full] = value if missed else full
+            if missed:
+                fixed += len(rows)
+            else:
+                reverted += len(rows)
+        return table, reverted, fixed, skipped
+
+    async def _apply_repair(
+        self,
+        df: pd.DataFrame,
+        col: str,
+        cleaned_column: pd.Series,
+        code: str | None,
+        details: dict | None,
+        attempt: int,
+        trace_steps: list[TraceStep],
+    ) -> tuple[pd.Series, str, str] | None:
+        """The system's own repair of a rejected column: (column, code, what it did).
+
+        None when no case applies, or when the repaired code does not run; then the round goes on as before.
+        """
+        table, reverted, fixed, skipped = self._repair_table(df[col], cleaned_column, details)
+        if not table:
+            return None
+        repaired_code = wrap_with_repair_map(code, table)
+        result = await LLMCodingAgent._execute_code_async(repaired_code, df, col)
+        if not isinstance(result, pd.Series):
+            self._add_step(col, trace_steps, self._attempt_step(
+                "repair", "Repair", attempt, "failed", f"The repaired code did not run: {result}"))
+            return None
+        cases = len((details or {}).get("cases") or [])
+        output = f"Reverted {reverted} rows, fixed {fixed} rows from {cases} cases; skipped {skipped}."
+        self._add_step(col, trace_steps, self._attempt_step("repair", "Repair", attempt, "ok", output))
+        return result, repaired_code, output
+
+    @staticmethod
+    def _repair_note(repair_output: str) -> str:
+        return (
+            f"After your last verdict the system changed the column itself. {repair_output} "
+            "Rewrites you objected to are back to their original value, and missed errors whose expected "
+            "value already appears in the column now have it. Judge the column as it is now."
+        )
+
+    @staticmethod
+    def _last_lines(text: str | None, count: int = CODER_ERROR_LINES) -> str:
+        return "\n".join(str(text or "").strip().splitlines()[-count:])
 
     @staticmethod
     def _format_recommender_output_multi(recommender_data) -> str:
@@ -709,10 +817,14 @@ class MultiAgentCleaning:
         final_code_str = ""
         trace_steps: list[TraceStep] = []
         recommender_api_failure_summary: str | None = None
+        # Repair and stop state lives in this column's own loop, so columns cleaned at once never share it.
+        coder_failures_in_a_row = 0
+        this_round_objected: set = set()
         # 1. Run multi-agent cleaning loop. Start with Recommender Agent to generate instructions
         feedback_target = 'RECOMMENDER'
         for attempt in range(self.config.max_cleaning_attempts):
             self._check_cancelled()
+            last_round_objected, this_round_objected = this_round_objected, set()
             if feedback_target == 'RECOMMENDER':
                 already_clean, recommender_data, new_recommender_history = await self.recommender_agent.generate_recommendations_async(
                     col, column_profile, messages=recommender_history)
@@ -795,9 +907,13 @@ class MultiAgentCleaning:
                 else "failed"
             )
             coder_output = self._trace_text(final_code_str)
+            if cleaned_column is None and _coder_status == "failed" and coder_note:
+                # A Coder that failed hands back its last error as the note.
+                coder_output = f"Coder failed. Last error:\n{coder_note}"
+            elif coder_note:
+                coder_output = f"{coder_note}\n\n{coder_output}"
             coder_step = self._add_step(col, trace_steps, self._attempt_step(
-                "coder", "Coder", attempt, _coder_status,
-                f"{coder_note}\n\n{coder_output}" if coder_note else coder_output,
+                "coder", "Coder", attempt, _coder_status, coder_output,
             ))
             if cleaned_column is not None and self._hitl_applies_to_column(col):
                 reviewed_code = await asyncio.to_thread(
@@ -827,7 +943,18 @@ class MultiAgentCleaning:
                             output=f"Edited code failed to execute: {exec_result!s}. Using coder output.",
                         ))
             # 3. If Coding Agent could not generate valid code to clean column, send feedback to Recommender to provide better instructions
-            if cleaned_column is None: 
+            if cleaned_column is None:
+                coder_failures_in_a_row = coder_failures_in_a_row + 1 if _coder_status == "failed" else 0
+                if coder_failures_in_a_row >= 2:
+                    msg = f"[{col}] FAILED cleaning: the Coder failed in 2 rounds in a row."
+                    self._finish_column(
+                        col, column_type, trace_steps, final_code_str,
+                        attempts=attempt + 1, cleaned=False, validated=False,
+                        output="The Coder failed in 2 rounds in a row; the column is left uncleaned.",
+                        status="failed",
+                        reason="Coder failed in 2 rounds in a row",
+                    )
+                    return col, None, msg
                 if attempt == self.config.max_cleaning_attempts -1:
                     break
                 feedback_target = 'RECOMMENDER'
@@ -837,9 +964,13 @@ class MultiAgentCleaning:
                     "This often means the instructions were too complex or ambiguous. "
                     "Please re-write your instructions."
                 )
+                coder_error = self._last_lines(coder_note or final_code_str)
+                if _coder_status == "failed" and coder_error:
+                    feedback_prompt += f"\n\nThe Coder's last error:\n{coder_error}"
                 if recommender_history:
                     recommender_history.append({"role": "user", "content": feedback_prompt})
                 continue
+            coder_failures_in_a_row = 0
             # 4. If column is cleaned, send to Validator Agent (if enabled)
             if not self.config.enable_validation:
                 msg = f"[{col}] Successfully cleaned."
@@ -961,18 +1092,77 @@ class MultiAgentCleaning:
                     output="Column cleaned and validated.",
                 )
                 return col, cleaned_column, msg
-            if attempt == self.config.max_cleaning_attempts - 1:
-                # Out of attempts: keep what the validator did not object to rather than dropping all work.
+            # The system's own work on the model's verdict; a person's review is never second-guessed.
+            automatic = not self._hitl_applies_to_column(col)
+            this_round_objected = self._objected_pairs(validation_details)
+            # The validator objects only to what it already objected to last round: another round will not help.
+            stalled = automatic and bool(this_round_objected) and this_round_objected <= last_round_objected
+            # A bug in the code is the Coder's to fix: no repair on top of it.
+            code_bug = (validation_details or {}).get("issue_kind") == "CODE_BUG"
+            if automatic and not last_attempt and not stalled and not code_bug:
+                repair = await self._apply_repair(
+                    df, col, cleaned_column, final_code_str, validation_details, attempt, trace_steps
+                )
+                if repair is not None:
+                    repaired_column, repaired_code, repair_output = repair
+                    (repair_needs_correction, repair_target, repair_instructions, validator_history, _repair_raw,
+                     repair_details) = await self.validation_agent.validate_async(
+                        col, df[col], repaired_column, column_type, messages=validator_history,
+                        last_attempt=False, attempt=attempt, note=self._repair_note(repair_output))
+                    if repair_instructions in _VALIDATOR_FAILURES:
+                        self._add_step(col, trace_steps, TraceStep(
+                            id=f"validator_repair_{attempt + 1}",
+                            title="Validator (after repair)",
+                            status="failed",
+                            output="The validator could not judge the repaired column; the repair was not kept.",
+                        ))
+                    else:
+                        self._add_step(col, trace_steps, TraceStep(
+                            id=f"validator_repair_{attempt + 1}",
+                            title="Validator (after repair)",
+                            status="needs_correction" if repair_needs_correction else "approved",
+                            output=self._format_validator_output(
+                                repair_needs_correction, repair_target, repair_instructions, repair_details
+                            ),
+                        ))
+                        if not repair_needs_correction:
+                            msg = f"[{col}] Successfully cleaned and validated after repair."
+                            self._finish_column(
+                                col, column_type, trace_steps, repaired_code,
+                                attempts=attempt + 1, cleaned=True, validated=True,
+                                output="Column cleaned and validated after repair.",
+                            )
+                            return col, repaired_column, msg
+                        # Rejected again: that verdict goes on as this round's rejection.
+                        cleaned_column, final_code_str = repaired_column, repaired_code
+                        feedback_target, correction_instructions = repair_target, repair_instructions
+                        validation_details = repair_details
+                        this_round_objected = this_round_objected | self._objected_pairs(repair_details)
+            if last_attempt or stalled:
+                # Out of attempts, or a repeated objection: keep what the validator did not object to.
                 kept = self._keep_unobjected_changes(df[col], cleaned_column, validation_details)
                 if kept is not None:
                     kept_column, kept_count, reverted_count = kept
                     msg = f"[{col}] Cleaned without validation: kept {kept_count} rewrites, reverted {reverted_count}."
+                    output = f"Kept {kept_count} rewrites; reverted {reverted_count} the validator objected to."
+                    if stalled:
+                        output = f"The validator repeated its objections, so the column stopped early. {output}"
                     self._finish_column(
                         col, column_type, trace_steps, final_code_str,
                         attempts=attempt + 1, cleaned=True, validated=False,
-                        output=f"Kept {kept_count} rewrites; reverted {reverted_count} the validator objected to.",
+                        output=output,
                     )
                     return col, kept_column, msg
+                if stalled:
+                    msg = f"[{col}] FAILED cleaning: the validator repeated its objections."
+                    self._finish_column(
+                        col, column_type, trace_steps, final_code_str,
+                        attempts=attempt + 1, cleaned=False, validated=False,
+                        output="The validator repeated its objections and none matched a row; column left uncleaned.",
+                        status="failed",
+                        reason="Validator repeated its objections",
+                    )
+                    return col, None, msg
                 break
             if self.verbose: print(f"[{col}] Validation Agent detected unintended changes or missed errors; updating cleaning operations.")
             if feedback_target == 'CODER' and coder_history is None:

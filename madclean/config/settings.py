@@ -57,7 +57,7 @@ class CleaningConfig:
     validator_failure_strategy: str = "accept_cleaned"  # accept_cleaned|leave_uncleaned|ask_user
 
     # retries
-    max_cleaning_attempts: int = 6
+    max_cleaning_attempts: int = 4
     max_multi_col_attempts: int = 3
     max_parse_attempts: int = 3
     max_coding_attempts: int = 3

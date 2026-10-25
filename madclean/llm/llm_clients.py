@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 from abc import ABC, abstractmethod
@@ -6,8 +7,18 @@ from typing import Any, Optional
 from openai import AsyncOpenAI
 
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types
 from pydantic import BaseModel
+
+
+def _gemini_error_is_worth_retrying(exc: BaseException) -> bool:
+    """A reply that never came, a server fault or a rate limit may pass on a second try."""
+    if isinstance(exc, TimeoutError):
+        return True
+    if isinstance(exc, genai_errors.ServerError):
+        return True
+    return isinstance(exc, genai_errors.APIError) and getattr(exc, "code", None) == 429
 
 
 def _sampling_error_retry_without(exc: BaseException) -> bool:
@@ -156,10 +167,37 @@ class OpenAIClient(BaseLLMClient):
         return content, token_usage
  
 class GeminiClient(BaseLLMClient):
+    # One reply can hang forever without a limit, freezing the whole run.
+    timeout_seconds: float = 180.0
+    attempts: int = 3
+    retry_wait_seconds: float = 5.0
+
     def __init__(self, model_name: str):
         super().__init__(model_name)
         self.sync_client = genai.Client()
         self.async_client = self.sync_client.aio
+
+    async def _generate(self, contents, config):
+        """Ask Gemini once, giving up after timeout_seconds; try again on a hang or a passing fault."""
+        for attempt in range(1, self.attempts + 1):
+            try:
+                return await asyncio.wait_for(
+                    self.async_client.models.generate_content(
+                        model=self.model_name,
+                        contents=contents,
+                        config=config,
+                    ),
+                    timeout=self.timeout_seconds,
+                )
+            except Exception as exc:
+                if isinstance(exc, TimeoutError):
+                    exc = TimeoutError(
+                        f"Gemini gave no reply within {self.timeout_seconds:g} seconds"
+                        f" (try {attempt} of {self.attempts})"
+                    )
+                if attempt == self.attempts or not _gemini_error_is_worth_retrying(exc):
+                    raise exc
+                await asyncio.sleep(self.retry_wait_seconds * attempt)
 
     async def call_llm_async(
         self,
@@ -195,11 +233,7 @@ class GeminiClient(BaseLLMClient):
             )
 
         try:
-            response = await self.async_client.models.generate_content(
-                model=self.model_name,
-                contents=contents,
-                config=config,
-            )
+            response = await self._generate(contents, config)
         except Exception as exc:
             if gen_kwargs and _sampling_error_retry_without(exc):
                 if response_schema == "text/plain":
@@ -214,11 +248,7 @@ class GeminiClient(BaseLLMClient):
                         response_schema=response_schema,
                     )
                 try:
-                    response = await self.async_client.models.generate_content(
-                        model=self.model_name,
-                        contents=contents,
-                        config=config,
-                    )
+                    response = await self._generate(contents, config)
                 except Exception as retry_exc:
                     raise retry_exc from exc
             else:

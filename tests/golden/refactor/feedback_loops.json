@@ -185,7 +185,7 @@
           "id": "coder_1",
           "title": "Coder (attempt 1)",
           "status": "failed",
-          "output": ""
+          "output": "Coder failed. Last error:\nValueError: boom"
         },
         {
           "id": "recommender_2",
@@ -313,9 +313,9 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 95543,
+        "input_tokens": 95585,
         "output_tokens": 2451,
-        "total_tokens": 97994
+        "total_tokens": 98036
       },
       "coding": {
         "input_tokens": 30623,
@@ -329,9 +329,9 @@
       }
     },
     "total_usage": {
-      "input_tokens": 233785,
+      "input_tokens": 233827,
       "output_tokens": 4200,
-      "total_tokens": 237985
+      "total_tokens": 238027
     }
   },
   "traces": {
@@ -522,7 +522,7 @@
         "step_id": "coder_1",
         "title": "Coder (attempt 1)",
         "status": "failed",
-        "output": ""
+        "output": "Coder failed. Last error:\nValueError: boom"
       },
       {
         "column": "colbreak",
@@ -691,12 +691,12 @@
       "7fb937b6ca23dfc89f3c936c5d2c9fa6e1ea534447019f6d5aeb4272a2073a75",
       "96e7c189caffec3f76cc096cdb687e6213f1583bd61f3b4233bb055ac138bc2c",
       "987129c8a5ae926251ff16701b67d282274356b3da4063fb1f13bfbb96ee4d4d",
+      "9a3a08a86eadb3908c0c534543b9fc5fae1d483ec0bc12a246961b434d00a720",
       "9c5958bbe6b5013636c47b69895d979fffd5bca459e3cff66a49e9486828485b",
       "c82069fc22b44e130e44e98176e227589d79ab9ebd488806864750ca8429fc81",
       "cde297f5660c3b6057f8e32f38653ae1f4e382527a766d79b13aa0ccad864181",
       "d2cce7d0360973cca962c452c3f5bd177fdae625875283272bacafc1c8b25b6e",
-      "d784186754c302d2333d57afdf70ba7025a14090fe88e53c0b6e2722527607b5",
-      "ebeb67dec42cd8b02fb31670746fd95be788528cef5df3d60853663d66c07a31"
+      "d784186754c302d2333d57afdf70ba7025a14090fe88e53c0b6e2722527607b5"
     ],
     "validator": [
       "143c5d118cc0ed8029282b099bd211b572a23a6820fc6d3d94a8dbb48d0ce9bc",

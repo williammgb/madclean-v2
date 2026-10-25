@@ -38,7 +38,7 @@
   "sample_size_validator_random": 60,
   "sample_size_validator_changed": 90,
   "validator_failure_strategy": "accept_cleaned",
-  "max_cleaning_attempts": 6,
+  "max_cleaning_attempts": 4,
   "max_multi_col_attempts": 3,
   "max_parse_attempts": 3,
   "max_coding_attempts": 3,

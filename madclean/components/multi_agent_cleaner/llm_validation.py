@@ -110,10 +110,12 @@ class LLMValidationAgent:
                column_type: str, 
                messages: list[dict[str, str]] | None = None,
                last_attempt: bool = False,
-               attempt: int = 0) -> tuple[bool, str | None, str| None, list[dict[str, str]], str, dict]:
+               attempt: int = 0,
+               note: str | None = None) -> tuple[bool, str | None, str| None, list[dict[str, str]], str, dict]:
         """
         Compares dirty and cleaned columns and validates cleaning operations.
         If validator detects undesired changes, it sends feedback to the corresponding LLM agent.
+        A note, when given, tells the validator what changed since its last verdict (the system's own repair).
         Returns (needs_correction, feedback_target, correction_instructions, messages, raw_llm_output, details),
         where details is {"issue_kind": ..., "cases": [...]}. The agent is shared by columns cleaned
         concurrently, so the details travel with the answer instead of living on the agent.
@@ -156,6 +158,8 @@ class LLMValidationAgent:
                     "If the cleaned column contradicts a DIRTY expectation or alters a cell marked CLEAN without fixing an error, that is an undesired change.\n"
                     f"{c_lab}\n"
                 )
+        if note and note.strip():
+            prompt += f"\n\n### WHAT CHANGED SINCE YOUR LAST VERDICT\n{note.strip()}\n"
         messages.append({"role": "user", "content": prompt})
         # 3. Call Validation Agent to validate cleaning operations
         try:

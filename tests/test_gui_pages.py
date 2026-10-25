@@ -41,6 +41,30 @@ VIEWS = {
 }
 
 
+def test_a_repaired_column_shows_validator_repair_validator_with_a_violet_repair():
+    from gui.state import State
+
+    steps = [
+        ("validator_1", "Validator (attempt 1)", "needs_correction"),
+        ("repair_1", "Repair (attempt 1)", "ok"),
+        ("validator_repair_1", "Validator (after repair)", "approved"),
+    ]
+
+    chips = [State._step_chip(step_id, title, status, False) for step_id, title, status in steps]
+
+    # Validator ✕ › Repair ✓ › Validator ✓
+    assert [(chip["label"], chip["mark"]) for chip in chips] == [
+        ("Validator", "x"), ("Repair", "check"), ("Validator", "check"),
+    ]
+    assert [chip["chip"] for chip in chips] == ["rejected", "repair", "ok"]
+    # A repair in a later round still reads Repair: it belongs to the validator before it.
+    assert State._step_chip("repair_3", "Repair (attempt 3)", "ok", False)["label"] == "Repair"
+    css = (GUI_DIR / "assets" / "madclean.css").read_text(encoding="utf-8")
+    assert ".step.repair{background:var(--violet-soft);color:var(--violet-text)}" in css
+    # The light theme and both dark themes each define the violet tokens.
+    assert css.count("--violet-soft:") == 3 and css.count("--violet-text:") == 3
+
+
 @pytest.mark.parametrize("name", sorted(VIEWS))
 def test_every_view_builds(name):
     component = VIEWS[name].page()

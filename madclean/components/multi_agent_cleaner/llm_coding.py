@@ -194,7 +194,8 @@ sys.exit(0)
 
         Each attempt: wrap the code with the value table, run it, reject it if it empties filled cells,
         then check it against the Recommender's examples. Returns the column, the final code, the coder
-        history and a note for the trace (the example check), or None for the column when nothing passed.
+        history and a note for the trace (the example check), or None for the column when nothing passed —
+        then the note is the last error the Coder's code met, so the Recommender can be told what went wrong.
         A value table without instructions needs no Coder: the code is the table alone and history is None.
         """
         recommender_data = recommender_data or {}
@@ -219,6 +220,7 @@ sys.exit(0)
         # 2. Call LLM to generate code. With retries for incorrectly generated code
         retries_messages = messages.copy()
         last_api_unavailable_msg: str | None = None
+        last_error: str | None = None
         for attempt in range(1, self.config.max_coding_attempts + 1):
             code_str, llm_output, llm_error_msg = await self._call_llm_for_code_async(retries_messages)
             if llm_output:
@@ -229,6 +231,7 @@ sys.exit(0)
                     if attempt < self.config.max_coding_attempts:
                         await asyncio.sleep(3)
                     continue
+                last_error = llm_error_msg
                 if llm_output:
                     fix_prompt = f"The previous attempt resulted in an empty code string. Please regenerate the entire valid code string now. The error was: {llm_error_msg}"
                 else:             
@@ -239,6 +242,7 @@ sys.exit(0)
             final_code = wrap_with_value_map(code_str, value_mapping)
             exec_result = await self._execute_code_async(final_code, df, col)
             if not isinstance(exec_result, pd.Series):
+                last_error = str(exec_result)
                 fix_prompt = (
                     f"The Python code provided in the previous step failed during execution with the following error:"
                     f"\n\n{exec_result}\n\n"
@@ -248,6 +252,7 @@ sys.exit(0)
             # 4. Reject code that empties most filled cells that were not placeholders.
             emptied, filled = emptied_share(df[col], exec_result, empty_inputs)
             if filled and emptied / filled > self.config.max_emptied_share:
+                last_error = emptied_feedback(emptied, filled)
                 fix_prompt = (
                     f"{emptied_feedback(emptied, filled)}\n\n"
                     "Please correct the code and provide the full, fixed executable code string again.")
@@ -273,4 +278,4 @@ sys.exit(0)
             return exec_result, final_code, messages, example_note(failed, len(cases))
         if last_api_unavailable_msg:
             return None, last_api_unavailable_msg, messages, None
-        return None, None, messages, None
+        return None, None, messages, last_error

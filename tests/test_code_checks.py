@@ -16,6 +16,7 @@ from madclean.components.multi_agent_cleaner.code_checks import (
     keep_whole_numbers,
     parse_example,
     values_match,
+    wrap_with_repair_map,
     wrap_with_value_map,
 )
 from madclean.components.multi_agent_cleaner.llm_coding import LLMCodingAgent
@@ -451,6 +452,43 @@ def test_only_the_first_500_table_entries_are_used():
     result = _run_in_process(wrap_with_value_map(None, mapping), pd.Series(["v499", "v500"]))
 
     assert result.tolist() == ["x", "v500"]
+
+
+def test_a_repair_over_value_table_code_applies_last_and_wins():
+    with_table = wrap_with_value_map(UPPER_CODE, [
+        {"from_value": "chicago il", "to_value": "Chicago"},
+        {"from_value": "n/a", "to_value": None},
+    ])
+    # The repair puts one value the table rewrote back, and fixes one the code upper-cased.
+    code = wrap_with_repair_map(with_table, {"chicago il": "chicago il", "denvr": "Denver", "n/a": "n/a"})
+
+    result = _run_in_process(code, pd.Series(["chicago il", "boston", "denvr", "n/a", None]))
+
+    assert result.tolist()[:4] == ["chicago il", "BOSTON", "Denver", "n/a"] and pd.isna(result.iloc[4])
+    assert "_VALUE_MAP" in code and "_REPAIR_MAP" in code
+    assert "def _clean_by_code(" in code and "def _clean_before_repair(" in code
+    assert code.count("def clean_column(") == 1
+    assert wrap_with_repair_map(with_table, {}) == with_table
+
+
+@settings(max_examples=60, deadline=None)
+@given(
+    values=st.lists(st.one_of(st.none(), st.sampled_from(["a", "b", "c", "d", " a"])), min_size=1, max_size=20),
+    repair=st.dictionaries(st.sampled_from(["a", "b", "x"]), st.one_of(st.none(), st.sampled_from(["a", "Q"])), max_size=3),
+)
+def test_every_row_gets_the_repair_value_of_its_original_or_the_codes_value(values, repair):
+    column = pd.Series(values, dtype=object)
+    code = wrap_with_repair_map(UPPER_CODE, repair)
+
+    result = _run_in_process(code, column).tolist()
+
+    for original, got in zip(values, result):
+        if original is not None and original in repair:
+            assert pd.isna(got) if repair[original] is None else got == repair[original]
+        elif original is None:
+            assert got is None or pd.isna(got)
+        else:
+            assert got == original.upper()
 
 
 @settings(max_examples=60, deadline=None)

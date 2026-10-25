@@ -1395,16 +1395,20 @@ class State(rx.State):
     def _step_chip(step_id: str, title: str, status: str, waiting: bool) -> Dict[str, str]:
         """One step as its chip draws it: a short name, a mark, and how it ended."""
         match = re.match(r"^(.*) \(attempt (\d+)\)$", title)
+        repair = bool(match) and match.group(1) == "Repair"
         if match:
-            label = match.group(1) if match.group(2) == "1" else f"{match.group(1)} {match.group(2)}"
+            # The system's repair belongs to the round of the validator before it, so it carries no number.
+            label = match.group(1) if match.group(2) == "1" or repair else f"{match.group(1)} {match.group(2)}"
         else:
-            label = {"Validator (already clean check)": "Validator", "User code review": "Your review"}.get(
-                title, title
-            )
+            label = {
+                "Validator (already clean check)": "Validator",
+                "Validator (after repair)": "Validator",
+                "User code review": "Your review",
+            }.get(title, title)
         if waiting:
             chip, mark, status_label, tone = "waiting", "", "Waiting", "orange"
         elif status in ("ok", "approved", "completed", "already_clean"):
-            chip, mark, status_label, tone = "ok", "check", "Done", "green"
+            chip, mark, status_label, tone = ("repair" if repair else "ok"), "check", "Done", "green"
         elif status in ("needs_correction", "rejected"):
             chip, mark, status_label, tone = "rejected", "x", "Sent back", "red"
         elif status in ("failed", "invalid_response"):

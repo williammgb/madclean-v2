@@ -13,6 +13,7 @@
   --red:#E5484D; --red-soft:#FEEBEC; --red-text:#CE2C31; --red-border:#FDBDBE;
   --green:#30A46C; --green-soft:#E6F6EB; --green-text:#218358; --green-border:#ADDDC0;
   --orange:#F76B15; --orange-soft:#FFEFD6; --orange-text:#CC4E00; --orange-border:#FFC182;
+  --violet-soft:#F3EDFC; --violet-text:#7C3AED;
   --code-bg:#FAFAFB; --code-kw:#8E4EC6; --code-str:#218358; --code-num:#CC4E00; --code-com:#8B8D98; --code-fn:#3A5BC7;
   --tok-in:#2563EB; --tok-out:#F97316; --tok-3:#22C55E;
   --t-integer:#00509d; --t-float:#00b4d8; --t-dirty-integer:#4d779e; --t-dirty-float:#8ac5d1;
@@ -35,6 +36,7 @@
     --red:#E5484D; --red-soft:#3B1219; --red-text:#FF9592; --red-border:#72232D;
     --green:#30A46C; --green-soft:#132D21; --green-text:#3DD68C; --green-border:#20573E;
     --orange:#F76B15; --orange-soft:#331E0B; --orange-text:#FFA057; --orange-border:#7E451D;
+    --violet-soft:#2A1A4A; --violet-text:#C4A7FF;
     --code-bg:#141517; --code-kw:#D19DFF; --code-str:#3DD68C; --code-num:#FFA057; --code-com:#7B7F87; --code-fn:#9EB1FF;
     --shadow-pop:0 16px 40px -12px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.4);
     --shadow-card:none;
@@ -51,6 +53,7 @@
   --red:#E5484D; --red-soft:#3B1219; --red-text:#FF9592; --red-border:#72232D;
   --green:#30A46C; --green-soft:#132D21; --green-text:#3DD68C; --green-border:#20573E;
   --orange:#F76B15; --orange-soft:#331E0B; --orange-text:#FFA057; --orange-border:#7E451D;
+  --violet-soft:#2A1A4A; --violet-text:#C4A7FF;
   --code-bg:#141517; --code-kw:#D19DFF; --code-str:#3DD68C; --code-num:#FFA057; --code-com:#7B7F87; --code-fn:#9EB1FF;
   --shadow-pop:0 16px 40px -12px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.4);
   --shadow-card:none;
@@ -303,6 +306,7 @@ table.data{border-collapse:collapse;width:100%;font-size:13px}
 .step[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
 .step svg.i{width:12px;height:12px;stroke-width:2.25}
 .step.ok{background:var(--green-soft);color:var(--green-text)}
+.step.repair{background:var(--violet-soft);color:var(--violet-text)}
 .step.rejected{background:var(--red-soft);color:var(--red-text)}
 .step.waiting{background:var(--orange-soft);color:var(--orange-text);border-color:var(--orange-border)}
 .step.running{background:var(--accent-soft);color:var(--accent-text)}

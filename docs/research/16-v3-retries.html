@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#16 — v3: did the retry changes cut the extra rounds?</title>
+<style>
+  :root { --bg: #ffffff; --fg: #1d1d1f; --muted: #5f6368; --line: #d9d9de; --code: #f4f4f6; --good: #1a7f37; --bad: #b42318; --accent: #0b57d0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161618; --fg: #ececf0; --muted: #a0a0aa; --line: #3a3a40; --code: #222226; --good: #4ac26b; --bad: #ff7b72; --accent: #8ab4f8; }
+  }
+  html { background: var(--bg); color: var(--fg); }
+  body { font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 52rem; margin: 0 auto; padding: 1.2rem; }
+  h1 { font-size: 1.5rem; line-height: 1.25; }
+  h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid var(--line); padding-bottom: .25rem; }
+  h3 { font-size: 1.02rem; margin-bottom: .2rem; }
+  p.meta { color: var(--muted); font-size: .9rem; }
+  .wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: .6rem 0; }
+  th, td { border: 1px solid var(--line); padding: .35rem .5rem; text-align: left; vertical-align: top; }
+  th { background: var(--code); }
+  td.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  pre { background: var(--code); padding: .7rem; overflow-x: auto; font-size: .82rem; line-height: 1.4; border-radius: 4px; }
+  code { background: var(--code); padding: 0 .2rem; border-radius: 3px; font-size: .9em; }
+  .good { color: var(--good); font-weight: 600; }
+  .bad { color: var(--bad); font-weight: 600; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>v3: did the retry changes cut the extra rounds?</h1>
+<p class="meta">Ticket #16 · four live runs on Gemini 2.5 Pro, 2026-10-25 · compared with the runs of 2026-10-02 and 2026-10-04</p>
+
+<h2>1. The question</h2>
+<p>Measure whether the changes worked: one paid live run each of beers, hospital, movies and rayyan on the finished v3, compared with the 2–4 October runs on extra rounds, failed columns, tokens, time and correction F1.</p>
+
+<h2>2. The answer</h2>
+<p><strong>Yes — the target is <span class="good">met</span>.</strong> Hospital, movies and rayyan together took <strong>15 extra rounds instead of about 42</strong> (9 + 9 + ~24), no column failed (rayyan had 2 before), every run used fewer tokens (14–32% fewer), and correction F1 stayed within 0.02 of before or got better: hospital −0.004, beers −0.003, movies +0.032, rayyan +0.185.</p>
+<p>Two things did not get better: movies and hospital took longer to run even with fewer tokens, and rayyan's <code>author_list</code> column still uses 62% of rayyan's tokens and ends without the Validator's approval. Hospital's low score has a separate cause: two columns the Recommender calls clean. Each of these is a follow-up ticket below.</p>
+
+<h2>3. Before and after</h2>
+<p>"Extra rounds" means rounds after the first, per column, added up over the dataset. Before, each round was counted from the log's "Validation Agent detected unintended changes" lines. After, it comes from <code>attempts − 1</code> in each column's <code>agent_stats</code>. Since #20, a Validator objection can be fixed by repairing the cells it names and asking it once more, without a whole new round, so "Validator objections" is shown as well. Before, every objection started a new round, so the before count of objections equals the before count of rounds.</p>
+<div class="wrap">
+<table>
+<tr><th>Dataset</th><th>Extra rounds<br>before → after</th><th>Validator objections after</th><th>Failed columns<br>before → after</th><th>Tokens<br>before → after</th><th>Runtime (s)<br>before → after</th><th>Correction F1<br>before → after</th></tr>
+<tr><td>beers</td><td class="n">not on disk → 2</td><td class="n">6</td><td class="n">not on disk → 0</td><td class="n">241,803 → 187,031 (−23%)</td><td class="n">229 → 235</td><td class="n">0.993 → 0.990</td></tr>
+<tr><td>hospital</td><td class="n">9 → 3</td><td class="n">6</td><td class="n">0 → 0</td><td class="n">398,562 → 270,512 (−32%)</td><td class="n">318 → 373</td><td class="n">0.575 → 0.571</td></tr>
+<tr><td>movies</td><td class="n">9 → 8</td><td class="n">15</td><td class="n">0 → 0</td><td class="n">565,827 → 409,681 (−28%)</td><td class="n">249 → 440</td><td class="n">0.958 → 0.990</td></tr>
+<tr><td>rayyan</td><td class="n">~24 → 4</td><td class="n">15</td><td class="n">2 → 0</td><td class="n">714,407 → 612,174 (−14%)</td><td class="n">158,637 → 1,996</td><td class="n">0.563 → 0.748</td></tr>
+</table>
+</div>
+<p>Before, rayyan's two failed columns were <code>author_list</code> and <code>article_pagination</code>, and its 158,637 s came from one model call that hung. Now <code>article_pagination</code> passes after one repair, and <code>author_list</code> is kept without the Validator's approval (113 rewrites kept, 11 undone), which no longer counts as failed. The ~24 for rayyan is the ticket's figure; the log tail still on disk shows 17 objection lines, so the total before is between 35 and 42 either way.</p>
+<p>Cost of the four runs at $1.25 per million input tokens and $10 per million output tokens: beers $0.89, hospital $1.44, movies $1.92, rayyan $3.59 — <strong>$7.83 in total</strong>, within the $8 that was approved. Rayyan wrote <em>more</em> output than before (322,519 against 252,035 tokens), almost all of it for <code>author_list</code>, so it cost more than its $3.10 estimate.</p>
+
+<h3>What changed, in one paragraph</h3>
+<p>The extra rounds dropped mainly because objections are now fixed in place — the Validator objected about as often as before (movies 15 times against 9, rayyan 15 against ~24, hospital 6 against 9), but most objections now cost one repair and one more Validator call instead of a whole round: in hospital, <code>Sample</code>, <code>Stateavg</code>, <code>ProviderNumber</code>, <code>Address1</code> and <code>MeasureName</code> each needed one to three new rounds before and none now, and rayyan's columns no longer run all the way to the old limit of 6 rounds (the limit is 4 now, and a column stops after two Coder failures in a row or the same objection twice). The round limit together with the 3-minute call limit is also why rayyan finished in 33 minutes instead of 44 hours. Fewer rounds and shorter history in the Validator's prompt (#22) meant fewer tokens on every dataset. The cleaning did not get worse: movies and rayyan scored clearly higher, and beers and hospital stayed within 0.005. What is left: movies still took 8 extra rounds, and 3 of them (Language, Release Date, Country) — plus beers' <code>city</code> — were rounds where the Validator rejected the first rewrite and the Recommender then said the column was clean after all. Each of those is a full round spent only to undo a rewrite. Hospital took one column (<code>Score</code>) to 3 extra rounds where it took 1 before.</p>
+
+<h2>4. What was tried</h2>
+
+<h3>The four live runs</h3>
+<p>One after another, each in the background, each once, from this branch (origin/v3 at 8f72f3f, with #19–#24 merged):</p>
+<pre>./run live beers
+./run live hospital
+./run live movies
+./run live rayyan</pre>
+<p>Their last lines:</p>
+<pre>live beers: det P 0.992 R 0.990 F1 0.991 | cor P 0.991 R 0.989 F1 0.990 | 235s | 187,031 tok
+live beers: 2 extra rounds (city 1, beer_name 1) | 0 failed
+live hospital: det P 0.987 R 0.433 F1 0.602 | cor P 0.935 R 0.411 F1 0.571 | 373s | 270,512 tok
+live hospital: 3 extra rounds (Score 3) | 0 failed
+live movies: det P 0.998 R 0.982 F1 0.990 | cor P 0.998 R 0.982 F1 0.990 | 440s | 409,681 tok
+live movies: 8 extra rounds (Duration 3, Filming Locations 2, Language 1, Release Date 1, Country 1) | 0 failed
+live rayyan: det P 0.869 R 0.700 F1 0.775 | cor P 0.838 R 0.675 F1 0.748 | 1996s | 612,174 tok
+live rayyan: 4 extra rounds (author_list 3, article_title 1) | 0 failed
+[article_pagination] Successfully cleaned and validated after repair.
+[author_list] Cleaned without validation: kept 113 rewrites, reverted 11.</pre>
+<p>Each run wrote <code>data/cleaned/&lt;dataset&gt;_run.json</code>. The columns that needed more than one round, from <code>agent_stats.per_column</code> (other columns had one objection each that a repair settled within the round):</p>
+<pre>beers    city               attempts 2  objections 2  already_clean (round 2 said clean)
+beers    beer_name          attempts 2  objections 2
+hospital Score              attempts 4  objections 6
+movies   Language           attempts 2  objections 2  already_clean
+movies   Release Date       attempts 2  objections 2  already_clean
+movies   Country            attempts 2  objections 2  already_clean
+movies   Duration           attempts 4  objections 4
+movies   Filming Locations  attempts 3  objections 2
+rayyan   article_title      attempts 2  objections 3
+rayyan   author_list        attempts 4  objections 7  not validated, 166,222 in + 214,473 out tokens</pre>
+
+<h3>The before numbers</h3>
+<p>From the main checkout's <code>.work/JOURNAL.md</code> (the four <code>live … passed</code> lines of 2026-10-02 and 2026-10-04) and the saved logs <code>.work/gates/live-hospital.out</code>, <code>live-movies.out</code> and <code>live-rayyan.out</code>:</p>
+<pre>live beers: det P 0.994 R 0.993 F1 0.994 | cor P 0.994 R 0.992 F1 0.993 | 229s | 241,803 tok
+live hospital: det P 0.987 R 0.440 F1 0.609 | cor P 0.932 R 0.416 F1 0.575 | 318s | 398,562 tok
+live movies: det P 0.948 R 0.967 F1 0.958 | cor P 0.948 R 0.967 F1 0.958 | 249s | 565,827 tok
+live rayyan: det P 0.765 R 0.494 F1 0.600 | cor P 0.717 R 0.463 F1 0.563 | 158637s | 714,407 tok
+[author_list] FAILED cleaning after 6 attempts.
+[article_pagination] FAILED cleaning after 6 attempts.</pre>
+<p>No log of the beers run of those dates is on disk, so its rounds and failed columns are unknown.</p>
+
+<h3>Where hospital and rayyan still miss — free, offline</h3>
+<p>Why does hospital stay at 0.41 recall? This compares the dirty table, the ground truth and the cleaned output, cell by cell, with no model call:</p>
+<pre>uv run --frozen python -I miss.py hospital     (dirty vs hospital_gt.csv vs data/cleaned/hospital_cleaned.csv)
+
+column                 errors fixed missed broke
+Address2                 1000     0   1000     0
+PhoneNumber                34     0     34     0
+Condition                  41    32      9     0
+MeasureName               114    36     78     0
+Score                    1000   977     23     0
+Sample                   1000    60    940     0
+Stateavg                   27    26      1    20
+(11 other columns: every error fixed, except 3 in State)
+
+Address2     'empty'          should be ''      kept 'empty'
+Sample       '33 patients'    should be '33'    kept '33 patients'
+PhoneNumber  '334793870x'     should be '3347938701'   made ''
+MeasureName  double spaces    should be single  kept</pre>
+<p>Of hospital's 2,088 missed cells, <strong>1,940 are in two columns</strong>, <code>Address2</code> and <code>Sample</code>, and both follow a rule of the benchmark ("empty" means a blank cell, and a count has no unit) that the Recommender cannot guess and calls clean. Fixing them would take hospital's recall from 0.41 to about 0.96. <code>PhoneNumber</code> typos are blanked instead of repaired, even though the same hospital's other rows hold the right number.</p>
+<pre>uv run --frozen python -I miss.py rayyan
+
+column                 errors fixed missed broke
+article_title              49    20     29     5
+article_language          139   131      8     0
+journal_title              10     2      8     6
+journal_abbreviation        0     0      0    22
+journal_issn               98    90      8     0
+article_jvolumn            38    22     16     0
+article_jissue             63    53     10     0
+article_pagination        102    55     47     0
+author_list               147    63     84    35</pre>
+<p>Rayyan's biggest losses are <code>author_list</code> (84 missed, 35 correct cells broken) and <code>article_pagination</code> (47 missed). <code>journal_abbreviation</code> had no errors, yet 22 of its cells were changed.</p>
+
+<h2>5. Still unknown</h2>
+<ul>
+<li><strong>Why movies and hospital got slower</strong> (440 s against 249 s, 373 s against 318 s) with fewer tokens. It may be the model's response time that day, a call that hit the 3-minute limit and was retried, or the extra "ask once more" calls. The run record keeps no time per call, so this cannot be told apart; a per-call duration in <code>agent_stats</code> would settle it.</li>
+<li><strong>How much of the change is luck.</strong> Each dataset ran once, before and after. The rounds dropped far more than one run's spread is likely to explain, but the F1 changes of a few thousandths on beers and hospital are within noise.</li>
+<li><strong>Beers before</strong>: its rounds and failed columns of 2026-10-04 are not on disk.</li>
+</ul>
+
+<h2>6. Suggested follow-up tickets</h2>
+
+<h3>Rayyan author_list: clean the authors one at a time, and stop the long code</h3>
+<p><code>author_list</code> took 3 extra rounds and 7 objections, used 380,695 of rayyan's 612,174 tokens, and ended without approval with 84 errors missed and 35 correct cells broken. Its code grew into a hard-coded list of name fixes. Split each cell into its authors, let the Recommender give a value table for the distinct broken names, and join them back, so the Validator judges names rather than whole lists. Effort: normal.</p>
+
+<h3>Rayyan article_pagination and journal_abbreviation</h3>
+<p><code>article_pagination</code> now passes but still misses 47 of 102 errors, and <code>journal_abbreviation</code>, which has no errors, had 22 cells changed. Look at the missed page ranges and the changed abbreviations and add the pattern to the Recommender's prompt or a guard for columns the profile finds consistent. Effort: small.</p>
+
+<h3>Hospital recall: tell the Recommender the dataset's rules</h3>
+<p>1,940 of hospital's 2,088 missed cells are <code>Address2</code> "empty" (should be blank) and <code>Sample</code> "33 patients" (should be "33"). Either add hints for those columns to <code>recommender_column_hints</code> for the benchmark, or teach the Recommender that a placeholder word such as "empty" means a blank cell and that a number column with one constant unit should lose the unit. Effort: small.</p>
+
+<h3>FD repair: use the other rows instead of blanking</h3>
+<p>Hospital's 34 <code>PhoneNumber</code> typos were turned into blank cells, though the same provider's other rows hold the right number; most dependency checks said "No FD errors detected after cleaning". Let the dependency stage fill a broken cell with the value its group agrees on (majority within <code>ProviderNumber → PhoneNumber</code> and similar), before falling back to blank. Effort: normal.</p>
+
+<h3>Skip the round that only undoes a rewrite</h3>
+<p>4 of the 10 extra rounds in beers and movies (city, Language, Release Date, Country) were: the Validator rejects the first rewrite, then the Recommender says the column was clean all along. When the Validator's objection is that the rewrite changed correct values and asks for none to be kept, end the column as clean without a new Recommender round. Effort: small.</p>
+
+<h3>Record how long each model call takes</h3>
+<p>Movies ran 77% longer with 28% fewer tokens, and nothing on disk says why. Add each call's duration and whether it hit the 3-minute limit to <code>agent_stats</code>, so the next live run shows where the time went. Effort: small.</p>
+
+<h2>7. Sources</h2>
+<ul>
+<li>This run: <code>data/cleaned/{beers,hospital,movies,rayyan}_run.json</code> and the four logs, on this machine (git ignores <code>data/cleaned/</code>).</li>
+<li>Before: <code>.work/JOURNAL.md</code> and <code>.work/gates/live-{hospital,movies,rayyan}.out</code> in the main checkout.</li>
+<li>Ground truth: <code>data/benchmark_datasets/{hospital,rayyan}_gt.csv</code>.</li>
+<li>The changes measured: pull requests #19–#24 on <a href="https://github.com/williammgb/madclean-v2/pulls?q=is%3Apr+base%3Av3">github.com/williammgb/madclean-v2</a>, base <code>v3</code>.</li>
+<li>Prices: Gemini 2.5 Pro, $1.25 per million input and $10 per million output tokens, as in the ticket — <a href="https://ai.google.dev/gemini-api/docs/pricing">ai.google.dev/gemini-api/docs/pricing</a>.</li>
+</ul>
+
+</body>
+</html>

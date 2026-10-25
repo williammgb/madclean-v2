@@ -170,6 +170,87 @@ def evaluation_view(metrics: Dict[str, Any], columns: List[str], colours: Dict[s
     }
 
 
+# A model call open longer than this is slow: the top bar's line and the task's chip turn orange.
+SLOW_CALL_SECONDS = 120
+# The id of the chip a task's row ends with while one of its model calls is open.
+OPEN_CALL_STEP_ID = "api_open"
+
+
+def _clock_text(seconds: Any) -> str:
+    """Seconds as m:ss, the way the top bar and the step chips count."""
+    whole = max(0, int(float(seconds or 0)))
+    return f"{whole // 60}:{whole % 60:02d}"
+
+
+def _is_retrying(call: Dict[str, Any]) -> bool:
+    return int(call.get("try_no") or 1) > 1
+
+
+def _try_text(call: Dict[str, Any]) -> str:
+    return f"try {call.get('try_no')} of {call.get('tries')}"
+
+
+def api_activity_view(snapshot: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """The top bar's API line and each task's open call, from `pipeline.activity.snapshot()`.
+
+    The keys are the state vars they fill. The line names the model of the oldest open call, how
+    many calls are open and how long the oldest has been; a call being sent again takes over the
+    line; with nothing open it says the run is working locally.
+    """
+    snapshot = snapshot or {}
+    calls = [call for call in (snapshot.get("open") or []) if isinstance(call, dict)]
+    # Oldest first, so the first call met for a task is the one its chip shows.
+    calls.sort(key=lambda call: float(call.get("seconds") or 0), reverse=True)
+    title_lines: List[str] = []
+    by_task: Dict[str, Dict[str, str]] = {}
+    for call in calls:
+        seconds = float(call.get("seconds") or 0)
+        agent = str(call.get("agent") or "Model")
+        parts = [agent]
+        if call.get("task"):
+            parts.append(str(call["task"]))
+        if _is_retrying(call):
+            parts.append(_try_text(call))
+        parts.append(_clock_text(seconds))
+        title_lines.append(" · ".join(parts))
+        task = call.get("task")
+        if task is None or str(task) in by_task:
+            continue
+        attempt = int(call.get("attempt") or 1)
+        # Named as the step chips name their agents: "Validator 2" is the validator's second round.
+        label = agent if attempt <= 1 else f"{agent} {attempt}"
+        if _is_retrying(call):
+            label += f" · {_try_text(call)}"
+        slow = _is_retrying(call) or seconds > SLOW_CALL_SECONDS
+        by_task[str(task)] = {"label": label, "secs": _clock_text(seconds), "chip": "slow" if slow else "running"}
+    if not calls:
+        last = snapshot.get("last_reply_seconds")
+        bold = "Working locally"
+        rest = "" if last is None else f" · last reply {_clock_text(last)}"
+        line_class = "api local"
+    else:
+        retry = next((call for call in calls if _is_retrying(call)), None)
+        if retry is not None:
+            bold = str(retry.get("model") or "model")
+            rest = f" · {retry.get('reason') or 'retrying'} · {_try_text(retry)}"
+            line_class = "api retry"
+        else:
+            oldest = calls[0]
+            seconds = float(oldest.get("seconds") or 0)
+            bold = str(oldest.get("model") or "model")
+            count = len(calls)
+            rest = f" · {count} call{'' if count == 1 else 's'} · {_clock_text(seconds)}"
+            line_class = "api slow" if seconds > SLOW_CALL_SECONDS else "api"
+    return {
+        "api_line_text": bold + rest,
+        "api_line_bold": bold,
+        "api_line_rest": rest,
+        "api_line_class": line_class,
+        "api_line_title": "\n".join(title_lines),
+        "api_open_by_task": by_task,
+    }
+
+
 class State(rx.State):
     """Bridge between MADClean system and the UI."""
     _default_config = load_default_cleaning_config()
@@ -230,6 +311,13 @@ class State(rx.State):
     status_msg: str = "Ready"
     logs: List[str] = []
     last_run_status: str = "idle"  # idle|running|finished|cancelled|error
+    # The model calls open right now, polled from the run's activity record (api_activity_view).
+    api_line_text: str = ""
+    api_line_bold: str = ""
+    api_line_rest: str = ""
+    api_line_class: str = "api"
+    api_line_title: str = ""
+    api_open_by_task: Dict[str, Dict[str, str]] = {}
     _log_file_path: str = ""
     _log_file_offset: int = 0
     _trace_file_path: str = ""
@@ -500,6 +588,8 @@ class State(rx.State):
         for raw in self.column_pipeline_traces.get(column, []):
             if str(raw.get("id", "")) == step.get("id"):
                 output = str(raw.get("output", "") or "")
+        if step.get("id") == OPEN_CALL_STEP_ID:
+            output = f"Waiting for the model's reply · {step.get('secs', '')}"
         return {
             "column": column,
             "step": str(step.get("id", "")),
@@ -588,6 +678,20 @@ class State(rx.State):
     @rx.var
     def progress_style(self) -> str:
         return f"width:{self.progress_percent}%"
+
+    def _apply_api_snapshot(self, snapshot: Optional[Dict[str, Any]]) -> None:
+        """Shows what the run's model calls are doing now, from its activity record."""
+        for name, value in api_activity_view(snapshot).items():
+            setattr(self, name, value)
+
+    def _clear_api_line(self) -> None:
+        """No run, no API line and no open-call chips."""
+        self.api_line_text = ""
+        self.api_line_bold = ""
+        self.api_line_rest = ""
+        self.api_line_class = "api"
+        self.api_line_title = ""
+        self.api_open_by_task = {}
 
     @rx.event
     def accept_user_validation(self, column: str):
@@ -1427,6 +1531,24 @@ class State(rx.State):
             "status_label": status_label,
             "status_tone": tone,
             "needs_blink": "1" if waiting else "0",
+            "secs": "",
+        }
+
+    @staticmethod
+    def _open_call_chip(call: Dict[str, str]) -> Dict[str, str]:
+        """The chip at the end of a task's row while one of its model calls is open."""
+        slow = call.get("chip") == "slow"
+        return {
+            "id": OPEN_CALL_STEP_ID,
+            "title": str(call.get("label", "")),
+            "label": str(call.get("label", "")),
+            "status": "running",
+            "chip": "slow" if slow else "running",
+            "mark": "pulse",
+            "status_label": "Running",
+            "status_tone": "orange" if slow else "accent",
+            "needs_blink": "0",
+            "secs": str(call.get("secs", "")),
         }
 
     @staticmethod
@@ -1451,8 +1573,16 @@ class State(rx.State):
     def _rebuild_pipeline_flow_rows(self):
         pending_by_col = self._sync_hitl_editing_state_from_global_pending()
         rows: List[Dict[str, Any]] = []
-        normal_cols = [c for c in self.column_names if c in self.column_pipeline_traces]
-        extra_tasks = [k for k in self.column_pipeline_traces.keys() if k not in normal_cols]
+        # A task whose first model call is still open has no trace yet, but gets its row now.
+        open_by_task = dict(self.api_open_by_task or {}) if self.is_cleaning else {}
+        normal_cols = [
+            c for c in self.column_names if c in self.column_pipeline_traces or c in open_by_task
+        ]
+        extra_tasks = [
+            k
+            for k in dict.fromkeys([*self.column_pipeline_traces.keys(), *open_by_task.keys()])
+            if k not in normal_cols
+        ]
         ordered_cols = normal_cols + extra_tasks
         active_map = self.active_trace_step_by_column or {}
         expanded_map = self.expanded_trace_step_by_column or {}
@@ -1511,6 +1641,8 @@ class State(rx.State):
             if any(s["id"] == "user_marked_clean" for s in rendered_steps):
                 # A column the user marked clean has no report entry saying so.
                 entry = {**entry, "already_clean": True}
+            if col in open_by_task:
+                rendered_steps.append(self._open_call_chip(open_by_task[col]))
             result, result_tone, result_kind = self._task_result(
                 entry,
                 finished_status,
@@ -2546,6 +2678,7 @@ class State(rx.State):
             self.pending_validation_sample_rows = []
             self.pending_validation_modified_count = 0
             self.user_validation_feedback_message = ""
+            self._clear_api_line()
             self._reset_hitl_session_state()
             # A new run starts with nothing waiting and a fresh stop flag, for this session only.
             self._run().start()
@@ -2631,10 +2764,12 @@ class State(rx.State):
         while not task.done():
             await asyncio.sleep(0.5)
             await self._drain_logs()
-            await self._drain_trace_events()
             async with self:
                 self.progress_percent = int(coordinator.progress.get("current_percentage", 0))
                 self.status_msg = f"Cleaning... {self.progress_percent}%"
+                # Before the trace drain rebuilds the rows, so they show the calls open right now.
+                self._apply_api_snapshot(pipeline.activity.snapshot())
+            await self._drain_trace_events()
         
         result = await task
         await self._drain_logs()
@@ -2688,6 +2823,7 @@ class State(rx.State):
                 self.status_msg = "Pipeline Error."
                 self.last_run_status = "error"
             self.is_cleaning = False
+            self._clear_api_line()
             # Once more with the run over, so a task that never finished says "Stopped", not "Running".
             self._rebuild_pipeline_flow_rows()
             # keep log file path for post-mortem/debugging

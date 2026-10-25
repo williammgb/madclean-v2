@@ -26,10 +26,10 @@ def tone_chip(text, tone: rx.Var) -> rx.Component:
 
 
 def step_mark(step: rx.Var) -> rx.Component:
-    """The tick, cross or dash in front of a step's name; a pulse while it waits for you."""
+    """The tick, cross or dash in front of a step's name; a pulse while it waits for you or the model."""
     mark = step["mark"].to(str)
     return rx.cond(
-        step["needs_blink"] == "1",
+        (step["needs_blink"] == "1") | (mark == "pulse"),
         rx.el.span(class_name="pulse"),
         rx.cond(
             mark == "check",
@@ -49,6 +49,11 @@ def step_chip(column: rx.Var, step: rx.Var, index: rx.Var) -> rx.Component:
         rx.el.button(
             step_mark(step),
             step["label"],
+            rx.cond(
+                step["secs"].to(str) != "",
+                rx.el.span(step["secs"].to(str), class_name="secs"),
+                rx.fragment(),
+            ),
             type="button",
             class_name="step " + step["chip"].to(str),
             aria_pressed=rx.cond(picked, "true", "false"),

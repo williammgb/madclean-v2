@@ -3,9 +3,9 @@ import asyncio
 import json
 import random
 import time
-from contextvars import ContextVar
 from functools import partial
 # Local imports
+from madclean.llm.activity import current_attempt, current_task
 from madclean.llm.llm_clients import BaseLLMClient
 from madclean.components.multi_agent_cleaner.llm_coding import LLMCodingAgent
 from madclean.components.multi_agent_cleaner.llm_validation import LLMValidationAgent
@@ -43,8 +43,9 @@ def _case_value(value) -> str | None:
 
 # Which column or dependency task the calls of this asyncio task belong to. Columns are cleaned
 # concurrently through one shared set of agents, so the task's own context is the only place that
-# knows whose tokens are being counted. Each asyncio task gets its own copy.
-_current_task_key: ContextVar[str | None] = ContextVar("madclean_task_key", default=None)
+# knows whose tokens are being counted. Each asyncio task gets its own copy. The same ContextVar
+# tells the live activity record which column an open model call is for.
+_current_task_key = current_task
 
 class MultiAgentCleaning:
     """Multi-Agent LLM Cleaning Coordinator that coordinates the workflow between the LLM agents."""
@@ -827,6 +828,7 @@ class MultiAgentCleaning:
         feedback_target = 'RECOMMENDER'
         for attempt in range(self.config.max_cleaning_attempts):
             self._check_cancelled()
+            current_attempt.set(attempt + 1)
             last_round_objected, this_round_objected = this_round_objected, set()
             if feedback_target == 'RECOMMENDER':
                 already_clean, recommender_data, new_recommender_history = await self.recommender_agent.generate_recommendations_async(
@@ -1230,6 +1232,7 @@ class MultiAgentCleaning:
         feedback_target = 'RECOMMENDER'
         for attempt in range(self.config.max_multi_col_attempts):
             self._check_cancelled()
+            current_attempt.set(attempt + 1)
             if feedback_target == 'RECOMMENDER':
                 recommender_data, new_recommender_history = await self.recommender_agent.generate_recommendations_multi_col_async( 
                     df, task_info, messages=recommender_history)

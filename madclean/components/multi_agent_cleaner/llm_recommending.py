@@ -3,6 +3,7 @@ import re
 from pydantic import BaseModel, ConfigDict, ValidationError
 import pandas as pd
 # Local imports
+from madclean.llm.activity import current_agent
 from madclean.llm.llm_clients import BaseLLMClient
 from madclean.components.coordinator.prompt_generation import PromptGeneration
 from madclean.components.domain.schema import ColumnProfile, MultiColumnTask
@@ -110,6 +111,7 @@ class LLMRecommendationAgent:
         # 2. Call LLM and parse output, with retries
         for attempt in range(self.MAX_PARSE_ATTEMPTS):
             try:
+                current_agent.set("Recommender")
                 raw_response, token_usage = await self.llm_client.call_llm_async(
                     working_messages,
                     response_schema=schema,

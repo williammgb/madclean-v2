@@ -7,6 +7,7 @@ import pickle
 import subprocess
 import pandas as pd
 # Local imports
+from madclean.llm.activity import current_agent
 from madclean.llm.llm_clients import BaseLLMClient
 from madclean.components.coordinator.prompt_generation import PromptGeneration
 from madclean.config.settings import CleaningConfig
@@ -66,6 +67,7 @@ class LLMCodingAgent:
 
     async def _call_llm_for_code_async(self, messages: list) -> tuple[str | None, str | None, str | None]:
         try:
+            current_agent.set("Coder")
             raw_response, token_usage = await self.llm_client.call_llm_async(
                 messages,
                 response_schema="text/plain",

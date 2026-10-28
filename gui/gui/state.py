@@ -28,6 +28,7 @@ from madclean.evaluation.comparison import Mode, equal_mask
 from madclean.notebook import merged_cleaning_code, notebook_json
 from madclean.utils.helpers import load_dataset
 
+from .profile_stats import profile_rows
 from .session import SessionRun, session_run
 
 # Semantic types whose values are numbers, and so line up on the right of the table.
@@ -376,7 +377,7 @@ class State(rx.State):
     display_column_header_colors: Dict[str, str] = {}
     user_marked_clean_columns: Dict[str, bool] = {}
     profiling_dashboard_rows: List[Dict[str, Any]] = []
-    selected_profile_column: str = ""
+    profile_filter: str = "all"  # "all" or "findings": which column cards the Profile view shows
 
     # Profiling state (types + FDs)
     is_profiling: bool = False
@@ -723,13 +724,15 @@ class State(rx.State):
         return waiting
 
     @rx.var
-    def selected_profile_rows(self) -> List[Dict[str, Any]]:
-        """The selected column's profile, as a list of one, so a view can render it without indexing."""
-        wanted = self.selected_profile_column
-        for row in self.profiling_dashboard_rows:
-            if str(row.get("column", "")) == wanted:
-                return [row]
-        return self.profiling_dashboard_rows[:1]
+    def visible_profile_rows(self) -> List[Dict[str, Any]]:
+        """The column profiles the Profile view shows: all, or only those with findings."""
+        if self.profile_filter == "findings":
+            return [row for row in self.profiling_dashboard_rows if row.get("has_findings") == "1"]
+        return self.profiling_dashboard_rows
+
+    @rx.var
+    def profile_columns_with_findings(self) -> int:
+        return sum(1 for row in self.profiling_dashboard_rows if row.get("has_findings") == "1")
 
     @rx.var
     def page_range_label(self) -> str:
@@ -822,8 +825,9 @@ class State(rx.State):
             self.status_msg = "Ground truth cleared."
         self._run_evaluation()
 
-    def set_selected_profile_column(self, val: str):
-        self.selected_profile_column = val
+    def set_profile_filter(self, val: str):
+        if val in ("all", "findings"):
+            self.profile_filter = val
 
     def set_user_validation_feedback_target(self, val: str):
         if val in ("CODER", "RECOMMENDER"):
@@ -1869,168 +1873,9 @@ class State(rx.State):
         if self._full_df is None or self._full_df.empty:
             self.profiling_dashboard_rows = []
             return
-        def _regex_signature(value: str) -> str:
-            tokens: List[str] = []
-            for ch in value:
-                if ch.isdigit():
-                    tok = r"\d"
-                elif ch.isalpha() and ch.isupper():
-                    tok = r"[A-Z]"
-                elif ch.isalpha() and ch.islower():
-                    tok = r"[a-z]"
-                elif ch.isspace():
-                    tok = r"\s"
-                else:
-                    tok = re.escape(ch)
-                tokens.append(tok)
-            if not tokens:
-                return r"^$"
-            compressed: List[str] = []
-            run_tok = tokens[0]
-            run_count = 1
-            for tok in tokens[1:]:
-                if tok == run_tok:
-                    run_count += 1
-                else:
-                    compressed.append(f"{run_tok}{{{run_count}}}" if run_count > 1 else run_tok)
-                    run_tok = tok
-                    run_count = 1
-            compressed.append(f"{run_tok}{{{run_count}}}" if run_count > 1 else run_tok)
-            return "^" + "".join(compressed) + "$"
-
-        rows: List[Dict[str, Any]] = []
-        n_rows = max(1, int(len(self._full_df)))
-        for col in self.column_names:
-            if col not in self._full_df.columns:
-                continue
-            series = self._full_df[col]
-            non_null = series.dropna()
-            missing_count = int(series.isna().sum())
-            unique_count = int(non_null.nunique(dropna=True))
-            uniqueness_ratio = float(unique_count / max(1, len(non_null)))
-            semantic_type = self.column_semantic_types.get(col, "UNKNOWN")
-            is_numeric = bool(pd.api.types.is_numeric_dtype(series))
-            numeric_min = ""
-            numeric_max = ""
-            numeric_std = ""
-            numeric_mean = ""
-            numeric_median = ""
-            numeric_range = ""
-
-            value_counts = non_null.astype(str).value_counts()
-            top_values = value_counts.head(5)
-            top_rows = [
-                {
-                    "value": str(k),
-                    "count": str(int(v)),
-                    "pct": f"{(int(v) / max(1, len(non_null))) * 100:.1f}",
-                }
-                for k, v in top_values.items()
-            ]
-
-            hist_bars: List[Dict[str, Any]] = []
-            hist_x_min = ""
-            hist_x_max = ""
-            if is_numeric:
-                numeric = pd.to_numeric(series, errors="coerce").dropna()
-                if not numeric.empty:
-                    min_val = float(numeric.min())
-                    max_val = float(numeric.max())
-                    numeric_min = f"{min_val:.4g}"
-                    numeric_max = f"{max_val:.4g}"
-                    hist_x_min = numeric_min
-                    hist_x_max = numeric_max
-                    numeric_std = f"{float(numeric.std(ddof=0)):.4g}"
-                    numeric_mean = f"{float(numeric.mean()):.4g}"
-                    numeric_median = f"{float(numeric.median()):.4g}"
-                    numeric_range = f"{(max_val - min_val):.4g}"
-                    try:
-                        counts, _bins = pd.cut(
-                            numeric,
-                            bins=16,
-                            include_lowest=True,
-                            duplicates="drop",
-                            retbins=True,
-                        )
-                        bin_counts = counts.value_counts().sort_index()
-                        for interval, count in bin_counts.items():
-                            if pd.isna(interval):
-                                continue
-                            try:
-                                ileft = float(interval.left)
-                                iright = float(interval.right)
-                            except Exception:
-                                continue
-                            hist_bars.append(
-                                {
-                                    "left": f"{ileft:.4g}",
-                                    "right": f"{iright:.4g}",
-                                    "bin": f"{ileft:.4g} - {iright:.4g}",
-                                    "count": int(count),
-                                }
-                            )
-                        if hist_bars:
-                            max_count = max(1, max(int(b["count"]) for b in hist_bars))
-                            for b in hist_bars:
-                                h_pct = int((int(b["count"]) / max_count) * 100)
-                                b["height_pct"] = str(max(8, h_pct))
-                    except Exception:
-                        hist_bars = []
-
-            regex_counts: Dict[str, int] = {}
-            sampled = non_null.astype(str).head(3000)
-            for raw in sampled:
-                sig = _regex_signature(raw)
-                regex_counts[sig] = regex_counts.get(sig, 0) + 1
-            regex_sorted = sorted(regex_counts.items(), key=lambda x: x[1], reverse=True)
-            regex_rows: List[Dict[str, str]] = []
-            sample_len = max(1, len(sampled))
-            for p, c in regex_sorted:
-                pct_val = (c / sample_len) * 100.0
-                if pct_val < 20.0:
-                    continue
-                regex_rows.append(
-                    {
-                        "pattern": p,
-                        "count": str(c),
-                        "pct": f"{pct_val:.1f}",
-                    }
-                )
-                if len(regex_rows) >= 3:
-                    break
-            if not regex_rows and sample_len > 0:
-                # Fallback: summarize variable-length string-like columns as a broad pattern.
-                alpha_mask = sampled.str.match(r"^[A-Za-z]+$", na=False)
-                alpha_count = int(alpha_mask.sum())
-                alpha_pct = (alpha_count / sample_len) * 100.0
-                if alpha_pct >= 20.0:
-                    alpha_lengths = sampled[alpha_mask].str.len()
-                    if not alpha_lengths.empty:
-                        min_len = int(alpha_lengths.min())
-                        max_len = int(alpha_lengths.max())
-                        regex_rows.append(
-                            {
-                                "pattern": rf"^[A-Za-z]{{{min_len},{max_len}}}$",
-                                "count": str(alpha_count),
-                                "pct": f"{alpha_pct:.1f}",
-                            }
-                        )
-                else:
-                    non_empty = sampled[sampled.str.len() > 0]
-                    if not non_empty.empty:
-                        min_len = int(non_empty.str.len().min())
-                        max_len = int(non_empty.str.len().max())
-                        covered = int(non_empty.shape[0])
-                        pct_val = (covered / sample_len) * 100.0
-                        if pct_val >= 20.0:
-                            regex_rows.append(
-                                {
-                                    "pattern": rf"^.{{{min_len},{max_len}}}$",
-                                    "count": str(covered),
-                                    "pct": f"{pct_val:.1f}",
-                                }
-                            )
-
+        rows = profile_rows(self._full_df, list(self.column_names), self.column_semantic_types)
+        for row in rows:
+            col = row["column"]
             # Labeled cells (from GUI few-shot labels) – include sample values.
             labeled_clean_rows: List[Dict[str, str]] = []
             labeled_dirty_rows: List[Dict[str, str]] = []
@@ -2057,27 +1902,8 @@ class State(rx.State):
                     elif kind == "dirty":
                         labeled_dirty_rows.append(rec)
 
-            rows.append(
+            row.update(
                 {
-                    "column": col,
-                    "semantic_type": semantic_type,
-                    "missing_count": str(missing_count),
-                    "missing_pct": f"{(missing_count / n_rows) * 100:.1f}",
-                    "unique_count": str(unique_count),
-                    "unique_pct": f"{uniqueness_ratio * 100:.1f}",
-                    "is_numeric": "1" if is_numeric else "0",
-                    "numeric_min": numeric_min,
-                    "numeric_max": numeric_max,
-                    "numeric_std": numeric_std,
-                    "numeric_mean": numeric_mean,
-                    "numeric_median": numeric_median,
-                    "numeric_range": numeric_range,
-                    "top_values": top_rows,
-                    "histogram": hist_bars,
-                    "hist_x_min": hist_x_min,
-                    "hist_x_max": hist_x_max,
-                    "top_regex": regex_rows,
-                    "has_top_regex": "1" if len(regex_rows) > 0 else "0",
                     "color": self.column_header_colors.get(col, "#6b7280"),
                     "labeled_clean_count": str(
                         sum(
@@ -2099,8 +1925,6 @@ class State(rx.State):
                 }
             )
         self.profiling_dashboard_rows = rows
-        if not self.selected_profile_column and rows:
-            self.selected_profile_column = str(rows[0]["column"])
 
     # The two callbacks below are called from the run's worker thread, which must not touch the
     # page's state, so the session's run is handed to them when the run is wired up instead of
@@ -2880,7 +2704,7 @@ class State(rx.State):
                 self.column_header_colors = {c: self._semantic_type_to_color("UNKNOWN") for c in self.column_names}
                 self._rebuild_display_column_header_colors()
                 self.profiling_dashboard_rows = []
-                self.selected_profile_column = self.column_names[0] if self.column_names else ""
+                self.profile_filter = "all"
                 self.profiling_status = "Waiting for profiling..."
                 self.is_profiling = False
                 self.status_msg = f"Loaded {file.filename}"

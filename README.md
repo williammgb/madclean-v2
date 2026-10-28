@@ -32,10 +32,7 @@ uv sync --frozen
 ```
 
 This installs the locked dependency set from `uv.lock` into `.venv`, including the spaCy model
-`en_core_web_sm`. Nothing else needs to be installed by hand. `./run setup` does the same from a
-POSIX shell (on Windows, Git Bash).
-
-Run every command below from the repository folder, starting with `uv run`.
+`en_core_web_sm`.
 
 ## Configuring an LLM
 
@@ -81,16 +78,11 @@ against its ground truth after every run.
 | `--config PATH` | a JSON settings file with the same keys as `configurations.json`, the default; flags override it |
 | `--runs N` | clean N times; scores are printed per run and as a mean with its standard deviation |
 | `--gt PATH` | a ground truth file to score each run against |
-| `--mode paper\|strict` | the scoring mode (see [Evaluation](#evaluation)); default `paper` |
+| `--mode paper\|strict` | the scoring mode: `strict` also counts a value of the wrong type as wrong; default `paper` |
 | `--save-cleaned` | write each cleaned table to `data/cleaned/` |
 | `--results PATH` | write the settings, runtime, tokens and scores of every run to a JSON file |
 | `--export-notebook PATH` | write the run as a notebook that reproduces it without a model |
 | `-v`, `--verbose` | print profiling and per-agent progress |
-
-Every setting the web interface offers is a key in the settings file: retries, validator sample
-sizes, what to do when the Validator keeps failing, temperature, columns to skip. Settings that
-wait for a person — human-in-the-loop review, the `USER` validator, `ask_user` — are switched off
-on the command line, since nobody is there to answer.
 
 The paper's experiments, as commands:
 
@@ -103,17 +95,14 @@ uv run madclean movies --sample-size 64                                      # s
 uv run madclean my_data.csv --gt my_data_clean.csv                           # your own data, scored
 ```
 
-The paper's fourth ablation, a basic prompt in place of the type-specific ones, is not an option:
-its stored results are in `evaluation/results/ablation_study/`.
-
 ## Scoring a cleaned file
 
 ```bash
-uv run madclean evaluate CLEANED GROUND_TRUTH [--dirty PATH] [--mode paper|strict] [--results PATH]
+uv run madclean evaluate <cleaned> <ground_truth> [--dirty PATH] [--mode paper|strict] [--results PATH]
 ```
 
 Scores a cleaned file that already exists, from this tool or any other, without calling a model.
-`GROUND_TRUTH` is a file or a benchmark name. Scoring needs the dirty file as well, to know which
+`<ground_truth>` is a file or a benchmark name. Scoring needs the dirty file as well, to know which
 cells were errors: it is found on its own for a benchmark and for `X_gt.csv` beside `X_dirty.csv`,
 and is otherwise passed with `--dirty`.
 
@@ -147,22 +136,6 @@ Report, Evaluation, Guide. Every browser tab gets its own run: two tabs can clea
 without sharing a stop button or a review queue.
 
 ![The MADClean interface](docs/v2_cleaned.png)
-
-## Evaluation
-
-`madclean/evaluation/` scores a cleaned dataset against its ground truth, and everything that
-reports a number — the command line, the web interface and the benchmark scripts — goes through it.
-It scores in two modes:
-
-- **paper** — the comparison the paper used, so the committed results reproduce exactly: missing
-  on both sides matches, the columns a benchmark declares numeric compare as numbers, everything
-  else compares as it is.
-- **strict** — the type has to agree as well. A column left as text where the ground truth holds
-  numbers is counted wrong, which is invisible in paper mode.
-
-`./run score` re-scores every stored MADClean run and every baseline in both modes and prints one
-table, with the mean and the standard deviation over the runs of each dataset. It reads stored
-files only: no model is called and no baseline is re-run.
 
 ## Security note
 

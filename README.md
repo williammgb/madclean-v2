@@ -60,10 +60,10 @@ Gemma) are reached through OpenRouter.
 ## Cleaning from the command line
 
 ```bash
-uv run madclean DATASET [OPTIONS]
+uv run madclean <dataset_file> [OPTIONS]
 ```
 
-`DATASET` is a CSV, Excel or JSON file, or the name of a benchmark in `data/benchmark_datasets/`:
+`<dataset_file>` is a CSV, Excel or JSON file, or the name of a benchmark in `data/benchmark_datasets/`:
 `hospital`, `beers`, `movies`, `rayyan`, `tax`, `adult` or `restaurants`. A benchmark is scored
 against its ground truth after every run.
 

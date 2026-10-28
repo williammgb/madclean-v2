@@ -98,11 +98,11 @@ uv run madclean my_data.csv --gt my_data_clean.csv                           # y
 ## Scoring a cleaned file
 
 ```bash
-uv run madclean evaluate <cleaned> <ground_truth> [--dirty PATH] [--mode paper|strict] [--results PATH]
+uv run madclean evaluate <cleaned_file> <ground_truth_file> [--dirty PATH] [--mode paper|strict] [--results PATH]
 ```
 
 Scores a cleaned file that already exists, from this tool or any other, without calling a model.
-`<ground_truth>` is a file or a benchmark name. Scoring needs the dirty file as well, to know which
+`<ground_truth_file>` is a file or a benchmark name. Scoring needs the dirty file as well, to know which
 cells were errors: it is found on its own for a benchmark and for `X_gt.csv` beside `X_dirty.csv`,
 and is otherwise passed with `--dirty`.
 

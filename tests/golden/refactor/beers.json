@@ -15,8 +15,114 @@
     }
   },
   "report": {
+    "ounces": {
+      "datatype": "DIRTY_FLOAT",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "style": {
+      "datatype": "CATEGORICAL",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "abv": {
+      "datatype": "FLOAT",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": false,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        }
+      ]
+    },
     "state": {
       "datatype": "CATEGORICAL",
+      "already_clean": false,
+      "cleaned": true,
+      "attempts": 1,
+      "generated_code": "def clean_column(data):\n    return data",
+      "cleaning_validated": true,
+      "trace_steps": [
+        {
+          "id": "recommender_1",
+          "title": "Recommender (attempt 1)",
+          "status": "ok",
+          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
+        },
+        {
+          "id": "coder_1",
+          "title": "Coder (attempt 1)",
+          "status": "ok",
+          "output": "def clean_column(data):\n    return data"
+        },
+        {
+          "id": "validator_1",
+          "title": "Validator (attempt 1)",
+          "status": "approved",
+          "output": "Validator Agent has determined the cleaning operations are valid."
+        }
+      ]
+    },
+    "city": {
+      "datatype": "NAMED_ENTITY",
       "already_clean": false,
       "cleaned": true,
       "attempts": 1,
@@ -71,30 +177,8 @@
         }
       ]
     },
-    "abv": {
-      "datatype": "FLOAT",
-      "already_clean": false,
-      "cleaned": true,
-      "attempts": 1,
-      "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": false,
-      "trace_steps": [
-        {
-          "id": "recommender_1",
-          "title": "Recommender (attempt 1)",
-          "status": "ok",
-          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
-        },
-        {
-          "id": "coder_1",
-          "title": "Coder (attempt 1)",
-          "status": "ok",
-          "output": "def clean_column(data):\n    return data"
-        }
-      ]
-    },
-    "style": {
-      "datatype": "CATEGORICAL",
+    "brewery_id": {
+      "datatype": "IDENTIFIER",
       "already_clean": false,
       "cleaned": true,
       "attempts": 1,
@@ -118,56 +202,6 @@
           "title": "Validator (attempt 1)",
           "status": "approved",
           "output": "Validator Agent has determined the cleaning operations are valid."
-        }
-      ]
-    },
-    "ounces": {
-      "datatype": "DIRTY_FLOAT",
-      "already_clean": false,
-      "cleaned": true,
-      "attempts": 1,
-      "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": true,
-      "trace_steps": [
-        {
-          "id": "recommender_1",
-          "title": "Recommender (attempt 1)",
-          "status": "ok",
-          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
-        },
-        {
-          "id": "coder_1",
-          "title": "Coder (attempt 1)",
-          "status": "ok",
-          "output": "def clean_column(data):\n    return data"
-        },
-        {
-          "id": "validator_1",
-          "title": "Validator (attempt 1)",
-          "status": "approved",
-          "output": "Validator Agent has determined the cleaning operations are valid."
-        }
-      ]
-    },
-    "ibu": {
-      "datatype": "INTEGER",
-      "already_clean": false,
-      "cleaned": true,
-      "attempts": 1,
-      "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": false,
-      "trace_steps": [
-        {
-          "id": "recommender_1",
-          "title": "Recommender (attempt 1)",
-          "status": "ok",
-          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
-        },
-        {
-          "id": "coder_1",
-          "title": "Coder (attempt 1)",
-          "status": "ok",
-          "output": "def clean_column(data):\n    return data"
         }
       ]
     },
@@ -227,13 +261,13 @@
         }
       ]
     },
-    "brewery_id": {
-      "datatype": "IDENTIFIER",
+    "ibu": {
+      "datatype": "INTEGER",
       "already_clean": false,
       "cleaned": true,
       "attempts": 1,
       "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": true,
+      "cleaning_validated": false,
       "trace_steps": [
         {
           "id": "recommender_1",
@@ -246,40 +280,6 @@
           "title": "Coder (attempt 1)",
           "status": "ok",
           "output": "def clean_column(data):\n    return data"
-        },
-        {
-          "id": "validator_1",
-          "title": "Validator (attempt 1)",
-          "status": "approved",
-          "output": "Validator Agent has determined the cleaning operations are valid."
-        }
-      ]
-    },
-    "city": {
-      "datatype": "NAMED_ENTITY",
-      "already_clean": false,
-      "cleaned": true,
-      "attempts": 1,
-      "generated_code": "def clean_column(data):\n    return data",
-      "cleaning_validated": true,
-      "trace_steps": [
-        {
-          "id": "recommender_1",
-          "title": "Recommender (attempt 1)",
-          "status": "ok",
-          "output": "Summary:\nFake recommendation.\n\nError Types:\n- formatting\n\nCleaning Instructions:\n- Return the column unchanged.\n\nDirty Examples:\n\n\nClean Examples:"
-        },
-        {
-          "id": "coder_1",
-          "title": "Coder (attempt 1)",
-          "status": "ok",
-          "output": "def clean_column(data):\n    return data"
-        },
-        {
-          "id": "validator_1",
-          "title": "Validator (attempt 1)",
-          "status": "approved",
-          "output": "Validator Agent has determined the cleaning operations are valid."
         }
       ]
     },
@@ -357,9 +357,9 @@
     },
     "token_usage": {
       "recommender": {
-        "input_tokens": 147975,
+        "input_tokens": 153955,
         "output_tokens": 2363,
-        "total_tokens": 150338
+        "total_tokens": 156318
       },
       "coding": {
         "input_tokens": 27530,
@@ -373,9 +373,9 @@
       }
     },
     "total_usage": {
-      "input_tokens": 227734,
+      "input_tokens": 233714,
       "output_tokens": 3557,
-      "total_tokens": 231291
+      "total_tokens": 237271
     }
   },
   "traces": {
@@ -754,16 +754,16 @@
       "ddbcd66347864210c499af27cee1cb7155a68dee3351ad873f80fd0d23189ba1"
     ],
     "recommender": [
-      "09c334372eae2e7b1a88de63932e55141368f84707f2606633de2ac062fb4a1d",
-      "0cde8fb7cc94fc534de5b184685b111d0dd6a6bd1a8a9f881b2bbdf20c8cd907",
-      "13acab405a3fe777eaa38426a3003b5cf9f9464f42df5dc099f131fb28cd661c",
-      "1b880756c38508a8474258dbdf9547a4b1ed12c9da10e78c3b4e50f204a6b5c6",
-      "29bbe3ecca56ff59a944502802aec476364e1d154b745bf7c5ff35fe918120d4",
-      "732ca73d121fdaa1f8b6598e81871b2fefd0d2ade26c1846bafec1f317d8a16a",
-      "a6df9afa7ce48cf7429c215fafd48cbe344f723f8382ffa85a4453545760fce6",
-      "dbd407f4dae863c8cc885ac1387c47a56d8fb3518b618b6ad1caa561918c9643",
-      "e6fe2978e70ebeab492bef0c4fae9579e32a0ad557956d77938c341ba039fb77",
-      "edb59b3a26e3f8eeffe4a056b00ace7dd40664728fc653a4290e16d9a3f0e262"
+      "1ce0d56acb138e6430741fef7a4f701586542a6c4603d899bae911b2bd1f4a15",
+      "4a7a044cb0e29f6d230585e1a0320989d995420c0e0d86a7b0e726bd8bba1b5e",
+      "5620cc47e600856ce2e38ac8f5916100f17b74ef7962aee2a7125e929e2eeba3",
+      "5db770fd80d1ca25408e1a0fc013c84f979f418f9a522acf4db6d2420adeb614",
+      "6dd84575d1133e9d61ae65362c75b43417401ae02df801f195bc84b969d6ceb4",
+      "7366214b566cb2376471ba26fb751b09c1b7619609aef9c2ef43d6ac39798a81",
+      "c41b7a9c37cbc26f82e279ff875973a192c26be64f7537bef1d7a52c591053a8",
+      "dba3dd3f5550583eb382e7ddfcd4cba7639094bdf7a6ba88f9a0149589244a98",
+      "ed8e3323d89630783d8d4f31c077e8c3c340184a4642eaaeeeafdbdb03af6eb8",
+      "f2b69732e660663d8a3a131150ba6ac7b5ab9b9a1157935173391c65af478381"
     ],
     "validator": [
       "3281a2637e0efcf9d032ba26718547c806b0a1c0081cd0227a2d3f6f474273f7",

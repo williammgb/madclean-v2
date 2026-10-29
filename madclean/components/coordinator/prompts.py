@@ -39,7 +39,8 @@ LABELED EXAMPLES (follow when not "(none)"):
 OUTPUT FORMAT
 Return ONLY valid JSON with these keys, in this order:
  - "analysis": your reasoning before deciding, in a few sentences: the dominant form, which values deviate from it and why, and which values you will leave alone.
- - "is_clean": true if no value needs to change, otherwise false.
+ - "is_clean": true if no value needs to change, otherwise false. Before you answer true, go through every distinct value in the sample: "is_clean" is false if any one is a missing-value placeholder from RULE 3, or if every value, or nearly every value, carries the same unit word after its number ("33 patients", "15 kg"). Mixed units ("5 kg", "3 lb") are not a shared unit. A word that is clearly a real label of this column, such as "none" among product types, follows RULE 3: when unsure, leave it.
+   Example: a column whose only value is "empty" → "is_clean": false, "value_mapping": [{{"from_value": "empty", "to_value": null}}], so every cell becomes empty.
  - "summary": what the column holds and the target form of its values.
  - "error_types": one sentence per distinct problem found. null if "is_clean" is true.
  - "examples_clean": up to 10 values from the sample that are already in the target form. null if "is_clean" is true.

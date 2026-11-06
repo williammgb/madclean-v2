@@ -6,6 +6,8 @@ The profiler extracts column types, outliers and functional dependencies; a mult
 loop (Recommender → Coder → Validator) turns those findings into executable cleaning code and
 validates the result before it is applied.
 
+![The MADClean framework: a data profiler, a cleaning coordinator and a multi-agent data cleaner turn raw data into cleaned data](docs/framework.png)
+
 ```
 madclean/          the framework: profiler, coordinator, multi-agent cleaner, LLM clients, scorer
 evaluation/        the benchmark runner, baselines and their stored results
